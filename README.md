@@ -1,7 +1,7 @@
 # Torneo Municipal — Sistema de Gestión de Basquetbol
 
 Plataforma web completa para administrar un torneo de basquetbol municipal. Permite gestionar equipos, jugadores, partidos, estadísticas, transmisiones en vivo y cuentas de usuario con roles diferenciados.
-> [!IMPORTANT] En la parte de abajo estan los usuarios y contraseñas para acceder a la plataforma donde esta la URL de producción, por favor no los compartas con nadie.
+> [!WARNING] En la parte de abajo estan los usuarios y contraseñas para acceder a la plataforma donde esta la URL de producción, por favor no los compartas con nadie.
 
 ---
 
