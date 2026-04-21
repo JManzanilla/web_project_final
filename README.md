@@ -161,8 +161,8 @@ gcloud run deploy torneo-web \
 
 ## URLs de producción
 
--* **Frontend:** [https://torneo-web-167747831325.us-central1.run.app](https://torneo-web-167747831325.us-central1.run.app)
--* **Backend API:** [https://torneo-api-167747831325.us-central1.run.app](https://torneo-api-167747831325.us-central1.run.app)
+* **Frontend:** [https://torneo-web-167747831325.us-central1.run.app](https://torneo-web-167747831325.us-central1.run.app)
+* **Backend API:** [https://torneo-api-167747831325.us-central1.run.app](https://torneo-api-167747831325.us-central1.run.app)
 ---
 
 > [!CAUTION]
