@@ -168,12 +168,11 @@ gcloud run deploy torneo-web \
 
 > [!CAUTION]
 > ## Usuarios de prueba
-
-- | Usuario | Contraseña | Rol |
-- | admin   | Admin2026  | admin|
-- | lider1   | Lider2026  | lider|
-- | anotador1 | Anotador2026 | anotador|
-- | transmision1 | Transmision2026 | transmision|
+> | Usuario | Contraseña | Rol |
+> | admin   | Admin2026  | admin|
+> | lider1   | Lider2026  | lider|
+> | anotador1 | Anotador2026 | anotador|
+> | transmision1 | Transmision2026 | transmision|
 
 ---
 
