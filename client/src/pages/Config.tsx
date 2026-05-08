@@ -289,7 +289,7 @@ export default function ConfigPage() {
                 <span className="text-6xl font-display font-black text-brand-orange drop-shadow-[0_0_14px_rgba(255,69,0,0.5)]">
                   {totalTeams}
                 </span>
-                <p className="text-[11px] text-white/30 mt-1">
+                <p className="text-[11px] text-white/55 mt-1">
                   {Math.floor(totalTeams / 2)} partido{Math.floor(totalTeams / 2) !== 1 ? "s" : ""} por jornada
                 </p>
               </div>
@@ -313,7 +313,7 @@ export default function ConfigPage() {
                   className={`flex-1 h-11 rounded-full font-display font-bold text-base transition-all duration-200 ${
                     vueltas === num
                       ? "bg-brand-orange text-white glow-orange scale-105"
-                      : "bg-white/5 text-white/40 hover:bg-white/15 border border-white/10"
+                      : "bg-white/5 text-white/65 hover:bg-white/15 border border-white/10"
                   }`}>
                   {num}
                 </button>
@@ -330,10 +330,10 @@ export default function ConfigPage() {
 
             {/* Cierre de registro */}
             <div className="mb-5">
-              <label className="text-[11px] text-white/40 uppercase tracking-widest font-bold block mb-1">
+              <label className="text-[11px] text-white/65 uppercase tracking-widest font-bold block mb-1">
                 Registro libre hasta la jornada
               </label>
-              <p className="text-[10px] text-white/25 mb-3">
+              <p className="text-[10px] text-white/50 mb-3">
                 Después de esta jornada no se pueden agregar jugadores nuevos.
               </p>
               <div className="flex items-center gap-3">
@@ -357,7 +357,7 @@ export default function ConfigPage() {
               className={`flex items-center gap-2.5 w-full p-3 rounded-xl border transition-all mb-3 ${
                 transferWindowEnabled
                   ? "bg-brand-orange/8 border-brand-orange/30 text-brand-orange"
-                  : "bg-white/4 border-white/8 text-white/40 hover:border-white/20"
+                  : "bg-white/4 border-white/8 text-white/65 hover:border-white/20"
               }`}
             >
               <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 ${
@@ -372,10 +372,10 @@ export default function ConfigPage() {
 
             {transferWindowEnabled && (
               <div className="animate-in fade-in duration-200">
-                <label className="text-[11px] text-white/40 uppercase tracking-widest font-bold block mb-1">
+                <label className="text-[11px] text-white/65 uppercase tracking-widest font-bold block mb-1">
                   Ventana abre en la jornada
                 </label>
-                <p className="text-[10px] text-white/25 mb-3">
+                <p className="text-[10px] text-white/50 mb-3">
                   A partir de aquí se permiten altas y bajas de jugadores.
                 </p>
                 <div className="flex items-center gap-3">
@@ -391,7 +391,7 @@ export default function ConfigPage() {
                     className="w-9 h-9 rounded-full bg-white/8 hover:bg-white/15 border border-white/10 text-white font-bold flex items-center justify-center text-lg flex-shrink-0"
                   >+</button>
                 </div>
-                <p className="text-[10px] text-white/20 text-center mt-2">
+                <p className="text-[10px] text-white/65 text-center mt-2">
                   Debe ser mayor a la jornada de cierre ({rosterLockJornada})
                 </p>
               </div>
@@ -406,7 +406,7 @@ export default function ConfigPage() {
             </h3>
             <div className="space-y-4">
               <div>
-                <label className="text-[11px] text-white/40 uppercase tracking-widest font-bold block mb-2">
+                <label className="text-[11px] text-white/65 uppercase tracking-widest font-bold block mb-2">
                   Fecha de inicio — Jornada 1
                 </label>
                 <Input type="date" value={startDate}
@@ -414,7 +414,7 @@ export default function ConfigPage() {
                   className="glass-input h-11" />
               </div>
               <div>
-                <label className="text-[11px] text-white/40 uppercase tracking-widest font-bold block mb-2">
+                <label className="text-[11px] text-white/65 uppercase tracking-widest font-bold block mb-2">
                   Días de juego
                 </label>
                 {(() => {
@@ -443,14 +443,14 @@ export default function ConfigPage() {
                               className={`h-10 rounded-xl text-[11px] font-bold transition-all border ${
                                 active
                                   ? "bg-brand-orange text-white border-brand-orange"
-                                  : "bg-white/5 text-white/40 border-white/10 hover:bg-white/10 hover:text-white/70"
+                                  : "bg-white/5 text-white/65 border-white/10 hover:bg-white/10 hover:text-white/70"
                               }`}>
                               {label}
                             </button>
                           );
                         })}
                       </div>
-                      <p className="text-[10px] text-white/30 text-center">
+                      <p className="text-[10px] text-white/55 text-center">
                         {playDays.length} jornada{playDays.length !== 1 ? "s" : ""} por semana
                         {" · "}{DAYS.filter((d) => playDays.includes(d.n)).map((d) => d.label).join(", ")}
                       </p>
@@ -477,7 +477,7 @@ export default function ConfigPage() {
                   className={`flex-1 h-9 rounded-lg text-[12px] font-bold capitalize transition-all ${
                     scheduleMode === mode
                       ? "bg-brand-orange text-white"
-                      : "text-white/40 hover:text-white/60"
+                      : "text-white/65 hover:text-white/60"
                   }`}
                 >
                   {mode === "seguidos" ? "Seguidos" : "Personalizado"}
@@ -490,7 +490,7 @@ export default function ConfigPage() {
               <>
                 {/* Partidos por día */}
                 <div className="mb-4">
-                  <label className="text-[11px] text-white/40 uppercase tracking-widest font-bold block mb-2">
+                  <label className="text-[11px] text-white/65 uppercase tracking-widest font-bold block mb-2">
                     Partidos por día
                   </label>
                   <div className="flex items-center gap-3">
@@ -504,7 +504,7 @@ export default function ConfigPage() {
 
                 {/* Hora de inicio */}
                 <div className="mb-4">
-                  <label className="text-[11px] text-white/40 uppercase tracking-widest font-bold block mb-2">
+                  <label className="text-[11px] text-white/65 uppercase tracking-widest font-bold block mb-2">
                     Primer partido
                   </label>
                   <Input type="time" value={startTime}
@@ -515,7 +515,7 @@ export default function ConfigPage() {
                 {/* Tiempo entre partidos */}
                 {matchesPerDay > 1 && (
                   <div className="mb-4">
-                    <label className="text-[11px] text-white/40 uppercase tracking-widest font-bold block mb-2">
+                    <label className="text-[11px] text-white/65 uppercase tracking-widest font-bold block mb-2">
                       Tiempo entre partidos
                     </label>
                     <div className="grid grid-cols-4 gap-2">
@@ -550,7 +550,7 @@ export default function ConfigPage() {
 
                 {/* Preview seguidos */}
                 <div>
-                  <p className="text-[10px] text-white/25 font-bold uppercase tracking-widest mb-2">Horario del día</p>
+                  <p className="text-[10px] text-white/50 font-bold uppercase tracking-widest mb-2">Horario del día</p>
                   <div className="flex flex-wrap gap-1.5">
                     {Array.from({ length: matchesPerDay }, (_, i) => {
                       const [sh, sm] = startTime.split(":").map(Number);
@@ -571,13 +571,13 @@ export default function ConfigPage() {
             {/* ── MODO PERSONALIZADO ── */}
             {scheduleMode === "personalizado" && (
               <>
-                <p className="text-[11px] text-white/35 mb-3">
+                <p className="text-[11px] text-white/60 mb-3">
                   Define la hora exacta de cada partido del día. Puedes agregar o quitar slots.
                 </p>
                 <div className="space-y-2 mb-4">
                   {customTimes.map((t, i) => (
                     <div key={i} className="flex items-center gap-2">
-                      <span className="text-[11px] text-white/30 font-bold w-16 text-right flex-shrink-0">
+                      <span className="text-[11px] text-white/55 font-bold w-16 text-right flex-shrink-0">
                         Partido {i + 1}
                       </span>
                       <Input
@@ -593,7 +593,7 @@ export default function ConfigPage() {
                       {customTimes.length > 1 && (
                         <button
                           onClick={() => setCustomTimes(customTimes.filter((_, j) => j !== i))}
-                          className="w-8 h-8 rounded-full bg-white/5 hover:bg-red-500/20 border border-white/10 hover:border-red-500/40 text-white/30 hover:text-red-400 flex items-center justify-center text-lg transition-all flex-shrink-0"
+                          className="w-8 h-8 rounded-full bg-white/5 hover:bg-red-500/20 border border-white/10 hover:border-red-500/40 text-white/55 hover:text-red-400 flex items-center justify-center text-lg transition-all flex-shrink-0"
                         >
                           ×
                         </button>
@@ -611,7 +611,7 @@ export default function ConfigPage() {
                       const mm = String(next % 60).padStart(2, "0");
                       setCustomTimes([...customTimes, `${hh}:${mm}`]);
                     }}
-                    className="w-full h-9 rounded-xl border border-dashed border-white/15 text-white/35 hover:border-brand-orange/40 hover:text-brand-orange/60 text-[12px] font-bold transition-all"
+                    className="w-full h-9 rounded-xl border border-dashed border-white/15 text-white/60 hover:border-brand-orange/40 hover:text-brand-orange/60 text-[12px] font-bold transition-all"
                   >
                     + Agregar partido
                   </button>
@@ -623,7 +623,7 @@ export default function ConfigPage() {
           {/* Resumen */}
           {info && (
             <div className="glass-panel p-4 bg-brand-orange/5 border-brand-orange/20">
-              <p className="text-[10px] text-white/40 uppercase tracking-widest font-bold mb-3">Resumen del torneo</p>
+              <p className="text-[10px] text-white/65 uppercase tracking-widest font-bold mb-3">Resumen del torneo</p>
               <div className="grid grid-cols-3 gap-2 text-center">
                 {[
                   { label: "Equipos",  value: totalTeams },
@@ -632,7 +632,7 @@ export default function ConfigPage() {
                 ].map((s) => (
                   <div key={s.label} className="bg-black/20 rounded-xl p-2.5">
                     <div className="text-xl font-black text-brand-orange">{s.value}</div>
-                    <div className="text-[9px] text-white/30 font-bold uppercase mt-0.5">{s.label}</div>
+                    <div className="text-[9px] text-white/55 font-bold uppercase mt-0.5">{s.label}</div>
                   </div>
                 ))}
               </div>
@@ -650,7 +650,7 @@ export default function ConfigPage() {
               {namedSlots} / {totalTeams} nombrados
             </span>
           </div>
-          <p className="text-[11px] text-white/30 mb-4">
+          <p className="text-[11px] text-white/55 mb-4">
             Toca un equipo para asignar el nombre tras el sorteo
           </p>
 
@@ -710,7 +710,7 @@ export default function ConfigPage() {
             className={`flex items-center gap-2.5 w-full p-3 rounded-xl border transition-all mb-3 ${
               replaceExisting
                 ? "bg-red-500/10 border-red-500/30 text-red-400"
-                : "bg-white/4 border-white/8 text-white/40 hover:border-white/20"
+                : "bg-white/4 border-white/8 text-white/65 hover:border-white/20"
             }`}>
             <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 ${
               replaceExisting ? "bg-red-500 border-red-500" : "border-white/20"
@@ -754,7 +754,7 @@ export default function ConfigPage() {
                 <span className="font-display font-semibold text-white/70 flex-1 text-left text-sm">
                   Integrar equipo al torneo activo
                 </span>
-                {suppOpen ? <ChevronUp className="w-4 h-4 text-white/30" /> : <ChevronDown className="w-4 h-4 text-white/30" />}
+                {suppOpen ? <ChevronUp className="w-4 h-4 text-white/55" /> : <ChevronDown className="w-4 h-4 text-white/55" />}
               </button>
 
               {suppOpen && (
@@ -762,7 +762,7 @@ export default function ConfigPage() {
 
                   {/* Instrucciones */}
                   <div className="bg-white/3 border border-white/8 rounded-xl p-3 space-y-2">
-                    <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">¿Cómo funciona?</p>
+                    <p className="text-[10px] font-bold text-white/65 uppercase tracking-widest mb-2">¿Cómo funciona?</p>
                     {[
                       { n: "1", text: "Sube el contador de equipos arriba, nombra y guarda al equipo nuevo." },
                       { n: "2", text: "Selecciona el equipo nuevo en la lista de abajo." },
@@ -771,14 +771,14 @@ export default function ConfigPage() {
                     ].map(({ n, text }) => (
                       <div key={n} className="flex items-start gap-2">
                         <span className="w-4 h-4 rounded-full bg-brand-orange/20 text-brand-orange text-[9px] font-black flex items-center justify-center flex-shrink-0 mt-0.5">{n}</span>
-                        <p className="text-[10px] text-white/35 leading-relaxed">{text}</p>
+                        <p className="text-[10px] text-white/60 leading-relaxed">{text}</p>
                       </div>
                     ))}
                   </div>
 
                   {/* Desde qué jornada se integra */}
                   <div>
-                    <label className="text-[10px] text-white/40 uppercase tracking-widest font-bold block mb-2">
+                    <label className="text-[10px] text-white/65 uppercase tracking-widest font-bold block mb-2">
                       Se integra a partir de la jornada
                     </label>
                     <div className="flex items-center gap-3">
@@ -788,14 +788,14 @@ export default function ConfigPage() {
                       <button onClick={() => setSuppFromJornada(suppFromJornada + 1)}
                         className="w-9 h-9 rounded-full bg-white/8 hover:bg-white/15 border border-white/10 text-white font-bold flex items-center justify-center text-lg flex-shrink-0">+</button>
                     </div>
-                    <p className="text-[10px] text-white/25 text-center mt-1">
+                    <p className="text-[10px] text-white/50 text-center mt-1">
                       Se generarán pendientes de {suppFromJornada - 1} jornada{suppFromJornada - 1 !== 1 ? "s" : ""} perdida{suppFromJornada - 1 !== 1 ? "s" : ""}
                     </p>
                   </div>
 
                   {/* Selector equipos nuevos */}
                   <div>
-                    <label className="text-[10px] text-white/40 uppercase tracking-widest font-bold block mb-2">
+                    <label className="text-[10px] text-white/65 uppercase tracking-widest font-bold block mb-2">
                       Equipo(s) que se integran
                     </label>
                     <div className="grid grid-cols-2 gap-1.5">
@@ -807,7 +807,7 @@ export default function ConfigPage() {
                             className={`h-9 rounded-xl text-[11px] font-bold px-2 text-left truncate transition-all border ${
                               selected
                                 ? "bg-brand-orange/15 border-brand-orange/50 text-white"
-                                : "bg-white/4 border-white/10 text-white/40 hover:border-white/25"
+                                : "bg-white/4 border-white/10 text-white/65 hover:border-white/25"
                             }`}>
                             {t.name}
                           </button>
@@ -855,18 +855,18 @@ export default function ConfigPage() {
               </span>
             </div>
             {showResumen
-              ? <ChevronUp className="w-4 h-4 text-white/40" />
-              : <ChevronDown className="w-4 h-4 text-white/40" />}
+              ? <ChevronUp className="w-4 h-4 text-white/65" />
+              : <ChevronDown className="w-4 h-4 text-white/65" />}
           </button>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
             {resumen.resumen.map((j) => (
               <div key={j.jornada} className="bg-black/25 rounded-xl p-3 text-center border border-white/8">
-                <div className="text-[10px] text-white/30 uppercase font-bold">Jornada {j.jornada}</div>
+                <div className="text-[10px] text-white/55 uppercase font-bold">Jornada {j.jornada}</div>
                 <div className="text-xs text-brand-orange font-semibold mt-1">{j.fecha}</div>
                 {j.fechaFin && j.fechaFin !== j.fecha && (
                   <div className="text-[9px] text-brand-orange/60 mt-0.5">— {j.fechaFin}</div>
                 )}
-                <div className="text-[10px] text-white/25 mt-0.5">{j.partidos} partidos</div>
+                <div className="text-[10px] text-white/50 mt-0.5">{j.partidos} partidos</div>
               </div>
             ))}
           </div>
@@ -888,7 +888,7 @@ export default function ConfigPage() {
             <div key={scope} className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-[13px] font-semibold text-white/70">{label}</p>
-                <p className="text-[11px] text-white/25">{desc}</p>
+                <p className="text-[11px] text-white/50">{desc}</p>
               </div>
               <button
                 onClick={() => { setResetScope(scope); setResetConfirm(""); }}
@@ -921,13 +921,13 @@ export default function ConfigPage() {
             const opt = RESET_OPTIONS.find((o) => o.scope === resetScope)!;
             return (
               <>
-                <p className="text-center text-sm text-white/40 -mt-2 mb-1">
+                <p className="text-center text-sm text-white/65 -mt-2 mb-1">
                   {opt.label}
                 </p>
-                <p className="text-center text-xs text-white/25 mb-5">
+                <p className="text-center text-xs text-white/50 mb-5">
                   {opt.desc}. <strong className="text-red-400">Esta acción no se puede deshacer.</strong>
                 </p>
-                <p className="text-[11px] text-white/40 mb-2 text-center">
+                <p className="text-[11px] text-white/65 mb-2 text-center">
                   Escribe <span className="font-bold text-red-400">CONFIRMAR</span> para continuar
                 </p>
                 <Input
@@ -970,7 +970,7 @@ export default function ConfigPage() {
             </DialogTitle>
           </DialogHeader>
 
-          <p className="text-center text-sm text-white/35 -mt-2 mb-4">
+          <p className="text-center text-sm text-white/60 -mt-2 mb-4">
             {teams[editSlot ?? 0]
               ? "Cambia el nombre del equipo"
               : "Escribe el nombre del equipo (del sorteo)"}
