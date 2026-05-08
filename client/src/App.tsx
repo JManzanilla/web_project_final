@@ -243,7 +243,7 @@ function App() {
       <TooltipProvider>
         <AuthProvider>
           <AppBackground />
-          <div className="min-h-screen text-white pb-32 overflow-x-hidden">
+          <div className="min-h-screen text-white pb-32 [overflow-x:clip]">
             <Router />
             <Navigation />
           </div>
