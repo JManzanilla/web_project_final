@@ -78,7 +78,7 @@ function MatchRow({
   const isLive     = m.status === "live";
 
   return (
-    <div className={`px-4 py-3 flex gap-3 transition-colors ${m.status === "suspended" ? "opacity-50" : ""}`}>
+    <div className={`px-3 py-2.5 flex gap-2 transition-colors ${m.status === "suspended" ? "opacity-50" : ""}`}>
       {/* Contenido principal */}
       <div className="flex-1 min-w-0">
         {/* Fila 1: equipos + marcador/vs */}
@@ -226,7 +226,7 @@ export default function SchedulePage() {
   }
 
   return (
-    <div className="container max-w-3xl mx-auto px-4 py-8">
+    <div className="container max-w-5xl mx-auto px-4 py-8">
       <SectionTitle whiteText="Calendario" orangeText="Partidos" />
 
       {/* Resumen rápido */}
@@ -244,7 +244,7 @@ export default function SchedulePage() {
       </div>
 
       {/* Lista de jornadas */}
-      <div className="space-y-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
 
         {/* ── Partidos pendientes (equipos integrados tarde) ── */}
         {pendingMatches.length > 0 && (
