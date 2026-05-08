@@ -673,14 +673,14 @@ export default function ConfigPage() {
                 >
                   {/* Número */}
                   <div className={`w-6 h-6 rounded-md flex items-center justify-center font-display font-black text-[11px] flex-shrink-0 ${
-                    isNamed ? "bg-brand-orange text-white" : "bg-white/8 text-white/30"
+                    isNamed ? "bg-brand-orange text-white" : "bg-white/8 text-white/70"
                   }`}>
                     {i + 1}
                   </div>
 
                   {/* Nombre */}
                   <span className={`text-[12px] font-semibold flex-1 truncate ${
-                    isNamed ? "text-white" : "text-white/25"
+                    isNamed ? "text-white" : "text-white/70"
                   }`}>
                     {team ? team.name : `Equipo ${i + 1}`}
                   </span>
