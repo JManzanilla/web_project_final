@@ -266,7 +266,7 @@ export default function ConfigPage() {
     <div className="container max-w-5xl mx-auto px-4 py-8">
       <SectionTitle whiteText="Configurar" orangeText="Torneo" />
 
-      <div className="flex flex-col md:flex-row md:items-start gap-8">
+      <div className="flex flex-col md:flex-row md:items-start gap-8 md:gap-6">
 
         {/* ================================================================ */}
         {/* IZQUIERDA — Parámetros                                            */}
@@ -643,7 +643,7 @@ export default function ConfigPage() {
         {/* ================================================================ */}
         {/* DERECHA — Nombres de equipos (sorteo)                             */}
         {/* ================================================================ */}
-        <div className="glass-panel p-5 sm:p-6 md:flex-1">
+        <div className="glass-panel p-5 sm:p-6 md:flex-1 md:sticky md:top-6 self-start">
           <div className="flex items-center justify-between mb-1">
             <h3 className="text-base font-display font-semibold">Equipos del torneo</h3>
             <span className="text-[11px] text-brand-orange font-bold">
