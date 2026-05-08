@@ -134,13 +134,14 @@ export default function StandingsPage() {
       </div>
 
       {/* ── Canasteo individual ── */}
-      <div className="mb-2 flex items-center gap-3">
-        <h2 className="text-2xl font-extrabold tracking-tighter uppercase font-display leading-none">
-          <span className="text-white">Canasteo</span>{" "}
-          <span className="text-brand-orange">Individual</span>
-        </h2>
+      <SectionTitle whiteText="Canasteo" orangeText="Individual" />
+
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-3 h-3 rounded-full bg-brand-orange shadow-[0_0_10px_rgba(255,69,0,0.8)] flex-shrink-0" />
+        <span className="text-white/70 text-xs font-semibold uppercase tracking-wider">
+          Puntos acumulados en el torneo
+        </span>
       </div>
-      <p className="text-[11px] text-white/70 mb-4 font-semibold uppercase tracking-wider">Puntos acumulados en el torneo</p>
 
       <div className="glass-panel overflow-hidden">
         {loadingScorers ? (
