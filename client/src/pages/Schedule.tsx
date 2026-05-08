@@ -78,58 +78,61 @@ function MatchRow({
   const isLive     = m.status === "live";
 
   return (
-    <div className={`px-3 py-2.5 flex gap-2 transition-colors ${m.status === "suspended" ? "opacity-50" : ""}`}>
-      {/* Contenido principal */}
-      <div className="flex-1 min-w-0">
-        {/* Fila 1: equipos + marcador/vs */}
-        <div className="flex items-center gap-2 mb-1">
-          <span className={`text-sm font-bold truncate flex-1 min-w-0 ${isFinished ? "text-white/35" : "text-white"}`}>
-            {m.homeTeam.name}
-          </span>
+    <div className={`px-3 py-3 flex items-center gap-2 transition-colors ${m.status === "suspended" ? "opacity-50" : ""}`}>
+      {/* Layout 3 columnas: local | centro | visitante */}
+      <div className="flex-1 min-w-0 grid grid-cols-[1fr_auto_1fr] items-center gap-1">
+        {/* Equipo local */}
+        <span className={`text-sm font-bold truncate ${isFinished ? "text-white/40" : "text-white"}`}>
+          {m.homeTeam.name}
+        </span>
+
+        {/* Centro: marcador/vs + badge + fecha */}
+        <div className="flex flex-col items-center gap-1 px-2">
           {isFinished && m.scoreHome !== null ? (
-            <span className="text-sm font-black text-brand-orange/80 flex-shrink-0 px-1 tabular-nums whitespace-nowrap">
+            <span className="text-sm font-black text-brand-orange/80 tabular-nums">
               {m.scoreHome} – {m.scoreAway}
             </span>
           ) : isLive ? (
-            <span className="text-sm font-black text-brand-orange flex-shrink-0 px-1 tabular-nums whitespace-nowrap">
+            <span className="text-sm font-black text-brand-orange tabular-nums">
               {m.scoreHome ?? 0} – {m.scoreAway ?? 0}
             </span>
           ) : (
-            <span className="text-[11px] text-white/20 flex-shrink-0 px-1 font-bold">vs</span>
+            <span className="text-[11px] text-white/40 font-bold">vs</span>
           )}
-          <span className={`text-sm font-bold truncate flex-1 min-w-0 text-right ${isFinished ? "text-white/35" : "text-white"}`}>
-            {m.awayTeam.name}
-          </span>
+          <div className="flex flex-col items-center gap-0.5">
+            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${STATUS_STYLE[m.status]}`}>
+              {STATUS_LABEL[m.status]}
+            </span>
+            <span className="text-[9px] text-white/50 font-semibold whitespace-nowrap">
+              {formatDateTime(m.scheduledAt)}
+            </span>
+          </div>
         </div>
-        {/* Fila 2: badge + fecha/hora */}
-        <div className="flex items-center gap-2">
-          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border flex-shrink-0 ${STATUS_STYLE[m.status]}`}>
-            {STATUS_LABEL[m.status]}
-          </span>
-          <span className="text-[10px] text-white/25 font-semibold truncate">
-            {formatDateTime(m.scheduledAt)}
-          </span>
-        </div>
+
+        {/* Equipo visitante */}
+        <span className={`text-sm font-bold truncate text-right ${isFinished ? "text-white/40" : "text-white"}`}>
+          {m.awayTeam.name}
+        </span>
       </div>
 
       {/* Acciones */}
       {!isFinished && !isLive && (
-        <div className="flex items-center gap-1.5 flex-shrink-0 self-center">
+        <div className="flex items-center gap-1 flex-shrink-0">
           <button onClick={() => onEdit(m)} title="Reprogramar"
-            className="w-8 h-8 rounded-full flex items-center justify-center bg-white/5 hover:bg-brand-orange/20 hover:text-brand-orange text-white/30 transition-all border border-white/8 hover:border-brand-orange/30">
-            <Pencil className="w-3.5 h-3.5" />
+            className="w-7 h-7 rounded-full flex items-center justify-center bg-white/5 hover:bg-brand-orange/20 hover:text-brand-orange text-white/30 transition-all border border-white/8 hover:border-brand-orange/30">
+            <Pencil className="w-3 h-3" />
           </button>
           {m.status === "upcoming" ? (
             <button onClick={() => onToggleSuspend(m.id, "suspended")} title="Suspender"
               disabled={isPending}
-              className="w-8 h-8 rounded-full flex items-center justify-center bg-white/5 hover:bg-amber-500/20 hover:text-amber-400 text-white/30 transition-all border border-white/8 hover:border-amber-500/30 disabled:opacity-40">
-              <PauseCircle className="w-3.5 h-3.5" />
+              className="w-7 h-7 rounded-full flex items-center justify-center bg-white/5 hover:bg-amber-500/20 hover:text-amber-400 text-white/30 transition-all border border-white/8 hover:border-amber-500/30 disabled:opacity-40">
+              <PauseCircle className="w-3 h-3" />
             </button>
           ) : (
             <button onClick={() => onToggleSuspend(m.id, "upcoming")} title="Restaurar"
               disabled={isPending}
-              className="w-8 h-8 rounded-full flex items-center justify-center bg-white/5 hover:bg-green-500/20 hover:text-green-400 text-white/30 transition-all border border-white/8 hover:border-green-500/30 disabled:opacity-40">
-              <PlayCircle className="w-3.5 h-3.5" />
+              className="w-7 h-7 rounded-full flex items-center justify-center bg-white/5 hover:bg-green-500/20 hover:text-green-400 text-white/30 transition-all border border-white/8 hover:border-green-500/30 disabled:opacity-40">
+              <PlayCircle className="w-3 h-3" />
             </button>
           )}
         </div>
