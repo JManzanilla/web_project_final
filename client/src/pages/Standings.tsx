@@ -51,7 +51,7 @@ export default function StandingsPage() {
                 <TableHeader>
                   <TableRow className="border-b border-white/10 hover:bg-transparent">
                     <TableHead className="w-16 text-center text-white/60 font-display">POS</TableHead>
-                    <TableHead className="text-white/60 font-display">EQUIPO</TableHead>
+                    <TableHead className="text-brand-orange font-display">EQUIPO</TableHead>
                     <TableHead className="text-center text-white/60 font-display">PTS</TableHead>
                     <TableHead className="text-center text-white/60 font-display">PJ</TableHead>
                     <TableHead className="text-center text-white/60 font-display">G</TableHead>
@@ -140,7 +140,7 @@ export default function StandingsPage() {
           <span className="text-brand-orange">Individual</span>
         </h2>
       </div>
-      <p className="text-[11px] text-white/30 mb-4 font-semibold uppercase tracking-wider">Puntos acumulados en el torneo</p>
+      <p className="text-[11px] text-white/70 mb-4 font-semibold uppercase tracking-wider">Puntos acumulados en el torneo</p>
 
       <div className="glass-panel overflow-hidden">
         {loadingScorers ? (
@@ -153,10 +153,10 @@ export default function StandingsPage() {
                 <TableHeader>
                   <TableRow className="border-b border-white/10 hover:bg-transparent">
                     <TableHead className="w-14 text-center text-white/60 font-display">#</TableHead>
-                    <TableHead className="text-white/60 font-display">JUGADOR</TableHead>
+                    <TableHead className="text-brand-orange font-display">JUGADOR</TableHead>
                     <TableHead className="text-white/60 font-display">EQUIPO</TableHead>
                     <TableHead className="text-center text-white/60 font-display">PJ</TableHead>
-                    <TableHead className="text-center text-brand-orange font-display">PTS</TableHead>
+                    <TableHead className="text-center text-white/60 font-display">PTS</TableHead>
                     <TableHead className="text-center text-white/60 font-display">FLT</TableHead>
                   </TableRow>
                 </TableHeader>
