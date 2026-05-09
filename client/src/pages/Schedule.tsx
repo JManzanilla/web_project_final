@@ -95,12 +95,12 @@ function MatchRow({
     <div className={`px-3 py-3 flex items-center gap-2 transition-colors ${m.status === "suspended" ? "opacity-50" : ""}`}>
       {/* Layout 3 columnas: local | centro | visitante */}
       <div className="flex-1 min-w-0 grid grid-cols-[1fr_auto_1fr] items-center gap-1">
-        {/* Equipo local: logo + nombre */}
-        <div className="flex items-center gap-2 min-w-0">
-          <TeamLogo logoUrl={m.homeTeam.logoUrl} name={m.homeTeam.name} />
-          <span className={`text-sm font-bold truncate ${isFinished ? "text-white/40" : "text-white"}`}>
+        {/* Equipo local: nombre + logo (logo hacia el centro) */}
+        <div className="flex items-center gap-2 justify-end min-w-0">
+          <span className={`text-sm font-bold truncate text-right ${isFinished ? "text-white/40" : "text-white"}`}>
             {m.homeTeam.name}
           </span>
+          <TeamLogo logoUrl={m.homeTeam.logoUrl} name={m.homeTeam.name} />
         </div>
 
         {/* Centro: marcador/vs + badge + fecha */}
@@ -126,12 +126,12 @@ function MatchRow({
           </div>
         </div>
 
-        {/* Equipo visitante: nombre + logo */}
-        <div className="flex items-center gap-2 justify-end min-w-0">
-          <span className={`text-sm font-bold truncate text-right ${isFinished ? "text-white/40" : "text-white"}`}>
+        {/* Equipo visitante: logo + nombre (logo hacia el centro) */}
+        <div className="flex items-center gap-2 min-w-0">
+          <TeamLogo logoUrl={m.awayTeam.logoUrl} name={m.awayTeam.name} />
+          <span className={`text-sm font-bold truncate ${isFinished ? "text-white/40" : "text-white"}`}>
             {m.awayTeam.name}
           </span>
-          <TeamLogo logoUrl={m.awayTeam.logoUrl} name={m.awayTeam.name} />
         </div>
       </div>
 
