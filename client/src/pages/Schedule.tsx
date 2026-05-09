@@ -25,8 +25,22 @@ interface ScheduleMatch {
   status: MatchStatus;
   scoreHome: number | null;
   scoreAway: number | null;
-  homeTeam: { id: string; name: string };
-  awayTeam: { id: string; name: string };
+  homeTeam: { id: string; name: string; logoUrl: string | null };
+  awayTeam: { id: string; name: string; logoUrl: string | null };
+}
+
+function TeamLogo({ logoUrl, name, flip = false }: { logoUrl: string | null; name: string; flip?: boolean }) {
+  if (logoUrl) {
+    return (
+      <img src={logoUrl} alt={name}
+        className="w-8 h-8 rounded-full object-cover flex-shrink-0 border border-white/10" />
+    );
+  }
+  return (
+    <div className="w-8 h-8 rounded-full bg-white/8 border border-white/10 flex items-center justify-center flex-shrink-0 text-base">
+      🏀
+    </div>
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -81,10 +95,13 @@ function MatchRow({
     <div className={`px-3 py-3 flex items-center gap-2 transition-colors ${m.status === "suspended" ? "opacity-50" : ""}`}>
       {/* Layout 3 columnas: local | centro | visitante */}
       <div className="flex-1 min-w-0 grid grid-cols-[1fr_auto_1fr] items-center gap-1">
-        {/* Equipo local */}
-        <span className={`text-sm font-bold truncate ${isFinished ? "text-white/40" : "text-white"}`}>
-          {m.homeTeam.name}
-        </span>
+        {/* Equipo local: logo + nombre */}
+        <div className="flex items-center gap-2 min-w-0">
+          <TeamLogo logoUrl={m.homeTeam.logoUrl} name={m.homeTeam.name} />
+          <span className={`text-sm font-bold truncate ${isFinished ? "text-white/40" : "text-white"}`}>
+            {m.homeTeam.name}
+          </span>
+        </div>
 
         {/* Centro: marcador/vs + badge + fecha */}
         <div className="flex flex-col items-center gap-1 px-2">
@@ -109,10 +126,13 @@ function MatchRow({
           </div>
         </div>
 
-        {/* Equipo visitante */}
-        <span className={`text-sm font-bold truncate text-right ${isFinished ? "text-white/40" : "text-white"}`}>
-          {m.awayTeam.name}
-        </span>
+        {/* Equipo visitante: nombre + logo */}
+        <div className="flex items-center gap-2 justify-end min-w-0">
+          <span className={`text-sm font-bold truncate text-right ${isFinished ? "text-white/40" : "text-white"}`}>
+            {m.awayTeam.name}
+          </span>
+          <TeamLogo logoUrl={m.awayTeam.logoUrl} name={m.awayTeam.name} />
+        </div>
       </div>
 
       {/* Acciones */}
