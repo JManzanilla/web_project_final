@@ -23,26 +23,37 @@ const schema = z.object({
 });
 
 // ---------------------------------------------------------------------------
-// Round Robin — método circular
+// Round Robin — tablas de Berger (equipo 1 fijo, rotación izquierda)
+// Produce el mismo orden que la tabla de referencia usada en sorteos presenciales:
+//   4 equipos → R1: 1vs2, 3vs4 | R2: 1vs3, 4vs2 | R3: 1vs4, 2vs3
+//   6 equipos → R1: 1vs2, 3vs6, 4vs5 | etc.
 // ---------------------------------------------------------------------------
 function buildRoundRobin(n: number): Array<Array<[number, number]>> {
-  const list = Array.from({ length: n }, (_, i) => i);
-  if (n % 2 === 1) list.push(-1);
-  const m   = list.length;
-  const rot = [...list];
+  const teams = Array.from({ length: n }, (_, i) => i);
+  if (n % 2 === 1) teams.push(-1); // -1 = descanso
+  const size = teams.length;
+
+  const fixed    = teams[0];
+  const rotating = teams.slice(1);
   const rounds: Array<Array<[number, number]>> = [];
-  for (let r = 0; r < m - 1; r++) {
+
+  for (let r = 0; r < size - 1; r++) {
     const round: Array<[number, number]> = [];
-    for (let i = 0; i < m / 2; i++) {
-      const home = rot[i];
-      const away = rot[m - 1 - i];
+
+    if (fixed !== -1 && rotating[0] !== -1) {
+      round.push([fixed, rotating[0]]);
+    }
+
+    for (let i = 1; i <= (size - 2) / 2; i++) {
+      const home = rotating[i];
+      const away = rotating[size - 1 - i];
       if (home !== -1 && away !== -1) round.push([home, away]);
     }
+
     rounds.push(round);
-    const last = rot[m - 1];
-    for (let i = m - 1; i > 1; i--) rot[i] = rot[i - 1];
-    rot[1] = last;
+    rotating.push(rotating.shift()!); // rotación izquierda
   }
+
   return rounds;
 }
 
