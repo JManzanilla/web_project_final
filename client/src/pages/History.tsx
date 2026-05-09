@@ -46,8 +46,8 @@ function TeamLogo({ team, size = "md" }: { team: TeamInfo; size?: "sm" | "md" })
       className={`${px} rounded-lg object-cover flex-shrink-0 bg-white/5`}
     />
   ) : (
-    <div className={`${px} rounded-lg bg-white/8 border border-white/10 flex items-center justify-center font-bold text-white/60 flex-shrink-0`}>
-      {team.name.charAt(0)}
+    <div className={`${px} rounded-lg bg-white/8 border border-white/10 flex items-center justify-center flex-shrink-0 text-base`}>
+      🏀
     </div>
   );
 }
@@ -182,31 +182,31 @@ function JornadaBlock({ jornada, isOpen, onToggle }: {
   jornada: JornadaGroup; isOpen: boolean; onToggle: () => void;
 }) {
   return (
-    <div className="rounded-[18px] overflow-hidden border border-white/8 bg-white/[0.03]">
-      <div
+    <div className="glass-panel overflow-hidden">
+      <button
         onClick={onToggle}
-        className={`flex items-center justify-between px-3 sm:px-5 py-4 cursor-pointer transition-all duration-200 select-none ${isOpen ? "bg-brand-orange/7 border-b border-brand-orange/15" : "hover:bg-white/4"}`}
+        className="w-full flex items-center justify-between px-5 py-4 hover:bg-white/3 transition-colors"
       >
-        <div className="flex items-center gap-2 flex-wrap min-w-0">
-          <span className="text-[14px] font-black text-white whitespace-nowrap">
-            Jornada <span className="text-brand-orange">{jornada.numero}</span>
+        <div className="flex items-center gap-3">
+          <span className="font-display font-black text-brand-orange text-lg">
+            Jornada {jornada.numero}
           </span>
           {jornada.reciente && (
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-brand-orange/15 text-brand-orange/80 border border-brand-orange/25 whitespace-nowrap">
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-brand-orange/15 text-brand-orange border border-brand-orange/25">
               Reciente
             </span>
           )}
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="text-[11px] text-white/20 font-semibold">
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/8 text-white/50 border border-white/10">
             {jornada.matches.length} partido{jornada.matches.length !== 1 ? "s" : ""}
           </span>
-          <ChevronRight className={`w-4 h-4 transition-all duration-250 ${isOpen ? "rotate-90 text-brand-orange" : "text-white/20"}`} />
         </div>
-      </div>
+        <div className="text-white/50">
+          {isOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+        </div>
+      </button>
 
       {isOpen && (
-        <div className="p-3 flex flex-col gap-2 animate-in fade-in duration-200">
+        <div className="border-t border-white/5 p-3 grid grid-cols-1 sm:grid-cols-2 gap-2 animate-in fade-in duration-200">
           {jornada.matches.map((match) => (
             <PartidoCard key={match.id} match={match} />
           ))}
@@ -239,11 +239,14 @@ export default function HistoryPage() {
   }, [matches]);
 
   return (
-    <div className="container max-w-2xl mx-auto px-4 py-8">
+    <div className="container max-w-5xl mx-auto px-4 py-8">
       <SectionTitle whiteText="Historial" orangeText="Jornadas" />
-      <p className="text-sm text-white/60 -mt-4 mb-8">
-        Todos los partidos jugados del torneo — toca una jornada para ver los resultados
-      </p>
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-3 h-3 rounded-full bg-brand-orange shadow-[0_0_10px_rgba(255,69,0,0.8)] flex-shrink-0" />
+        <span className="text-white/70 text-xs font-semibold uppercase tracking-wider">
+          Todos los partidos finalizados — toca una jornada para ver resultados
+        </span>
+      </div>
 
       {isLoading ? (
         <div className="text-center text-white/40 py-12">Cargando historial...</div>
@@ -252,7 +255,7 @@ export default function HistoryPage() {
           No hay partidos finalizados aún
         </div>
       ) : (
-        <div className="flex flex-col gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
           {jornadas.map((jornada, index) => (
             <JornadaBlock
               key={jornada.numero}

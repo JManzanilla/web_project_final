@@ -4,7 +4,7 @@ import { SectionTitle } from "@/components/ui/SectionTitle";
 import { apiGet, apiPut } from "@/lib/apiClient";
 import { sileo } from "sileo";
 import {
-  Radio, Link2, Check, X, PlayCircle, Tv, ExternalLink,
+  Radio, Link2, Check, X, PlayCircle, Tv, ExternalLink, ChevronUp, ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,11 +15,22 @@ import { Input } from "@/components/ui/input";
 interface MatchStream {
   id: string;
   jornada: number;
-  homeTeam: { name: string };
-  awayTeam: { name: string };
+  homeTeam: { name: string; logoUrl: string | null };
+  awayTeam: { name: string; logoUrl: string | null };
   scheduledAt: string;
   status: "upcoming" | "live" | "finished" | "suspended";
   streamUrl: string | null;
+}
+
+function TeamLogo({ logoUrl, name }: { logoUrl: string | null; name: string }) {
+  if (logoUrl) {
+    return <img src={logoUrl} alt={name} className="w-7 h-7 rounded-full object-cover flex-shrink-0 border border-white/10" />;
+  }
+  return (
+    <div className="w-7 h-7 rounded-full bg-white/8 border border-white/10 flex items-center justify-center flex-shrink-0 text-sm">
+      🏀
+    </div>
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -97,17 +108,23 @@ function MatchStreamCard({
 
         {/* Info del partido */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1.5">
+          <div className="flex items-center gap-2 mb-2">
             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${statusColor}`}>
               {statusLabel}
             </span>
-            <span className="text-[10px] text-white/25 font-semibold">J{match.jornada} · {date} · {time}</span>
+            <span className="text-[10px] text-white/50 font-semibold">{date} · {time}</span>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-white text-sm">{match.homeTeam.name}</span>
-            <span className="text-white/25 text-xs font-bold">vs</span>
-            <span className="font-bold text-white text-sm">{match.awayTeam.name}</span>
+          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-1">
+            <div className="flex items-center gap-2 justify-end min-w-0">
+              <span className="font-bold text-white text-sm truncate text-right">{match.homeTeam.name}</span>
+              <TeamLogo logoUrl={match.homeTeam.logoUrl} name={match.homeTeam.name} />
+            </div>
+            <span className="text-[11px] text-white/40 font-bold px-2">vs</span>
+            <div className="flex items-center gap-2 min-w-0">
+              <TeamLogo logoUrl={match.awayTeam.logoUrl} name={match.awayTeam.name} />
+              <span className="font-bold text-white text-sm truncate">{match.awayTeam.name}</span>
+            </div>
           </div>
         </div>
 
@@ -226,6 +243,9 @@ function MatchStreamCard({
 // ---------------------------------------------------------------------------
 export default function StreamPage() {
   const qc = useQueryClient();
+  const [collapsed, setCollapsed] = useState<Set<number>>(new Set());
+  const toggleCollapse = (n: number) =>
+    setCollapsed((prev) => { const s = new Set(prev); s.has(n) ? s.delete(n) : s.add(n); return s; });
 
   const { data: matches = [], isLoading } = useQuery<MatchStream[]>({
     queryKey: ["/api/matches"],
@@ -270,14 +290,13 @@ export default function StreamPage() {
   ) ?? sortedJornadas[sortedJornadas.length - 1];
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-2xl">
-
-      {/* Header */}
-      <div className="flex items-center gap-4 mb-8">
-        <div className="w-11 h-11 rounded-2xl bg-brand-orange/15 border border-brand-orange/30 flex items-center justify-center">
-          <Radio className="w-5 h-5 text-brand-orange" />
-        </div>
-        <SectionTitle whiteText="Gestión de" orangeText="Transmisiones" className="mb-0 leading-tight" />
+    <div className="container mx-auto px-4 py-8 max-w-5xl">
+      <SectionTitle whiteText="Gestión de" orangeText="Transmisiones" />
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-3 h-3 rounded-full bg-brand-orange shadow-[0_0_10px_rgba(255,69,0,0.8)] flex-shrink-0" />
+        <span className="text-white/70 text-xs font-semibold uppercase tracking-wider">
+          Asigna enlaces y controla el estado en vivo de cada partido
+        </span>
       </div>
 
       {isLoading ? (
@@ -285,39 +304,49 @@ export default function StreamPage() {
       ) : sortedJornadas.length === 0 ? (
         <div className="text-center text-white/30 py-12">No hay partidos registrados.</div>
       ) : (
-        <div className="space-y-8">
-          {sortedJornadas.map((jornada) => (
-            <div key={jornada}>
-              {/* Encabezado de jornada */}
-              <div className="flex items-center gap-3 mb-3">
-                <span className={`text-sm font-black uppercase tracking-wider ${jornada === activeJornada ? "text-brand-orange" : "text-white/30"}`}>
-                  Jornada {jornada}
-                </span>
-                {jornada === activeJornada && (
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-brand-orange/15 border border-brand-orange/30 text-brand-orange">
-                    Activa
-                  </span>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
+          {sortedJornadas.map((jornada) => {
+            const isOpen = !collapsed.has(jornada);
+            const withLink = byJornada[jornada].filter((m) => m.streamUrl).length;
+            const hasLive = byJornada[jornada].some((m) => m.status === "live");
+            return (
+              <div key={jornada} className="glass-panel overflow-hidden">
+                <button onClick={() => toggleCollapse(jornada)}
+                  className="w-full flex items-center justify-between px-5 py-4 hover:bg-white/3 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <span className={`font-display font-black text-lg ${jornada === activeJornada ? "text-brand-orange" : "text-brand-orange"}`}>
+                      Jornada {jornada}
+                    </span>
+                    {jornada === activeJornada && (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-brand-orange/15 border border-brand-orange/30 text-brand-orange">
+                        Activa
+                      </span>
+                    )}
+                    {hasLive && (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-500/15 border border-green-500/25 text-green-400">
+                        En vivo
+                      </span>
+                    )}
+                    <span className="text-[10px] text-white/50 font-semibold">{withLink}/{byJornada[jornada].length} con enlace</span>
+                  </div>
+                  <div className="text-white/50">
+                    {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </div>
+                </button>
+                {isOpen && (
+                  <div className="border-t border-white/5 p-3 space-y-2">
+                    {byJornada[jornada]
+                      .sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime())
+                      .map((match) => (
+                        <MatchStreamCard key={match.id} match={match}
+                          onSave={(id, url) => streamMutation.mutate({ id, streamUrl: url })}
+                          onStatusChange={(id, status) => statusMutation.mutate({ id, status })} />
+                      ))}
+                  </div>
                 )}
-                <div className="flex-1 h-px bg-white/8" />
-                <span className="text-[10px] text-white/20">
-                  {byJornada[jornada].filter((m) => m.streamUrl).length}/{byJornada[jornada].length} con enlace
-                </span>
               </div>
-
-              <div className="space-y-3">
-                {byJornada[jornada]
-                  .sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime())
-                  .map((match) => (
-                    <MatchStreamCard
-                      key={match.id}
-                      match={match}
-                      onSave={(id, url) => streamMutation.mutate({ id, streamUrl: url })}
-                      onStatusChange={(id, status) => statusMutation.mutate({ id, status })}
-                    />
-                  ))}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
