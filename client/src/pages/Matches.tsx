@@ -22,16 +22,6 @@ interface MatchItem {
   actaUrl: string | null;
 }
 
-function TeamLogo({ logoUrl, name }: { logoUrl: string | null; name: string }) {
-  if (logoUrl) {
-    return <img src={logoUrl} alt={name} className="w-8 h-8 rounded-full object-cover flex-shrink-0 border border-white/10" />;
-  }
-  return (
-    <div className="w-8 h-8 rounded-full bg-white/8 border border-white/10 flex items-center justify-center flex-shrink-0 text-base">
-      🏀
-    </div>
-  );
-}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -79,12 +69,9 @@ function MatchCard({ match }: { match: MatchItem }) {
     >
       {/* Grid 3 col: local | centro | visitante */}
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-1 mb-0">
-        <div className="flex items-center gap-4 justify-end min-w-0">
-          <span className={`text-sm font-bold truncate text-right ${isFinished ? "text-white/40" : "text-white"}`}>
-            {match.homeTeam.name}
-          </span>
-          <TeamLogo logoUrl={match.homeTeam.logoUrl} name={match.homeTeam.name} />
-        </div>
+        <span className={`text-sm font-bold truncate text-right ${isFinished ? "text-white/40" : "text-white"}`}>
+          {match.homeTeam.name}
+        </span>
 
         <div className="flex flex-col items-center gap-1 px-2">
           {isFinished ? (
@@ -102,12 +89,9 @@ function MatchCard({ match }: { match: MatchItem }) {
           </div>
         </div>
 
-        <div className="flex items-center gap-4 min-w-0">
-          <TeamLogo logoUrl={match.awayTeam.logoUrl} name={match.awayTeam.name} />
-          <span className={`text-sm font-bold truncate ${isFinished ? "text-white/40" : "text-white"}`}>
-            {match.awayTeam.name}
-          </span>
-        </div>
+        <span className={`text-sm font-bold truncate ${isFinished ? "text-white/40" : "text-white"}`}>
+          {match.awayTeam.name}
+        </span>
       </div>
 
       {/* Acciones: acta + icono */}
@@ -169,7 +153,7 @@ function JornadaGroup({ jornada, matches }: { jornada: number; matches: MatchIte
       </button>
 
       {open && (
-        <div className="border-t border-white/5 p-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div className="border-t border-white/5 p-3 grid grid-cols-1 gap-2">
           {matches
             .sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime())
             .map((m) => <MatchCard key={m.id} match={m} />)}
