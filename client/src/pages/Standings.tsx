@@ -56,6 +56,8 @@ export default function StandingsPage() {
                     <TableHead className="text-center text-white/60 font-display">PJ</TableHead>
                     <TableHead className="text-center text-white/60 font-display">G</TableHead>
                     <TableHead className="text-center text-white/60 font-display">P</TableHead>
+                    <TableHead className="text-center text-green-400/60 font-display">CF</TableHead>
+                    <TableHead className="text-center text-red-400/60 font-display">CE</TableHead>
                     <TableHead className="text-center text-white/60 font-display">DIF</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -78,6 +80,8 @@ export default function StandingsPage() {
                         <TableCell className="text-center text-white/60 font-semibold">{row.pj}</TableCell>
                         <TableCell className="text-center text-green-400 font-semibold">{row.pg}</TableCell>
                         <TableCell className="text-center text-red-400 font-semibold">{row.pp}</TableCell>
+                        <TableCell className="text-center text-green-400/80 font-semibold">{row.pf}</TableCell>
+                        <TableCell className="text-center text-red-400/80 font-semibold">{row.pc}</TableCell>
                         <TableCell className={`text-center font-semibold ${diff >= 0 ? "text-green-400/70" : "text-red-400/70"}`}>
                           {diff >= 0 ? `+${diff}` : diff}
                         </TableCell>
@@ -86,7 +90,7 @@ export default function StandingsPage() {
                   })}
                   {standings.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center text-white/30 py-10">No hay partidos finalizados aún</TableCell>
+                      <TableCell colSpan={9} className="text-center text-white/30 py-10">No hay partidos finalizados aún</TableCell>
                     </TableRow>
                   )}
                 </TableBody>
