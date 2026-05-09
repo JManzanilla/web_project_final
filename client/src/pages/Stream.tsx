@@ -292,11 +292,19 @@ export default function StreamPage() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl">
       <SectionTitle whiteText="Gestión de" orangeText="Transmisiones" />
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-4">
         <div className="w-3 h-3 rounded-full bg-brand-orange shadow-[0_0_10px_rgba(255,69,0,0.8)] flex-shrink-0" />
         <span className="text-white/70 text-xs font-semibold uppercase tracking-wider">
           Asigna enlaces y controla el estado en vivo de cada partido
         </span>
+      </div>
+
+      {/* Plataformas soportadas — referencia rápida antes de agregar links */}
+      <div className="glass-panel px-4 py-2.5 rounded-2xl flex items-center gap-4 flex-wrap mb-6">
+        <span className="text-[10px] text-white/50 font-bold uppercase tracking-widest">Soportado</span>
+        <span className="flex items-center gap-1.5 text-[11px] text-red-400/80"><PlayCircle className="w-3.5 h-3.5" /> YouTube</span>
+        <span className="flex items-center gap-1.5 text-[11px] text-purple-400/80"><Tv className="w-3.5 h-3.5" /> Twitch</span>
+        <span className="flex items-center gap-1.5 text-[11px] text-sky-400/80"><Link2 className="w-3.5 h-3.5" /> Facebook / Otro</span>
       </div>
 
       {isLoading ? (
@@ -350,13 +358,6 @@ export default function StreamPage() {
         </div>
       )}
 
-      {/* Leyenda de plataformas */}
-      <div className="mt-10 glass-panel px-4 py-3 rounded-2xl flex items-center gap-4 flex-wrap">
-        <span className="text-[10px] text-white/25 font-bold uppercase tracking-widest">Soportado</span>
-        <span className="flex items-center gap-1.5 text-[11px] text-red-400/70"><PlayCircle className="w-3.5 h-3.5" /> YouTube</span>
-        <span className="flex items-center gap-1.5 text-[11px] text-purple-400/70"><Tv className="w-3.5 h-3.5" /> Twitch</span>
-        <span className="flex items-center gap-1.5 text-[11px] text-sky-400/70"><Link2 className="w-3.5 h-3.5" /> Facebook / Otro</span>
-      </div>
     </div>
   );
 }
