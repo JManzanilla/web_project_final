@@ -100,24 +100,28 @@ function StreamSection({
         {/* Barra superior: marcador (live) o próximo partido (idle) */}
         <div className="px-5 py-3 flex items-center gap-3 border-b border-white/8 bg-black/20">
           {isLive ? (
-            <>
-              <span className="font-bold text-white text-sm flex-1 text-right">{liveMatch!.homeTeam.name}</span>
-              <span className="text-xl font-black text-brand-orange px-2">
-                {liveMatch!.scoreHome ?? 0} — {liveMatch!.scoreAway ?? 0}
+            <div className="flex flex-col items-center gap-1 w-full py-0.5">
+              <span className="flex items-center gap-1.5 text-[10px] font-bold text-brand-orange uppercase tracking-widest">
+                <span className="w-1.5 h-1.5 rounded-full bg-brand-orange animate-pulse" /> En curso
               </span>
-              <span className="font-bold text-white text-sm flex-1">{liveMatch!.awayTeam.name}</span>
-              <span className="flex items-center gap-1.5 text-[10px] font-bold text-brand-orange flex-shrink-0">
-                <span className="w-1.5 h-1.5 rounded-full bg-brand-orange animate-pulse" /> EN CURSO
-              </span>
-            </>
+              <div className="flex items-center gap-3">
+                <span className="font-bold text-white text-sm">{liveMatch!.homeTeam.name}</span>
+                <span className="text-xl font-black text-brand-orange tabular-nums">
+                  {liveMatch!.scoreHome ?? 0} — {liveMatch!.scoreAway ?? 0}
+                </span>
+                <span className="font-bold text-white text-sm">{liveMatch!.awayTeam.name}</span>
+              </div>
+            </div>
           ) : nextMatch ? (
-            <>
-              <span className="text-[10px] text-white/25 font-bold uppercase tracking-widest flex-shrink-0">Próximo</span>
-              <span className="font-bold text-white/60 text-sm flex-1 text-right">{nextMatch.homeTeam.name}</span>
-              <span className="text-white/20 text-xs font-bold px-1">vs</span>
-              <span className="font-bold text-white/60 text-sm flex-1">{nextMatch.awayTeam.name}</span>
-              <span className="text-[10px] text-white/25 flex-shrink-0">{nextDate} · {nextTime}</span>
-            </>
+            <div className="flex flex-col items-center gap-1 w-full py-0.5">
+              <span className="text-[10px] text-white/30 font-bold uppercase tracking-widest">Próximo</span>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-white text-sm">{nextMatch.homeTeam.name}</span>
+                <span className="text-white/30 text-xs font-bold">vs</span>
+                <span className="font-bold text-white text-sm">{nextMatch.awayTeam.name}</span>
+              </div>
+              <span className="text-[10px] text-white/30 font-semibold">{nextDate} · {nextTime}</span>
+            </div>
           ) : (
             <span className="text-[11px] text-white/20 mx-auto">Sin partidos programados</span>
           )}
