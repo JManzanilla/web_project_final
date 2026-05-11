@@ -22,17 +22,6 @@ interface MatchStream {
   streamUrl: string | null;
 }
 
-function TeamLogo({ logoUrl, name }: { logoUrl: string | null; name: string }) {
-  if (logoUrl) {
-    return <img src={logoUrl} alt={name} className="w-7 h-7 rounded-full object-cover flex-shrink-0 border border-white/10" />;
-  }
-  return (
-    <div className="w-7 h-7 rounded-full bg-white/8 border border-white/10 flex items-center justify-center flex-shrink-0 text-sm">
-      🏀
-    </div>
-  );
-}
-
 // ---------------------------------------------------------------------------
 // Detecta plataforma desde una URL
 // ---------------------------------------------------------------------------
@@ -104,67 +93,54 @@ function MatchStreamCard({
 
   return (
     <div className={`glass-panel p-4 rounded-2xl transition-all ${match.status === "live" ? "border border-brand-orange/25 shadow-[0_0_20px_rgba(251,146,60,0.12)]" : ""}`}>
-      <div className="flex items-start gap-3">
 
-        {/* Info del partido */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-2">
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${statusColor}`}>
-              {statusLabel}
-            </span>
-            <span className="text-[10px] text-white/50 font-semibold">{date} · {time}</span>
-          </div>
-
-          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-1">
-            <div className="flex items-center gap-2 justify-end min-w-0">
-              <span className="font-bold text-white text-sm truncate text-right">{match.homeTeam.name}</span>
-              <TeamLogo logoUrl={match.homeTeam.logoUrl} name={match.homeTeam.name} />
-            </div>
-            <span className="text-[11px] text-white/40 font-bold px-2">vs</span>
-            <div className="flex items-center gap-2 min-w-0">
-              <TeamLogo logoUrl={match.awayTeam.logoUrl} name={match.awayTeam.name} />
-              <span className="font-bold text-white text-sm truncate">{match.awayTeam.name}</span>
-            </div>
-          </div>
+      {/* Fila 1: estado + botones */}
+      {!editing && (
+        <div className="flex items-center gap-1.5 flex-wrap mb-2">
+          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${statusColor}`}>
+            {statusLabel}
+          </span>
+          {match.status === "upcoming" && (
+            <Button
+              size="sm"
+              onClick={() => onStatusChange(match.id, "live")}
+              className="rounded-full h-7 px-3 text-[11px] font-bold bg-brand-orange hover:bg-brand-orange/85 text-white glow-orange"
+            >
+              🔴 En vivo
+            </Button>
+          )}
+          {match.status === "live" && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onStatusChange(match.id, "upcoming")}
+              className="rounded-full h-7 px-3 text-[11px] font-bold border border-white/15 text-white/50 hover:text-white hover:bg-white/8"
+            >
+              ⏹ Finalizar
+            </Button>
+          )}
+          {match.status !== "finished" && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setEditing(true)}
+              className="rounded-full h-7 px-3 text-[11px] font-bold border border-white/10 hover:border-brand-orange/40 hover:text-brand-orange transition-all"
+            >
+              {match.streamUrl ? "Editar" : "+ Enlace"}
+            </Button>
+          )}
         </div>
+      )}
 
-        {/* Acciones (si no está editando) */}
-        {!editing && (
-          <div className="flex items-center gap-1.5 flex-shrink-0">
-            {/* Poner en vivo / Finalizar transmisión */}
-            {match.status === "upcoming" && (
-              <Button
-                size="sm"
-                onClick={() => onStatusChange(match.id, "live")}
-                className="rounded-full h-7 px-3 text-[11px] font-bold bg-brand-orange hover:bg-brand-orange/85 text-white glow-orange"
-              >
-                🔴 En vivo
-              </Button>
-            )}
-            {match.status === "live" && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onStatusChange(match.id, "upcoming")}
-                className="rounded-full h-7 px-3 text-[11px] font-bold border border-white/15 text-white/50 hover:text-white hover:bg-white/8"
-              >
-                ⏹ Finalizar
-              </Button>
-            )}
-            {/* Editar enlace */}
-            {match.status !== "finished" && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setEditing(true)}
-                className="rounded-full h-7 px-3 text-[11px] font-bold border border-white/10 hover:border-brand-orange/40 hover:text-brand-orange transition-all"
-              >
-                {match.streamUrl ? "Editar" : "+ Enlace"}
-              </Button>
-            )}
-          </div>
-        )}
+      {/* Fila 2: equipos */}
+      <div className="flex items-center gap-2 min-w-0 mb-1">
+        <span className="font-bold text-white text-sm truncate flex-1 text-right">{match.homeTeam.name}</span>
+        <span className="text-[11px] text-white/40 font-bold flex-shrink-0">vs</span>
+        <span className="font-bold text-white text-sm truncate flex-1">{match.awayTeam.name}</span>
       </div>
+
+      {/* Fila 3: fecha */}
+      <p className="text-[10px] text-white/40 font-semibold text-center mb-2">{date} · {time}</p>
 
       {/* URL actual */}
       {!editing && match.streamUrl && (
