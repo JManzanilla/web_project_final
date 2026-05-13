@@ -19,7 +19,7 @@ interface ApiMatch {
   scheduledAt: string;
   status: "upcoming" | "live" | "finished" | "suspended";
   streamUrl: string | null;
-  actaUrl:   string | null;
+  actaUrl: string | null;
 }
 
 /** Jornada activa = la que tiene un partido EN VIVO; si no, la más próxima en fecha;
@@ -56,7 +56,7 @@ export const InfiniteCarousel: React.FC = () => {
 
   // Filtrar solo la jornada activa (sin suspendidos)
   const activeJornada = getActiveJornada(apiMatches);
-  const weekMatches   = apiMatches.filter(
+  const weekMatches = apiMatches.filter(
     (m) => m.jornada === activeJornada && m.status !== "suspended",
   );
 
@@ -141,8 +141,8 @@ export const InfiniteCarousel: React.FC = () => {
       ? (track.firstElementChild as HTMLElement).offsetWidth + 16
       : 268;
     const setWidth = cardW * matches.length;
-    while (xRef.current > 0)           xRef.current -= setWidth;
-    while (xRef.current <= -setWidth)  xRef.current += setWidth;
+    while (xRef.current > 0) xRef.current -= setWidth;
+    while (xRef.current <= -setWidth) xRef.current += setWidth;
     track.style.transform = `translateX(${xRef.current}px)`;
     dragLastXRef.current = clientX;
   }, [matches.length]);

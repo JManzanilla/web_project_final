@@ -6,38 +6,38 @@ import type { ApiUser, SectionKey, UserPermissions } from "./UserTableRow";
 
 // ── Configuración de secciones ────────────────────────────────────────────────
 const ROLE_BASE: Record<string, SectionKey[]> = {
-  admin:       ["roster", "match", "schedule", "config", "accounts", "stream"],
-  lider:       ["roster"],
-  anotador:    ["match"],
+  admin: ["roster", "match", "schedule", "config", "accounts", "stream"],
+  lider: ["roster"],
+  anotador: ["match"],
   transmision: ["stream"],
 };
 
 const RESTRICTED_SECTIONS: { key: SectionKey; label: string; Icon: React.ElementType }[] = [
-  { key: "roster",   label: "Roster",         Icon: User         },
-  { key: "match",    label: "Mesa Técnica",    Icon: ClipboardList },
-  { key: "schedule", label: "Calendario",      Icon: CalendarDays  },
-  { key: "config",   label: "Configuración",   Icon: Settings      },
-  { key: "accounts", label: "Cuentas",         Icon: Users2        },
-  { key: "stream",   label: "Transmisiones",   Icon: Radio         },
+  { key: "roster", label: "Roster", Icon: User },
+  { key: "match", label: "Mesa Técnica", Icon: ClipboardList },
+  { key: "schedule", label: "Calendario", Icon: CalendarDays },
+  { key: "config", label: "Configuración", Icon: Settings },
+  { key: "accounts", label: "Cuentas", Icon: Users2 },
+  { key: "stream", label: "Transmisiones", Icon: Radio },
 ];
 
 const PUBLIC_SECTIONS = [
-  { label: "Inicio",         Icon: Home    },
-  { label: "Clasificación",  Icon: Trophy  },
-  { label: "Historial",      Icon: History },
+  { label: "Inicio", Icon: Home },
+  { label: "Clasificación", Icon: Trophy },
+  { label: "Historial", Icon: History },
 ];
 
 const ROLE_LABEL: Record<string, string> = {
-  admin:       "Admin",
-  lider:       "Líder",
-  anotador:    "Mesa",
+  admin: "Admin",
+  lider: "Líder",
+  anotador: "Mesa",
   transmision: "Stream",
 };
 
 const ROLE_COLOR: Record<string, string> = {
-  admin:       "text-brand-orange",
-  lider:       "text-white/60",
-  anotador:    "text-sky-400",
+  admin: "text-brand-orange",
+  lider: "text-white/60",
+  anotador: "text-sky-400",
   transmision: "text-purple-400",
 };
 
@@ -67,11 +67,10 @@ function PermDot({ active, isBase, kind }: { active: boolean; isBase: boolean; k
   }
   return (
     <span
-      className={`w-2 h-2 rounded-full flex-shrink-0 ${
-        kind === "view"
+      className={`w-2 h-2 rounded-full flex-shrink-0 ${kind === "view"
           ? "bg-sky-400 shadow-[0_0_6px_rgba(56,189,248,0.6)]"
           : "bg-brand-orange shadow-[0_0_6px_rgba(251,146,60,0.6)]"
-      }`}
+        }`}
       title={kind === "view" ? "Ver (permiso extra)" : "Editar (permiso extra)"}
     />
   );
@@ -90,12 +89,11 @@ function UserPermCard({ user, onEdit }: { user: ApiUser; onEdit: (u: ApiUser) =>
           <div className="text-sm font-bold text-white truncate">{user.name}</div>
           <div className="text-[10px] text-white/40">@{user.username}</div>
         </div>
-        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border flex-shrink-0 ${
-          user.role === "admin"       ? "bg-brand-orange/15 border-brand-orange/30 text-brand-orange" :
-          user.role === "anotador"    ? "bg-sky-500/10 border-sky-500/25 text-sky-400" :
-          user.role === "transmision" ? "bg-purple-500/10 border-purple-500/25 text-purple-400" :
-                                        "bg-white/8 border-white/15 text-white/60"
-        }`}>
+        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border flex-shrink-0 ${user.role === "admin" ? "bg-brand-orange/15 border-brand-orange/30 text-brand-orange" :
+            user.role === "anotador" ? "bg-sky-500/10 border-sky-500/25 text-sky-400" :
+              user.role === "transmision" ? "bg-purple-500/10 border-purple-500/25 text-purple-400" :
+                "bg-white/8 border-white/15 text-white/60"
+          }`}>
           {ROLE_LABEL[user.role]}
         </span>
         {user.role !== "admin" && (
@@ -151,7 +149,7 @@ export function PermissionsMatrix({
   users,
   onEdit,
 }: {
-  users:  ApiUser[];
+  users: ApiUser[];
   onEdit: (user: ApiUser) => void;
 }) {
   const staffUsers = users.filter((u) => u.active);
