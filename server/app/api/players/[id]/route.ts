@@ -6,9 +6,15 @@ import { db } from "@/db";
 import { players } from "@/db/schema";
 import { requireAuth, ok, err } from "@/lib/api";
 
-const updateSchema = z.object({
+const adminUpdateSchema = z.object({
   name:     z.string().min(1).optional(),
   lastName: z.string().min(1).optional(),
+  number:   z.string().min(1).optional(),
+  photoUrl: z.string().url().optional().nullable(),
+});
+
+// Non-admins can only change number and photo to preserve stats integrity
+const liderUpdateSchema = z.object({
   number:   z.string().min(1).optional(),
   photoUrl: z.string().url().optional().nullable(),
 });
@@ -37,7 +43,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     return err("Sin permisos para este jugador", 403);
   }
 
-  const body = updateSchema.safeParse(await req.json());
+  const schema = user!.role === "admin" ? adminUpdateSchema : liderUpdateSchema;
+  const body = schema.safeParse(await req.json());
   if (!body.success) return err(body.error.issues[0].message);
 
   const [updated] = await db.update(players).set(body.data).where(eq(players.id, id)).returning();

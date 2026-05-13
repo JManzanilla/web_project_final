@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Camera, Plus, User, Trophy, Check, Pencil, ChevronDown } from "lucide-react";
+import { Camera, Plus, User, Trophy, Check, Pencil, ChevronDown, X } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { apiGet, apiPost, apiPut, apiUpload } from "@/lib/apiClient";
 import { sileo } from "sileo";
@@ -139,6 +139,48 @@ export default function RosterPage() {
 
   const photoInputRef = useRef<HTMLInputElement>(null);
   const logoInputRef  = useRef<HTMLInputElement>(null);
+
+  // ── Editar jugador ─────────────────────────────────────────────────────────
+  const canEdit = isAdmin || !!user?.permissions?.roster?.edit;
+  const [editingId,        setEditingId]        = useState<string | null>(null);
+  const [editDraft,        setEditDraft]        = useState({ number: "", name: "", lastName: "" });
+  const [editPhotoFile,    setEditPhotoFile]    = useState<File | null>(null);
+  const [editPhotoPreview, setEditPhotoPreview] = useState<string | null>(null);
+  const editPhotoRef = useRef<HTMLInputElement>(null);
+
+  const editMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Record<string, unknown> }) =>
+      apiPut<ApiPlayer>(`/api/players/${id}`, data),
+    onSuccess: async (_, { id }) => {
+      if (editPhotoFile) {
+        const fd = new FormData();
+        fd.append("photo", editPhotoFile);
+        await apiUpload<{ photoUrl: string }>(`/api/players/${id}/photo`, fd);
+        setEditPhotoFile(null);
+        if (editPhotoPreview) { URL.revokeObjectURL(editPhotoPreview); setEditPhotoPreview(null); }
+      }
+      qc.invalidateQueries({ queryKey: ["/api/players", { teamId: selectedTeamId }] });
+      setEditingId(null);
+      sileo.success({ title: "Jugador actualizado" });
+    },
+    onError: (e) => sileo.error({ title: "Error", description: (e as Error).message }),
+  });
+
+  const openEdit = (player: ApiPlayer) => {
+    setEditingId(player.id);
+    setEditDraft({ number: player.number, name: player.name, lastName: player.lastName });
+    setEditPhotoFile(null);
+    setEditPhotoPreview(null);
+  };
+
+  const saveEdit = (playerId: string) => {
+    const data: Record<string, unknown> = { number: editDraft.number.trim() };
+    if (isAdmin) {
+      data.name     = editDraft.name.trim();
+      data.lastName = editDraft.lastName.trim();
+    }
+    editMutation.mutate({ id: playerId, data });
+  };
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -445,9 +487,9 @@ export default function RosterPage() {
               {players.map((player) => (
                 <div
                   key={player.id}
-                  className="relative glass-panel overflow-hidden group hover:border-brand-orange/20 transition-all duration-200"
+                  className={`relative glass-panel overflow-hidden group transition-all duration-200 ${editingId === player.id ? "border-brand-orange/40 bg-brand-orange/5" : "hover:border-brand-orange/50 hover:bg-brand-orange/5 hover:shadow-[0_0_24px_rgba(251,146,60,0.12)]"}`}
                 >
-                  <div className="absolute -right-3 -top-3 text-8xl font-display font-black text-white/[0.04] select-none pointer-events-none leading-none">
+                  <div className="absolute -right-3 -top-3 text-8xl font-display font-black text-white/[0.04] group-hover:text-brand-orange/[0.18] transition-colors duration-200 select-none pointer-events-none leading-none">
                     {player.number}
                   </div>
 
@@ -464,6 +506,14 @@ export default function RosterPage() {
                       <div className="text-lg font-bold uppercase leading-tight truncate">{player.name}</div>
                       <div className="text-sm text-white/50 uppercase leading-tight truncate">{player.lastName}</div>
                     </div>
+                    {canEdit && editingId !== player.id && (
+                      <button
+                        onClick={() => openEdit(player)}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity w-8 h-8 rounded-xl bg-white/6 border border-white/10 flex items-center justify-center hover:bg-brand-orange/15 hover:border-brand-orange/40 flex-shrink-0"
+                      >
+                        <Pencil className="w-3.5 h-3.5 text-white/50 group-hover:text-brand-orange" />
+                      </button>
+                    )}
                   </div>
 
                   <div className="relative z-10 bg-black/35 px-5 py-3 border-t border-white/5 flex justify-between">
@@ -481,6 +531,71 @@ export default function RosterPage() {
                       </React.Fragment>
                     ))}
                   </div>
+
+                  {/* Panel de edición inline */}
+                  {editingId === player.id && (
+                    <div className="relative z-10 border-t border-brand-orange/20 bg-black/30 p-4 space-y-3">
+                      {/* Nombre y apellido — solo admin */}
+                      {isAdmin && (
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="text-[10px] text-white/30 uppercase tracking-widest font-bold block mb-1">Nombre</label>
+                            <Input value={editDraft.name} onChange={(e) => setEditDraft({ ...editDraft, name: e.target.value })}
+                              className="glass-input h-9 text-sm" />
+                          </div>
+                          <div>
+                            <label className="text-[10px] text-white/30 uppercase tracking-widest font-bold block mb-1">Apellido</label>
+                            <Input value={editDraft.lastName} onChange={(e) => setEditDraft({ ...editDraft, lastName: e.target.value })}
+                              className="glass-input h-9 text-sm" />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Número */}
+                      <div>
+                        <label className="text-[10px] text-white/30 uppercase tracking-widest font-bold block mb-1">Número</label>
+                        <Input value={editDraft.number} onChange={(e) => setEditDraft({ ...editDraft, number: e.target.value })}
+                          className="glass-input h-9 text-sm w-28" />
+                      </div>
+
+                      {/* Foto */}
+                      <div>
+                        <label className="text-[10px] text-white/30 uppercase tracking-widest font-bold block mb-1">Foto</label>
+                        <input ref={editPhotoRef} type="file" accept="image/*" className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              if (editPhotoPreview) URL.revokeObjectURL(editPhotoPreview);
+                              setEditPhotoFile(file);
+                              setEditPhotoPreview(URL.createObjectURL(file));
+                            }
+                          }} />
+                        <button onClick={() => editPhotoRef.current?.click()}
+                          className="w-14 h-14 rounded-full border-2 border-dashed border-white/15 hover:border-brand-orange/50 flex items-center justify-center overflow-hidden transition-colors">
+                          {editPhotoPreview ? (
+                            <img src={editPhotoPreview} className="w-full h-full object-cover" />
+                          ) : player.photoUrl ? (
+                            <img src={player.photoUrl} className="w-full h-full object-cover" />
+                          ) : (
+                            <Camera className="w-5 h-5 text-white/25" />
+                          )}
+                        </button>
+                      </div>
+
+                      {/* Botones */}
+                      <div className="flex gap-2 pt-1">
+                        <Button size="sm" onClick={() => saveEdit(player.id)}
+                          disabled={editMutation.isPending}
+                          className="rounded-full h-8 px-4 bg-brand-orange hover:bg-brand-orange/85 text-white text-[12px] font-bold flex items-center gap-1.5 glow-orange">
+                          <Check className="w-3 h-3" /> Guardar
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => setEditingId(null)}
+                          className="rounded-full h-8 px-3 border border-white/10 text-[12px] flex items-center gap-1.5 hover:bg-white/8">
+                          <X className="w-3 h-3" /> Cancelar
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
