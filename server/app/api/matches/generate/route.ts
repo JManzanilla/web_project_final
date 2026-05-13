@@ -23,10 +23,9 @@ const schema = z.object({
 });
 
 // ---------------------------------------------------------------------------
-// Round Robin — tablas de Berger (equipo 1 fijo, rotación izquierda)
-// Produce el mismo orden que la tabla de referencia usada en sorteos presenciales:
-//   4 equipos → R1: 1vs2, 3vs4 | R2: 1vs3, 4vs2 | R3: 1vs4, 2vs3
-//   6 equipos → R1: 1vs2, 3vs6, 4vs5 | etc.
+// Berger tables — equipo 1 fijo, rotación izquierda del resto.
+// Usado porque el sorteo presencial asigna números 1-N y los participantes
+// consultan esta misma tabla para saber sus rivales por jornada.
 // ---------------------------------------------------------------------------
 function buildRoundRobin(n: number): Array<Array<[number, number]>> {
   const teams = Array.from({ length: n }, (_, i) => i);
