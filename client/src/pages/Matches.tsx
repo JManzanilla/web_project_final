@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import { apiGet } from "@/lib/apiClient";
 import { ClipboardList, Lock, ChevronDown, ChevronUp, FileText } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
 // ---------------------------------------------------------------------------
 // Tipos
@@ -121,7 +121,11 @@ function JornadaGroup({ jornada, matches }: { jornada: number; matches: MatchIte
   const hasLive     = matches.some((m) => m.status === "live");
   const allFinished = matches.every((m) => m.status === "finished");
   const pending     = matches.filter((m) => m.status === "upcoming").length;
-  const [open, setOpen] = useState(!allFinished);
+  const [open, setOpen] = useState(false);
+  const sorted = useMemo(
+    () => [...matches].sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime()),
+    [matches],
+  );
 
   return (
     <div className="glass-panel overflow-hidden">
@@ -154,9 +158,7 @@ function JornadaGroup({ jornada, matches }: { jornada: number; matches: MatchIte
 
       {open && (
         <div className="border-t border-white/5 p-3 grid grid-cols-1 gap-2">
-          {matches
-            .sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime())
-            .map((m) => <MatchCard key={m.id} match={m} />)}
+          {sorted.map((m) => <MatchCard key={m.id} match={m} />)}
         </div>
       )}
     </div>
@@ -194,10 +196,17 @@ export default function MatchesPage() {
       ) : sortedJornadas.length === 0 ? (
         <div className="text-center text-white/30 py-12">No hay partidos registrados.</div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
-          {sortedJornadas.map((j) => (
-            <JornadaGroup key={j} jornada={j} matches={byJornada[j]} />
-          ))}
+        <div className="flex flex-col md:flex-row gap-3 items-start">
+          <div className="flex-1 flex flex-col gap-3">
+            {sortedJornadas.filter((_, i) => i % 2 === 0).map((j) => (
+              <JornadaGroup key={j} jornada={j} matches={byJornada[j]} />
+            ))}
+          </div>
+          <div className="flex-1 flex flex-col gap-3">
+            {sortedJornadas.filter((_, i) => i % 2 !== 0).map((j) => (
+              <JornadaGroup key={j} jornada={j} matches={byJornada[j]} />
+            ))}
+          </div>
         </div>
       )}
     </div>

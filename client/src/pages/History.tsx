@@ -220,7 +220,7 @@ function JornadaBlock({ jornada, isOpen, onToggle }: {
 // PÁGINA
 // ---------------------------------------------------------------------------
 export default function HistoryPage() {
-  const [openIndex, setOpenIndex] = useState<number>(0);
+  const [openIndex, setOpenIndex] = useState<number>(-1);
 
   const { data: matches = [], isLoading } = useQuery<ApiMatch[]>({
     queryKey: ["/api/matches", { status: "finished" }],
@@ -255,14 +255,21 @@ export default function HistoryPage() {
           No hay partidos finalizados aún
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
-          {jornadas.map((jornada, index) => (
-            <JornadaBlock
-              key={jornada.numero}
-              jornada={jornada}
-              isOpen={openIndex === index}
-              onToggle={() => setOpenIndex(openIndex === index ? -1 : index)}
-            />
+        <div className="flex flex-col md:flex-row gap-3 items-start">
+          {[jornadas.filter((_, i) => i % 2 === 0), jornadas.filter((_, i) => i % 2 !== 0)].map((col, ci) => (
+            <div key={ci} className="flex-1 flex flex-col gap-3">
+              {col.map((jornada) => {
+                const index = jornadas.indexOf(jornada);
+                return (
+                  <JornadaBlock
+                    key={jornada.numero}
+                    jornada={jornada}
+                    isOpen={openIndex === index}
+                    onToggle={() => setOpenIndex(openIndex === index ? -1 : index)}
+                  />
+                );
+              })}
+            </div>
           ))}
         </div>
       )}
