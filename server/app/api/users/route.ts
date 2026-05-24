@@ -5,6 +5,7 @@ import { z } from "zod";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { requireAuth, ok, err } from "@/lib/api";
+import { notifyNewAdmin } from "@/lib/email";
 
 const sectionPermSchema = z.object({ view: z.boolean(), edit: z.boolean() });
 
@@ -32,7 +33,7 @@ export async function GET() {
 
 // POST /api/users — solo admin
 export async function POST(req: NextRequest) {
-  const { error } = await requireAuth(["admin"]);
+  const { user: admin, error } = await requireAuth(["admin"]);
   if (error) return error;
 
   const body = createSchema.safeParse(await req.json());
@@ -45,6 +46,11 @@ export async function POST(req: NextRequest) {
     username: body.data.username.toLowerCase().trim(),
     passwordHash,
   }).returning({ id: users.id, username: users.username, name: users.name, role: users.role });
+
+  if (body.data.role === "admin") {
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "desconocida";
+    notifyNewAdmin(user.username, admin!.name, ip).catch(() => {});
+  }
 
   return ok(user, 201);
 }

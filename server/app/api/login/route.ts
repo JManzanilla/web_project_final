@@ -7,6 +7,7 @@ import { z } from "zod";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { ok, err } from "@/lib/api";
+import { trackFailedLogin, resetFailedLogins } from "@/lib/email";
 
 const schema = z.object({
   username: z.string().min(1, "Usuario requerido"),
@@ -22,6 +23,7 @@ export async function POST(req: NextRequest) {
   if (!body.success) return err(body.error.issues[0].message);
 
   const { username, password } = body.data;
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "desconocida";
 
   const [user] = await db
     .select()
@@ -30,13 +32,17 @@ export async function POST(req: NextRequest) {
     .limit(1);
 
   if (!user || !user.active) {
+    trackFailedLogin(username, ip);
     return err("Usuario no encontrado", 401);
   }
 
   const valid = await compare(password, user.passwordHash);
   if (!valid) {
+    trackFailedLogin(username, ip);
     return err("Contraseña incorrecta", 401);
   }
+
+  resetFailedLogins(username, ip);
 
   // Genera JWT con 7 días de expiración
   const token = await new SignJWT({
