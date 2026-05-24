@@ -75,75 +75,62 @@ function PlayerRow({ stat }: { stat: ApiStat }) {
 }
 
 // ---------------------------------------------------------------------------
-// Tarjeta de partido — expandible para ver stats
+// Tarjeta de partido — muestra top 5 anotadores de cada equipo directamente
 // ---------------------------------------------------------------------------
 function PartidoCard({ match }: { match: ApiMatch }) {
-  const [open, setOpen] = useState(false);
-
   const scoreA = match.scoreHome ?? 0;
   const scoreB = match.scoreAway ?? 0;
   const winA   = scoreA > scoreB;
 
   const homeStats = match.stats
-    .filter((s) => s.attended && s.player.teamId === match.homeTeam.id)
-    .sort((a, b) => b.pts - a.pts);
+    .filter((s) => s.attended && s.player.teamId === match.homeTeam.id && s.pts > 0)
+    .sort((a, b) => b.pts - a.pts)
+    .slice(0, 5);
   const awayStats = match.stats
-    .filter((s) => s.attended && s.player.teamId === match.awayTeam.id)
-    .sort((a, b) => b.pts - a.pts);
+    .filter((s) => s.attended && s.player.teamId === match.awayTeam.id && s.pts > 0)
+    .sort((a, b) => b.pts - a.pts)
+    .slice(0, 5);
 
   const hasStats = homeStats.length > 0 || awayStats.length > 0;
 
   return (
-    <div className={`bg-white/4 border rounded-[14px] transition-all duration-200 ${open ? "border-brand-orange/20 bg-white/6" : "border-white/8 hover:bg-white/7 hover:border-white/15"}`}>
-      {/* Fila principal */}
-      <div
-        className={`px-4 pt-3 pb-2.5 ${hasStats ? "cursor-pointer select-none" : ""}`}
-        onClick={() => hasStats && setOpen(!open)}
-      >
-        {/* Fecha arriba */}
-        <span className="block text-[10px] text-white/25 font-bold uppercase mb-2 text-center tracking-wider">
-          {formatDate(match.scheduledAt)}
-        </span>
+    <div className="bg-white/4 border border-white/8 rounded-[14px]">
+      {/* Fecha */}
+      <span className="block text-[10px] text-white/25 font-bold uppercase pt-3 text-center tracking-wider">
+        {formatDate(match.scheduledAt)}
+      </span>
 
-        {/* Logo · Score · Logo · Acta · Chevron */}
-        <div className="flex items-center justify-center gap-3">
-          <TeamLogo team={match.homeTeam} size="sm" />
+      {/* Score */}
+      <div className="flex items-center justify-center gap-3 px-4 pt-2 pb-2.5">
+        <TeamLogo team={match.homeTeam} size="sm" />
 
-          <div className="flex items-center gap-1.5 flex-shrink-0">
-            <span className={`text-[18px] font-black tabular-nums leading-none ${winA ? "text-brand-orange" : "text-white/25"}`}>{scoreA}</span>
-            <span className="text-[12px] text-white/20 font-bold">–</span>
-            <span className={`text-[18px] font-black tabular-nums leading-none ${!winA ? "text-brand-orange" : "text-white/25"}`}>{scoreB}</span>
-          </div>
-
-          <TeamLogo team={match.awayTeam} size="sm" />
-
-          {match.actaUrl ? (
-            <a href={match.actaUrl} target="_blank" rel="noopener noreferrer"
-              title="Ver acta" onClick={(e) => e.stopPropagation()}
-              className="w-8 h-8 rounded-xl bg-brand-orange/10 border border-brand-orange/30 flex items-center justify-center transition-all hover:bg-brand-orange/20 flex-shrink-0">
-              <FileText className="w-3.5 h-3.5 text-brand-orange" />
-            </a>
-          ) : (
-            <div className="w-8 h-8 rounded-xl bg-white/4 border border-white/8 flex items-center justify-center opacity-35 flex-shrink-0">
-              <FileText className="w-3.5 h-3.5 text-white/30" />
-            </div>
-          )}
-
-          {hasStats && (
-            <div className={`w-6 h-6 flex items-center justify-center transition-transform duration-200 flex-shrink-0 ${open ? "rotate-180" : ""}`}>
-              <ChevronDown className="w-3.5 h-3.5 text-white/25" />
-            </div>
-          )}
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          <span className={`text-[18px] font-black tabular-nums leading-none ${winA ? "text-brand-orange" : "text-white/25"}`}>{scoreA}</span>
+          <span className="text-[12px] text-white/20 font-bold">–</span>
+          <span className={`text-[18px] font-black tabular-nums leading-none ${!winA ? "text-brand-orange" : "text-white/25"}`}>{scoreB}</span>
         </div>
+
+        <TeamLogo team={match.awayTeam} size="sm" />
+
+        {match.actaUrl ? (
+          <a href={match.actaUrl} target="_blank" rel="noopener noreferrer"
+            title="Ver acta"
+            className="w-8 h-8 rounded-xl bg-brand-orange/10 border border-brand-orange/30 flex items-center justify-center transition-all hover:bg-brand-orange/20 flex-shrink-0">
+            <FileText className="w-3.5 h-3.5 text-brand-orange" />
+          </a>
+        ) : (
+          <div className="w-8 h-8 rounded-xl bg-white/4 border border-white/8 flex items-center justify-center opacity-35 flex-shrink-0">
+            <FileText className="w-3.5 h-3.5 text-white/30" />
+          </div>
+        )}
       </div>
 
-      {/* Stats expandidas */}
-      {open && hasStats && (
-        <div className="px-4 pb-4 animate-in fade-in duration-200">
+      {/* Top 5 anotadores — siempre visible si hay stats */}
+      {hasStats && (
+        <div className="px-4 pb-4">
           <div className="border-t border-white/8 pt-3 grid grid-cols-2 gap-2 sm:gap-4">
-            {/* Local */}
             <div>
-              <p className="text-[9px] text-brand-orange/60 font-bold uppercase tracking-widest mb-2">
+              <p className="text-[9px] text-brand-orange/60 font-bold uppercase tracking-widest mb-2 truncate">
                 {match.homeTeam.name}
               </p>
               <div className="flex items-center gap-2 mb-1 px-1">
@@ -155,9 +142,8 @@ function PartidoCard({ match }: { match: ApiMatch }) {
               {homeStats.map((s) => <PlayerRow key={s.playerId} stat={s} />)}
             </div>
 
-            {/* Visitante */}
             <div>
-              <p className="text-[9px] text-white/30 font-bold uppercase tracking-widest mb-2">
+              <p className="text-[9px] text-white/30 font-bold uppercase tracking-widest mb-2 truncate">
                 {match.awayTeam.name}
               </p>
               <div className="flex items-center gap-2 mb-1 px-1">
