@@ -53,6 +53,18 @@ export async function POST(req: NextRequest) {
     return err(`El número #${body.data.number} ya está asignado a ${duplicate.name} ${duplicate.lastName}`, 400);
   }
 
+  // Verificar que no exista otro jugador con el mismo nombre y apellido en el equipo
+  const nameDuplicate = await db.query.players.findFirst({
+    where: and(
+      eq(players.teamId, body.data.teamId),
+      eq(players.name, body.data.name),
+      eq(players.lastName, body.data.lastName),
+    ),
+  });
+  if (nameDuplicate) {
+    return err(`Ya existe un jugador llamado ${body.data.name} ${body.data.lastName} en este equipo`, 400);
+  }
+
   const [player] = await db.insert(players).values(body.data).returning();
   return ok(player, 201);
 }
