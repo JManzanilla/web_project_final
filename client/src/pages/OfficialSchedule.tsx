@@ -72,8 +72,14 @@ function AvailRow({
             <span className="text-[11px] text-white/20">Sin disponibilidad</span>
           ) : (
             mySlots.map((s) => (
-              <span key={s.id} className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-brand-orange/10 border border-brand-orange/20 text-brand-orange/70">
+              <span key={s.id} className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-brand-orange/10 border border-brand-orange/20 text-brand-orange/70">
                 {DAYS[s.dayOfWeek]} {s.startTime}–{s.endTime}
+                <button
+                  onClick={(e) => { e.stopPropagation(); onDelete(s.id); }}
+                  className="text-brand-orange/50 hover:text-red-400 transition-colors ml-0.5"
+                >
+                  <X className="w-2.5 h-2.5" />
+                </button>
               </span>
             ))
           )}
@@ -94,7 +100,7 @@ function AvailRow({
                     <span className="font-bold text-white/50 mr-2">{DAYS_FULL[s.dayOfWeek]}</span>
                     {s.startTime} – {s.endTime}
                   </span>
-                  <button onClick={() => onDelete(s.id)} className="text-white/20 hover:text-red-400 transition-colors p-1">
+                  <button onClick={() => onDelete(s.id)} className="text-red-400/50 hover:text-red-400 transition-colors p-1">
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>

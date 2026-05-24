@@ -219,7 +219,7 @@ function AvailabilityModal({ official, onClose }: { official: Official; onClose:
                       </div>
                       <button
                         onClick={() => deleteMutation.mutate(slot.id)}
-                        className="text-white/20 hover:text-red-400 transition-colors p-1"
+                        className="text-red-400/50 hover:text-red-400 transition-colors p-1"
                       >
                         <X className="w-3.5 h-3.5" />
                       </button>
