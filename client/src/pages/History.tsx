@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { SectionTitle } from "@/components/ui/SectionTitle";
-import { FileText, ChevronRight, ChevronDown } from "lucide-react";
+import { FileText, ChevronRight, ChevronDown, X } from "lucide-react";
 import { apiGet } from "@/lib/apiClient";
+import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 
 interface ApiPlayer {
   id: string; name: string; lastName: string; number: string; teamId: string;
@@ -75,9 +76,112 @@ function PlayerRow({ stat }: { stat: ApiStat }) {
 }
 
 // ---------------------------------------------------------------------------
-// Tarjeta de partido — muestra top 5 anotadores de cada equipo directamente
+// Modal con detalle completo del partido
+// ---------------------------------------------------------------------------
+function PartidoModal({ match }: { match: ApiMatch }) {
+  const scoreA = match.scoreHome ?? 0;
+  const scoreB = match.scoreAway ?? 0;
+  const winA   = scoreA > scoreB;
+
+  const homeStats = match.stats
+    .filter((s) => s.attended && s.player.teamId === match.homeTeam.id && s.pts > 0)
+    .sort((a, b) => b.pts - a.pts)
+    .slice(0, 5);
+  const awayStats = match.stats
+    .filter((s) => s.attended && s.player.teamId === match.awayTeam.id && s.pts > 0)
+    .sort((a, b) => b.pts - a.pts)
+    .slice(0, 5);
+
+  return (
+    <div className="bg-[#0d0d0d] rounded-2xl p-6 relative">
+      {/* Botón cerrar */}
+      <DialogClose className="absolute right-4 top-4 w-8 h-8 rounded-full bg-white/8 border border-white/10 flex items-center justify-center hover:bg-white/15 transition-colors">
+        <X className="w-4 h-4 text-white/60" />
+      </DialogClose>
+
+      {/* Fecha */}
+      <p className="text-center text-[11px] text-white/30 font-bold uppercase tracking-widest mb-4">
+        {new Date(match.scheduledAt).toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" })}
+      </p>
+
+      {/* Score grande */}
+      <div className="flex items-center justify-center gap-5 mb-6">
+        <div className="flex flex-col items-center gap-2 flex-1">
+          <TeamLogo team={match.homeTeam} size="md" />
+          <span className="text-[11px] text-white/50 font-bold uppercase tracking-wide text-center truncate w-full">{match.homeTeam.name}</span>
+        </div>
+
+        <div className="flex flex-col items-center flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <span className={`text-5xl font-black tabular-nums ${winA ? "text-brand-orange" : "text-white/25"}`}>{scoreA}</span>
+            <span className="text-2xl text-white/20 font-bold">–</span>
+            <span className={`text-5xl font-black tabular-nums ${!winA ? "text-brand-orange" : "text-white/25"}`}>{scoreB}</span>
+          </div>
+          <span className="text-[10px] text-white/20 mt-1 uppercase tracking-widest">Final</span>
+        </div>
+
+        <div className="flex flex-col items-center gap-2 flex-1">
+          <TeamLogo team={match.awayTeam} size="md" />
+          <span className="text-[11px] text-white/50 font-bold uppercase tracking-wide text-center truncate w-full">{match.awayTeam.name}</span>
+        </div>
+      </div>
+
+      {/* Anotadores */}
+      {(homeStats.length > 0 || awayStats.length > 0) && (
+        <div className="border-t border-white/8 pt-5">
+          <p className="text-[10px] text-white/25 font-bold uppercase tracking-widest text-center mb-4">Principales anotadores</p>
+          <div className="grid grid-cols-2 gap-4">
+            {/* Local */}
+            <div>
+              <p className="text-[10px] text-brand-orange/70 font-bold uppercase tracking-widest mb-3">{match.homeTeam.name}</p>
+              {homeStats.length > 0 ? homeStats.map((s, i) => (
+                <div key={s.playerId} className="flex items-center gap-3 py-2 border-b border-white/5 last:border-0">
+                  <span className="text-[11px] text-white/25 w-4 font-bold">{i + 1}</span>
+                  <span className="text-xs text-brand-orange/60 font-black w-7">#{s.player.number}</span>
+                  <span className="text-sm text-white/80 flex-1 truncate">{s.player.lastName}</span>
+                  <span className="text-lg font-black text-brand-orange tabular-nums">{s.pts}</span>
+                  <span className="text-[11px] text-white/25 w-6">{s.flt}f</span>
+                </div>
+              )) : <p className="text-xs text-white/20 italic">Sin datos</p>}
+            </div>
+
+            {/* Visitante */}
+            <div>
+              <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest mb-3">{match.awayTeam.name}</p>
+              {awayStats.length > 0 ? awayStats.map((s, i) => (
+                <div key={s.playerId} className="flex items-center gap-3 py-2 border-b border-white/5 last:border-0">
+                  <span className="text-[11px] text-white/25 w-4 font-bold">{i + 1}</span>
+                  <span className="text-xs text-brand-orange/60 font-black w-7">#{s.player.number}</span>
+                  <span className="text-sm text-white/80 flex-1 truncate">{s.player.lastName}</span>
+                  <span className="text-lg font-black text-brand-orange tabular-nums">{s.pts}</span>
+                  <span className="text-[11px] text-white/25 w-6">{s.flt}f</span>
+                </div>
+              )) : <p className="text-xs text-white/20 italic">Sin datos</p>}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Acta */}
+      {match.actaUrl && (
+        <div className="mt-5 pt-4 border-t border-white/8 flex justify-center">
+          <a href={match.actaUrl} target="_blank" rel="noopener noreferrer"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-brand-orange/10 border border-brand-orange/30 text-brand-orange text-sm font-bold hover:bg-brand-orange/20 transition-colors">
+            <FileText className="w-4 h-4" />
+            Ver acta del partido
+          </a>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Tarjeta de partido — clic abre modal con detalle completo
 // ---------------------------------------------------------------------------
 function PartidoCard({ match }: { match: ApiMatch }) {
+  const [open, setOpen] = useState(false);
+
   const scoreA = match.scoreHome ?? 0;
   const scoreB = match.scoreAway ?? 0;
   const winA   = scoreA > scoreB;
@@ -94,70 +198,65 @@ function PartidoCard({ match }: { match: ApiMatch }) {
   const hasStats = homeStats.length > 0 || awayStats.length > 0;
 
   return (
-    <div className="bg-white/4 border border-white/8 rounded-[14px]">
-      {/* Fecha */}
-      <span className="block text-[10px] text-white/25 font-bold uppercase pt-3 text-center tracking-wider">
-        {formatDate(match.scheduledAt)}
-      </span>
+    <>
+      <div
+        onClick={() => setOpen(true)}
+        className="bg-white/4 border border-white/8 rounded-[14px] cursor-pointer hover:bg-white/7 hover:border-white/15 transition-all duration-200"
+      >
+        {/* Fecha */}
+        <span className="block text-[10px] text-white/25 font-bold uppercase pt-3 text-center tracking-wider">
+          {formatDate(match.scheduledAt)}
+        </span>
 
-      {/* Score */}
-      <div className="flex items-center justify-center gap-3 px-4 pt-2 pb-2.5">
-        <TeamLogo team={match.homeTeam} size="sm" />
-
-        <div className="flex items-center gap-1.5 flex-shrink-0">
-          <span className={`text-[18px] font-black tabular-nums leading-none ${winA ? "text-brand-orange" : "text-white/25"}`}>{scoreA}</span>
-          <span className="text-[12px] text-white/20 font-bold">–</span>
-          <span className={`text-[18px] font-black tabular-nums leading-none ${!winA ? "text-brand-orange" : "text-white/25"}`}>{scoreB}</span>
+        {/* Score */}
+        <div className="flex items-center justify-center gap-3 px-4 pt-2 pb-2.5">
+          <TeamLogo team={match.homeTeam} size="sm" />
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            <span className={`text-[18px] font-black tabular-nums leading-none ${winA ? "text-brand-orange" : "text-white/25"}`}>{scoreA}</span>
+            <span className="text-[12px] text-white/20 font-bold">–</span>
+            <span className={`text-[18px] font-black tabular-nums leading-none ${!winA ? "text-brand-orange" : "text-white/25"}`}>{scoreB}</span>
+          </div>
+          <TeamLogo team={match.awayTeam} size="sm" />
+          <div className="w-8 h-8 rounded-xl bg-white/4 border border-white/8 flex items-center justify-center flex-shrink-0">
+            <FileText className={`w-3.5 h-3.5 ${match.actaUrl ? "text-brand-orange" : "text-white/20"}`} />
+          </div>
         </div>
 
-        <TeamLogo team={match.awayTeam} size="sm" />
-
-        {match.actaUrl ? (
-          <a href={match.actaUrl} target="_blank" rel="noopener noreferrer"
-            title="Ver acta"
-            className="w-8 h-8 rounded-xl bg-brand-orange/10 border border-brand-orange/30 flex items-center justify-center transition-all hover:bg-brand-orange/20 flex-shrink-0">
-            <FileText className="w-3.5 h-3.5 text-brand-orange" />
-          </a>
-        ) : (
-          <div className="w-8 h-8 rounded-xl bg-white/4 border border-white/8 flex items-center justify-center opacity-35 flex-shrink-0">
-            <FileText className="w-3.5 h-3.5 text-white/30" />
+        {/* Top anotadores preview */}
+        {hasStats && (
+          <div className="px-4 pb-4">
+            <div className="border-t border-white/8 pt-3 grid grid-cols-2 gap-2 sm:gap-4">
+              <div>
+                <p className="text-[9px] text-brand-orange/60 font-bold uppercase tracking-widest mb-2 truncate">{match.homeTeam.name}</p>
+                <div className="flex items-center gap-2 mb-1 px-1">
+                  <span className="text-[9px] text-white/20 w-5" />
+                  <span className="text-[9px] text-white/20 flex-1 uppercase tracking-wide">Jugador</span>
+                  <span className="text-[9px] text-white/20 w-8 text-right uppercase tracking-wide">Pts</span>
+                  <span className="text-[9px] text-white/20 w-5 text-right uppercase tracking-wide">F</span>
+                </div>
+                {homeStats.map((s) => <PlayerRow key={s.playerId} stat={s} />)}
+              </div>
+              <div>
+                <p className="text-[9px] text-white/30 font-bold uppercase tracking-widest mb-2 truncate">{match.awayTeam.name}</p>
+                <div className="flex items-center gap-2 mb-1 px-1">
+                  <span className="text-[9px] text-white/20 w-5" />
+                  <span className="text-[9px] text-white/20 flex-1 uppercase tracking-wide">Jugador</span>
+                  <span className="text-[9px] text-white/20 w-8 text-right uppercase tracking-wide">Pts</span>
+                  <span className="text-[9px] text-white/20 w-5 text-right uppercase tracking-wide">F</span>
+                </div>
+                {awayStats.map((s) => <PlayerRow key={s.playerId} stat={s} />)}
+              </div>
+            </div>
           </div>
         )}
       </div>
 
-      {/* Top 5 anotadores — siempre visible si hay stats */}
-      {hasStats && (
-        <div className="px-4 pb-4">
-          <div className="border-t border-white/8 pt-3 grid grid-cols-2 gap-2 sm:gap-4">
-            <div>
-              <p className="text-[9px] text-brand-orange/60 font-bold uppercase tracking-widest mb-2 truncate">
-                {match.homeTeam.name}
-              </p>
-              <div className="flex items-center gap-2 mb-1 px-1">
-                <span className="text-[9px] text-white/20 w-5" />
-                <span className="text-[9px] text-white/20 flex-1 uppercase tracking-wide">Jugador</span>
-                <span className="text-[9px] text-white/20 w-8 text-right uppercase tracking-wide">Pts</span>
-                <span className="text-[9px] text-white/20 w-5 text-right uppercase tracking-wide">F</span>
-              </div>
-              {homeStats.map((s) => <PlayerRow key={s.playerId} stat={s} />)}
-            </div>
-
-            <div>
-              <p className="text-[9px] text-white/30 font-bold uppercase tracking-widest mb-2 truncate">
-                {match.awayTeam.name}
-              </p>
-              <div className="flex items-center gap-2 mb-1 px-1">
-                <span className="text-[9px] text-white/20 w-5" />
-                <span className="text-[9px] text-white/20 flex-1 uppercase tracking-wide">Jugador</span>
-                <span className="text-[9px] text-white/20 w-8 text-right uppercase tracking-wide">Pts</span>
-                <span className="text-[9px] text-white/20 w-5 text-right uppercase tracking-wide">F</span>
-              </div>
-              {awayStats.map((s) => <PlayerRow key={s.playerId} stat={s} />)}
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="p-0 border-0 bg-transparent shadow-none max-w-lg w-full">
+          <PartidoModal match={match} />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
