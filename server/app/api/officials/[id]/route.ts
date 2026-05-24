@@ -7,15 +7,14 @@ import { officials } from "@/db/schema";
 import { requireAuth, ok, err } from "@/lib/api";
 
 const updateSchema = z.object({
-  name:          z.string().min(1).optional(),
-  lastName:      z.string().min(1).optional(),
-  roles:         z.object({
+  name:     z.string().min(1).optional(),
+  lastName: z.string().min(1).optional(),
+  roles:    z.object({
     mainRef:   z.boolean(),
     assistRef: z.boolean(),
     scorer:    z.boolean(),
   }).optional(),
-  availableDays: z.array(z.number().int().min(0).max(6)).optional(),
-  active:        z.boolean().optional(),
+  active:   z.boolean().optional(),
 });
 
 // PUT /api/officials/:id — solo admin

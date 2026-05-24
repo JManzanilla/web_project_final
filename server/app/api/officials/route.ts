@@ -12,10 +12,9 @@ const rolesSchema = z.object({
 });
 
 const createSchema = z.object({
-  name:          z.string().min(1),
-  lastName:      z.string().min(1),
-  roles:         rolesSchema,
-  availableDays: z.array(z.number().int().min(0).max(6)),
+  name:     z.string().min(1),
+  lastName: z.string().min(1),
+  roles:    rolesSchema,
 });
 
 // GET /api/officials — usuarios autenticados

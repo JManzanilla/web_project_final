@@ -116,14 +116,26 @@ export const tournamentConfig = pgTable("tournament_config", {
 // OFFICIALS (árbitros y mesa técnica — catálogo reutilizable)
 // ---------------------------------------------------------------------------
 export const officials = pgTable("officials", {
-  id:            uuid("id").primaryKey().defaultRandom(),
-  name:          text("name").notNull(),
-  lastName:      text("last_name").notNull(),
-  photoUrl:      text("photo_url"),
-  roles:         jsonb("roles").$type<OfficialRoles>().notNull().default({ mainRef: false, assistRef: false, scorer: false }),
-  availableDays: integer("available_days").array().notNull().default([]),
-  active:        boolean("active").notNull().default(true),
-  createdAt:     timestamp("created_at").defaultNow().notNull(),
+  id:        uuid("id").primaryKey().defaultRandom(),
+  name:      text("name").notNull(),
+  lastName:  text("last_name").notNull(),
+  photoUrl:  text("photo_url"),
+  roles:     jsonb("roles").$type<OfficialRoles>().notNull().default({ mainRef: false, assistRef: false, scorer: false }),
+  active:    boolean("active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// ---------------------------------------------------------------------------
+// OFFICIAL AVAILABILITY (disponibilidad por jornada — capturada semana a semana)
+// ---------------------------------------------------------------------------
+export const officialAvailability = pgTable("official_availability", {
+  id:         uuid("id").primaryKey().defaultRandom(),
+  officialId: uuid("official_id").notNull().references(() => officials.id, { onDelete: "cascade" }),
+  jornada:    integer("jornada").notNull(),
+  dayOfWeek:  integer("day_of_week").notNull(),  // 0=Dom … 6=Sáb
+  startTime:  text("start_time").notNull(),       // "HH:MM"
+  endTime:    text("end_time").notNull(),          // "HH:MM"
+  createdAt:  timestamp("created_at").defaultNow().notNull(),
 });
 
 // ---------------------------------------------------------------------------
@@ -155,4 +167,12 @@ export const matchesRelations = relations(matches, ({ one, many }) => ({
 export const playerMatchStatsRelations = relations(playerMatchStats, ({ one }) => ({
   match:  one(matches, { fields: [playerMatchStats.matchId], references: [matches.id] }),
   player: one(players, { fields: [playerMatchStats.playerId], references: [players.id] }),
+}));
+
+export const officialsRelations = relations(officials, ({ many }) => ({
+  availability: many(officialAvailability),
+}));
+
+export const officialAvailabilityRelations = relations(officialAvailability, ({ one }) => ({
+  official: one(officials, { fields: [officialAvailability.officialId], references: [officials.id] }),
 }));

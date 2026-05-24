@@ -6,19 +6,19 @@ import { apiGet } from "@/lib/apiClient";
 
 interface OfficialRoles { mainRef: boolean; assistRef: boolean; scorer: boolean }
 interface Official {
-  id:            string;
-  name:          string;
-  lastName:      string;
-  photoUrl:      string | null;
-  roles:         OfficialRoles;
-  availableDays: number[];
-  active:        boolean;
+  id:       string;
+  name:     string;
+  lastName: string;
+  photoUrl: string | null;
+  roles:    OfficialRoles;
+  active:   boolean;
 }
 
 interface OfficialStepProps {
   refs:         { ref1: string; ref2: string; scorer: string };
   setRefs:      (refs: { ref1: string; ref2: string; scorer: string }) => void;
-  scheduledAt?: string;
+  jornada:      number;
+  scheduledAt:  string;
   onNext:       () => void;
   loading?:     boolean;
 }
@@ -27,26 +27,15 @@ function hasFullName(val: string) {
   return val.trim().split(/\s+/).filter(Boolean).length >= 2;
 }
 
-// Selector que muestra oficiales filtrados + opción manual
 function OfficialSelect({
-  label,
-  value,
-  onChange,
-  officials,
-  roleKey,
+  label, value, onChange, officials, roleKey,
 }: {
-  label:     string;
-  value:     string;
-  onChange:  (v: string) => void;
-  officials: Official[];
-  roleKey:   keyof OfficialRoles;
+  label: string; value: string; onChange: (v: string) => void;
+  officials: Official[]; roleKey: keyof OfficialRoles;
 }) {
-  const filtered = officials.filter((o) => o.active && o.roles[roleKey]);
-  const isManual = value !== "" && !filtered.some((o) => `${o.name} ${o.lastName}` === value);
-
-  const fieldClass = `glass-input h-13 px-5 text-base w-full ${
-    value.length > 0 && !hasFullName(value) ? "border-red-500/40" : ""
-  }`;
+  const filtered  = officials.filter((o) => o.active && o.roles[roleKey]);
+  const isManual  = value !== "" && !filtered.some((o) => `${o.name} ${o.lastName}` === value);
+  const fieldClass = `glass-input h-13 px-5 text-base w-full ${value.length > 0 && !hasFullName(value) ? "border-red-500/40" : ""}`;
 
   return (
     <div className="space-y-1.5">
@@ -58,10 +47,7 @@ function OfficialSelect({
         <>
           <select
             value={isManual ? "__manual__" : value}
-            onChange={(e) => {
-              if (e.target.value === "__manual__") onChange("");
-              else onChange(e.target.value);
-            }}
+            onChange={(e) => { if (e.target.value === "__manual__") onChange(""); else onChange(e.target.value); }}
             className="glass-input h-13 px-5 text-base w-full bg-transparent appearance-none cursor-pointer"
           >
             <option value="" className="bg-gray-900 text-white/50">— Selecciona —</option>
@@ -72,24 +58,14 @@ function OfficialSelect({
             ))}
             <option value="__manual__" className="bg-gray-900 text-white/40">Escribir manualmente…</option>
           </select>
-
           {isManual && (
-            <Input
-              placeholder="Nombre Apellido"
-              className={fieldClass}
-              value={value}
-              onChange={(e) => onChange(e.target.value)}
-              autoFocus
-            />
+            <Input placeholder="Nombre Apellido" className={fieldClass} value={value}
+              onChange={(e) => onChange(e.target.value)} autoFocus />
           )}
         </>
       ) : (
-        <Input
-          placeholder="Nombre Apellido"
-          className={fieldClass}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-        />
+        <Input placeholder="Nombre Apellido" className={fieldClass} value={value}
+          onChange={(e) => onChange(e.target.value)} />
       )}
 
       {value.length > 0 && !hasFullName(value) && (
@@ -99,55 +75,40 @@ function OfficialSelect({
   );
 }
 
-export function OfficialStep({ refs, setRefs, scheduledAt, onNext, loading }: OfficialStepProps) {
-  const { data: allOfficials = [] } = useQuery<Official[]>({
-    queryKey: ["/api/officials"],
-    queryFn:  () => apiGet<Official[]>("/api/officials"),
-  });
+export function OfficialStep({ refs, setRefs, jornada, scheduledAt, onNext, loading }: OfficialStepProps) {
+  const dayOfWeek = new Date(scheduledAt).getDay();
+  // "HH:MM" extraído del timestamp
+  const time = scheduledAt.length >= 16 ? scheduledAt.substring(11, 16) : "00:00";
 
-  // Filtrar por día disponible si se conoce la fecha del partido
-  const dayOfWeek = scheduledAt ? new Date(scheduledAt).getDay() : null;
-  const officials = dayOfWeek !== null
-    ? allOfficials.filter((o) => o.availableDays.includes(dayOfWeek))
-    : allOfficials;
+  const { data: available = [], isLoading } = useQuery<Official[]>({
+    queryKey: ["/api/officials/available", jornada, dayOfWeek, time],
+    queryFn:  () => apiGet<Official[]>(`/api/officials/available?jornada=${jornada}&day=${dayOfWeek}&time=${time}`),
+    enabled:  !!jornada,
+  });
 
   const valid = hasFullName(refs.ref1) && hasFullName(refs.ref2) && hasFullName(refs.scorer);
 
   return (
     <div className="glass-panel p-5 sm:p-8 animate-in fade-in duration-300">
-      <h3 className="text-lg font-display font-bold mb-6 flex items-center gap-3 border-b border-white/10 pb-4">
+      <h3 className="text-lg font-display font-bold mb-2 flex items-center gap-3 border-b border-white/10 pb-4">
         <Shirt className="text-brand-orange w-5 h-5" />
         Oficiales del Partido
       </h3>
 
-      {dayOfWeek !== null && officials.length === 0 && allOfficials.length > 0 && (
-        <p className="text-[11px] text-yellow-400/60 mb-4 text-center">
-          No hay árbitros disponibles registrados para este día. Escribe el nombre manualmente.
+      {!isLoading && available.length === 0 && (
+        <p className="text-[11px] text-yellow-400/60 mt-3 mb-2 text-center">
+          Sin árbitros con disponibilidad capturada para la Jornada {jornada} en este horario.
+          Escribe el nombre manualmente.
         </p>
       )}
 
-      <div className="space-y-4">
-        <OfficialSelect
-          label="Árbitro Principal"
-          value={refs.ref1}
-          onChange={(v) => setRefs({ ...refs, ref1: v })}
-          officials={officials}
-          roleKey="mainRef"
-        />
-        <OfficialSelect
-          label="Árbitro Auxiliar"
-          value={refs.ref2}
-          onChange={(v) => setRefs({ ...refs, ref2: v })}
-          officials={officials}
-          roleKey="assistRef"
-        />
-        <OfficialSelect
-          label="Anotador"
-          value={refs.scorer}
-          onChange={(v) => setRefs({ ...refs, scorer: v })}
-          officials={officials}
-          roleKey="scorer"
-        />
+      <div className="space-y-4 mt-4">
+        <OfficialSelect label="Árbitro Principal" value={refs.ref1}
+          onChange={(v) => setRefs({ ...refs, ref1: v })} officials={available} roleKey="mainRef" />
+        <OfficialSelect label="Árbitro Auxiliar" value={refs.ref2}
+          onChange={(v) => setRefs({ ...refs, ref2: v })} officials={available} roleKey="assistRef" />
+        <OfficialSelect label="Anotador" value={refs.scorer}
+          onChange={(v) => setRefs({ ...refs, scorer: v })} officials={available} roleKey="scorer" />
       </div>
 
       {!valid && (
@@ -157,11 +118,8 @@ export function OfficialStep({ refs, setRefs, scheduledAt, onNext, loading }: Of
       )}
 
       <div className="flex justify-end mt-4">
-        <Button
-          onClick={onNext}
-          disabled={!valid || loading}
-          className="rounded-full h-11 bg-brand-orange hover:bg-brand-orange/80 text-white font-bold px-6 disabled:opacity-30 disabled:cursor-not-allowed"
-        >
+        <Button onClick={onNext} disabled={!valid || loading}
+          className="rounded-full h-11 bg-brand-orange hover:bg-brand-orange/80 text-white font-bold px-6 disabled:opacity-30 disabled:cursor-not-allowed">
           {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
           Continuar →
         </Button>

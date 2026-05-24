@@ -206,6 +206,7 @@ export default function MatchPage() {
         <OfficialStep
           refs={refs}
           setRefs={setRefs}
+          jornada={match.jornada}
           scheduledAt={match.scheduledAt}
           onNext={() => officialsMutation.mutate()}
           loading={officialsMutation.isPending}
