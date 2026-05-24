@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/apiClient";
 import { sileo } from "sileo";
-import { X, UserPlus, Camera, Trash2, Pencil, CalendarDays, Plus } from "lucide-react";
+import { X, UserPlus, Camera, Trash2, Pencil } from "lucide-react";
 
 // ── Tipos ────────────────────────────────────────────────────────────────────
 interface OfficialRoles { mainRef: boolean; assistRef: boolean; scorer: boolean }
@@ -19,24 +19,6 @@ interface Official {
   active:    boolean;
 }
 
-interface AvailabilitySlot {
-  id:        string;
-  officialId: string;
-  jornada:   number;
-  dayOfWeek: number;
-  startTime: string;
-  endTime:   string;
-}
-
-const DAYS = [
-  { value: 0, label: "Domingo"   },
-  { value: 1, label: "Lunes"     },
-  { value: 2, label: "Martes"    },
-  { value: 3, label: "Miércoles" },
-  { value: 4, label: "Jueves"    },
-  { value: 5, label: "Viernes"   },
-  { value: 6, label: "Sábado"    },
-];
 
 const ROLE_OPTIONS = [
   { key: "mainRef"   as const, label: "Árbitro Principal", color: "bg-brand-orange/15 border-brand-orange/40 text-brand-orange" },
@@ -74,163 +56,6 @@ function RoleBadges({ roles }: { roles: OfficialRoles }) {
       {ROLE_OPTIONS.filter((r) => roles[r.key]).map((r) => (
         <span key={r.key} className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${r.color}`}>{r.label}</span>
       ))}
-    </div>
-  );
-}
-
-// ── Modal de disponibilidad por jornada ───────────────────────────────────────
-function AvailabilityModal({ official, onClose }: { official: Official; onClose: () => void }) {
-  const qc = useQueryClient();
-  const [jornadaInput, setJornadaInput] = useState("");
-  const [newSlot, setNewSlot] = useState({ dayOfWeek: 6, startTime: "09:00", endTime: "14:00" });
-
-  const { data: slots = [], isLoading } = useQuery<AvailabilitySlot[]>({
-    queryKey: ["/api/officials", official.id, "availability"],
-    queryFn:  () => apiGet<AvailabilitySlot[]>(`/api/officials/${official.id}/availability`),
-  });
-
-  const addMutation = useMutation({
-    mutationFn: (data: { jornada: number; dayOfWeek: number; startTime: string; endTime: string }) =>
-      apiPost<AvailabilitySlot>(`/api/officials/${official.id}/availability`, data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["/api/officials", official.id, "availability"] });
-      sileo.success({ title: "Disponibilidad guardada" });
-    },
-    onError: (e) => sileo.error({ title: "Error", description: (e as Error).message }),
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (slotId: string) => apiDelete(`/api/officials/${official.id}/availability/${slotId}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["/api/officials", official.id, "availability"] }),
-    onError: (e) => sileo.error({ title: "Error al eliminar", description: (e as Error).message }),
-  });
-
-  const handleAdd = () => {
-    const jornada = parseInt(jornadaInput);
-    if (isNaN(jornada) || jornada < 1) { sileo.error({ title: "Jornada inválida" }); return; }
-    if (newSlot.startTime >= newSlot.endTime) { sileo.error({ title: "Hora inicio debe ser antes de hora fin" }); return; }
-    addMutation.mutate({ jornada, ...newSlot });
-  };
-
-  // Agrupar slots por jornada
-  const byJornada = slots.reduce<Record<number, AvailabilitySlot[]>>((acc, s) => {
-    (acc[s.jornada] ??= []).push(s);
-    return acc;
-  }, {});
-  const jornadas = Object.keys(byJornada).map(Number).sort((a, b) => a - b);
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center px-4 pt-6 pb-28 overflow-y-auto">
-      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-lg glass-panel p-6 sm:p-8 rounded-3xl">
-
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <Avatar official={official} size="sm" />
-            <div>
-              <p className="font-bold text-white">{official.name} {official.lastName}</p>
-              <p className="text-[11px] text-white/40">Disponibilidad por jornada</p>
-            </div>
-          </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition-all">
-            <X className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-        {/* Agregar slot */}
-        <div className="glass-panel rounded-2xl p-4 space-y-3 mb-6">
-          <p className="text-xs font-bold uppercase tracking-widest text-white/40">Agregar disponibilidad</p>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <label className="text-[10px] text-white/30 uppercase font-bold">Jornada</label>
-              <Input
-                type="number"
-                min={1}
-                placeholder="Ej: 5"
-                value={jornadaInput}
-                onChange={(e) => setJornadaInput(e.target.value)}
-                className="glass-input h-10"
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-[10px] text-white/30 uppercase font-bold">Día</label>
-              <select
-                value={newSlot.dayOfWeek}
-                onChange={(e) => setNewSlot({ ...newSlot, dayOfWeek: parseInt(e.target.value) })}
-                className="glass-input h-10 px-3 bg-transparent text-white text-sm w-full appearance-none"
-              >
-                {DAYS.map((d) => (
-                  <option key={d.value} value={d.value} className="bg-gray-900">{d.label}</option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-1">
-              <label className="text-[10px] text-white/30 uppercase font-bold">Desde</label>
-              <input
-                type="time"
-                value={newSlot.startTime}
-                onChange={(e) => setNewSlot({ ...newSlot, startTime: e.target.value })}
-                className="glass-input h-10 px-3 text-white text-sm w-full bg-transparent"
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-[10px] text-white/30 uppercase font-bold">Hasta</label>
-              <input
-                type="time"
-                value={newSlot.endTime}
-                onChange={(e) => setNewSlot({ ...newSlot, endTime: e.target.value })}
-                className="glass-input h-10 px-3 text-white text-sm w-full bg-transparent"
-              />
-            </div>
-          </div>
-          <Button
-            onClick={handleAdd}
-            disabled={addMutation.isPending || !jornadaInput}
-            className="w-full rounded-xl h-10 bg-brand-orange hover:bg-brand-orange/85 text-white font-bold text-sm glow-orange disabled:opacity-40"
-          >
-            <Plus className="w-4 h-4 mr-1" />
-            {addMutation.isPending ? "Guardando…" : "Agregar"}
-          </Button>
-        </div>
-
-        {/* Slots existentes */}
-        {isLoading ? (
-          <p className="text-center text-white/30 text-sm py-4">Cargando...</p>
-        ) : jornadas.length === 0 ? (
-          <p className="text-center text-white/20 text-sm py-4">Sin disponibilidad capturada aún.</p>
-        ) : (
-          <div className="space-y-4">
-            {jornadas.map((j) => (
-              <div key={j}>
-                <p className="text-[11px] font-bold uppercase tracking-widest text-brand-orange mb-2">
-                  Jornada {j}
-                </p>
-                <div className="space-y-1.5">
-                  {byJornada[j].sort((a, b) => a.dayOfWeek - b.dayOfWeek || a.startTime.localeCompare(b.startTime)).map((slot) => (
-                    <div key={slot.id} className="flex items-center justify-between glass-panel px-3 py-2 rounded-xl">
-                      <div className="flex items-center gap-3">
-                        <span className="text-xs font-semibold text-white/60 w-20">
-                          {DAYS.find((d) => d.value === slot.dayOfWeek)?.label}
-                        </span>
-                        <span className="text-sm font-bold text-white">
-                          {slot.startTime} – {slot.endTime}
-                        </span>
-                      </div>
-                      <button
-                        onClick={() => deleteMutation.mutate(slot.id)}
-                        className="text-red-400/50 hover:text-red-400 transition-colors p-1"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
     </div>
   );
 }
@@ -351,8 +176,8 @@ function OfficialModal({
 }
 
 // ── Card ──────────────────────────────────────────────────────────────────────
-function OfficialCard({ official, onEdit, onAvailability, onDelete }: {
-  official: Official; onEdit: () => void; onAvailability: () => void; onDelete: () => void;
+function OfficialCard({ official, onEdit, onDelete }: {
+  official: Official; onEdit: () => void; onDelete: () => void;
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -369,10 +194,6 @@ function OfficialCard({ official, onEdit, onAvailability, onDelete }: {
         <button onClick={onEdit}
           className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold text-white/50 hover:text-white hover:bg-white/6 transition-all">
           <Pencil className="w-3.5 h-3.5" /> Editar
-        </button>
-        <button onClick={onAvailability}
-          className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold text-white/50 hover:text-brand-orange hover:bg-brand-orange/8 transition-all">
-          <CalendarDays className="w-3.5 h-3.5" /> Disponibilidad
         </button>
         {confirmDelete ? (
           <>
@@ -399,9 +220,8 @@ function OfficialCard({ official, onEdit, onAvailability, onDelete }: {
 // ── Página principal ─────────────────────────────────────────────────────────
 export default function OfficialsPage() {
   const qc = useQueryClient();
-  const [modalOpen,        setModalOpen]        = useState(false);
-  const [availModalTarget, setAvailModalTarget] = useState<Official | null>(null);
-  const [editTarget,       setEditTarget]       = useState<Official | null>(null);
+  const [modalOpen,  setModalOpen]  = useState(false);
+  const [editTarget, setEditTarget] = useState<Official | null>(null);
   const [form,             setForm]             = useState<FormState>(EMPTY_FORM);
   const [pendingPhoto,     setPendingPhoto]     = useState<File | null>(null);
   const [photoPreview,     setPhotoPreview]     = useState<string | null>(null);
@@ -484,7 +304,6 @@ export default function OfficialsPage() {
                 {active.map((o) => (
                   <OfficialCard key={o.id} official={o}
                     onEdit={() => openEdit(o)}
-                    onAvailability={() => setAvailModalTarget(o)}
                     onDelete={() => deleteMutation.mutate(o.id)} />
                 ))}
               </div>
@@ -497,7 +316,6 @@ export default function OfficialsPage() {
                 {inactive.map((o) => (
                   <OfficialCard key={o.id} official={o}
                     onEdit={() => openEdit(o)}
-                    onAvailability={() => setAvailModalTarget(o)}
                     onDelete={() => deleteMutation.mutate(o.id)} />
                 ))}
               </div>
@@ -513,9 +331,6 @@ export default function OfficialsPage() {
           onSubmit={handleSubmit} onPhotoChange={handlePhotoChange} photoPreview={photoPreview} />
       )}
 
-      {availModalTarget && (
-        <AvailabilityModal official={availModalTarget} onClose={() => setAvailModalTarget(null)} />
-      )}
-    </div>
+</div>
   );
 }
