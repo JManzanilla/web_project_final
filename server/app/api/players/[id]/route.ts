@@ -48,19 +48,22 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   if (!body.success) return err(body.error.issues[0].message);
 
   // Verificar nombre duplicado en el mismo equipo (solo si el admin cambia nombre o apellido)
-  if (user!.role === "admin" && (body.data.name || body.data.lastName)) {
-    const newName     = body.data.name     ?? existing.name;
-    const newLastName = body.data.lastName ?? existing.lastName;
-    const nameDuplicate = await db.query.players.findFirst({
-      where: and(
-        eq(players.teamId, existing.teamId),
-        eq(players.name, newName),
-        eq(players.lastName, newLastName),
-        ne(players.id, id),
-      ),
-    });
-    if (nameDuplicate) {
-      return err(`Ya existe un jugador llamado ${newName} ${newLastName} en este equipo`, 400);
+  if (user!.role === "admin") {
+    const adminData = body.data as { name?: string; lastName?: string; number?: string; photoUrl?: string | null };
+    if (adminData.name || adminData.lastName) {
+      const newName     = adminData.name     ?? existing.name;
+      const newLastName = adminData.lastName ?? existing.lastName;
+      const nameDuplicate = await db.query.players.findFirst({
+        where: and(
+          eq(players.teamId, existing.teamId),
+          eq(players.name, newName),
+          eq(players.lastName, newLastName),
+          ne(players.id, id),
+        ),
+      });
+      if (nameDuplicate) {
+        return err(`Ya existe un jugador llamado ${newName} ${newLastName} en este equipo`, 400);
+      }
     }
   }
 
