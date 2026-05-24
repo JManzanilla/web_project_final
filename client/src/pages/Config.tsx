@@ -210,14 +210,14 @@ export default function ConfigPage() {
   };
 
   // ── Reset ──────────────────────────────────────────────────────────────────
-  type ResetScope = "matches" | "teams" | "all";
+  type ResetScope = "matches" | "players" | "all";
   const [resetScope,    setResetScope]    = useState<ResetScope | null>(null);
   const [resetConfirm,  setResetConfirm]  = useState("");
 
   const RESET_OPTIONS: { scope: ResetScope; label: string; desc: string; color: string }[] = [
-    { scope: "matches", label: "Borrar calendario",  desc: "Elimina todos los partidos generados",              color: "amber"  },
-    { scope: "teams",   label: "Borrar equipos",     desc: "Elimina equipos, jugadores y partidos en cascada",  color: "orange" },
-    { scope: "all",     label: "Resetear todo",      desc: "Elimina partidos, equipos y jugadores",             color: "red"    },
+    { scope: "matches", label: "Borrar calendario",  desc: "Elimina todos los partidos y estadísticas. Conserva equipos y jugadores.",       color: "amber"  },
+    { scope: "players", label: "Borrar jugadores",   desc: "Elimina todos los jugadores de todos los equipos. Conserva equipos y partidos.", color: "orange" },
+    { scope: "all",     label: "Resetear todo",      desc: "Elimina partidos, jugadores y equipos. No se puede deshacer.",                   color: "red"    },
   ];
 
   const resetMutation = useMutation({
