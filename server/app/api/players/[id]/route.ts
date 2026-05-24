@@ -9,13 +9,13 @@ import { requireAuth, ok, err } from "@/lib/api";
 const adminUpdateSchema = z.object({
   name:     z.string().min(1).optional(),
   lastName: z.string().min(1).optional(),
-  number:   z.string().min(1).optional(),
+  number:   z.string().regex(/^\d{1,2}$/).refine(v => parseInt(v) <= 99, "El número debe ser entre 0 y 99").optional(),
   photoUrl: z.string().url().optional().nullable(),
 });
 
 // Non-admins can only change number and photo to preserve stats integrity
 const liderUpdateSchema = z.object({
-  number:   z.string().min(1).optional(),
+  number:   z.string().regex(/^\d{1,2}$/).refine(v => parseInt(v) <= 99, "El número debe ser entre 0 y 99").optional(),
   photoUrl: z.string().url().optional().nullable(),
 });
 

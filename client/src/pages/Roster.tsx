@@ -411,7 +411,8 @@ export default function RosterPage() {
               />
 
               {(() => {
-                const canAdd = !rosterLocked && players.length < MAX_PLAYERS && !!newPlayer.name.trim() && !!newPlayer.lastName.trim() && !!newPlayer.number && !!selectedTeamId && !addMutation.isPending;
+                const numVal = parseInt(newPlayer.number);
+                const canAdd = !rosterLocked && players.length < MAX_PLAYERS && !!newPlayer.name.trim() && !!newPlayer.lastName.trim() && !isNaN(numVal) && numVal >= 0 && numVal <= 99 && !!selectedTeamId && !addMutation.isPending;
                 return (
                   <Button
                     onClick={addPlayer}
@@ -555,6 +556,7 @@ export default function RosterPage() {
                       <div>
                         <label className="text-[10px] text-white/30 uppercase tracking-widest font-bold block mb-1">Número</label>
                         <Input value={editDraft.number} onChange={(e) => setEditDraft({ ...editDraft, number: e.target.value })}
+                          type="number" min={0} max={99} step={1}
                           className="glass-input h-9 text-sm w-28" />
                       </div>
 
