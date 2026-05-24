@@ -9,7 +9,7 @@ import { AppBackground } from "./components/layout/AppBackground";
 import {
   Home, Settings, Users, User,
   ClipboardList, History, Trophy,
-  LogIn, LogOut, CalendarDays, Radio, ShieldCheck,
+  LogIn, LogOut, CalendarDays, Radio, ShieldCheck, ScrollText,
 } from "lucide-react";
 
 import { AuthProvider, useAuth } from "@/context/AuthContext";
@@ -26,7 +26,8 @@ import StandingsPage     from "@/pages/Standings";
 import LoginPage         from "@/pages/Login";
 import ChangePasswordPage from "@/pages/ChangePassword";
 import StreamPage         from "@/pages/Stream";
-import OfficialsPage      from "@/pages/Officials";
+import OfficialsPage          from "@/pages/Officials";
+import OfficialSchedulePage  from "@/pages/OfficialSchedule";
 
 // ---------------------------------------------------------------------------
 // Ruta protegida — redirige si no está autenticado o no tiene el rol correcto
@@ -104,7 +105,8 @@ function Navigation() {
     roleItems.push({ href: "/accounts",  icon: Users,         label: "Cuentas"       });
   }
   if (user?.role === "admin") {
-    roleItems.push({ href: "/officials", icon: ShieldCheck,   label: "Árbitros"      });
+    roleItems.push({ href: "/officials",         icon: ShieldCheck, label: "Árbitros"      });
+    roleItems.push({ href: "/official-schedule", icon: ScrollText,  label: "Rol Árbitros"  });
   }
 
   const navItems = [...publicItems, ...roleItems];
@@ -233,7 +235,10 @@ function Router() {
         {() => <ProtectedRoute component={StreamPage}    roles={["admin", "transmision"]}                 />}
       </Route>
       <Route path="/officials">
-        {() => <ProtectedRoute component={OfficialsPage} roles={["admin"]}                               />}
+        {() => <ProtectedRoute component={OfficialsPage}         roles={["admin"]} />}
+      </Route>
+      <Route path="/official-schedule">
+        {() => <ProtectedRoute component={OfficialSchedulePage}  roles={["admin"]} />}
       </Route>
 
       <Route component={NotFound} />
