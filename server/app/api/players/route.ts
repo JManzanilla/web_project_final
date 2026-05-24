@@ -9,7 +9,7 @@ import { requireAuth, ok, err } from "@/lib/api";
 const createSchema = z.object({
   name:     z.string().min(1),
   lastName: z.string().min(1),
-  number:   z.string().min(1),
+  number:   z.string().regex(/^\d{1,2}$/).refine(v => parseInt(v) <= 99, "El número debe ser entre 0 y 99"),
   teamId:   z.string().uuid(),
   photoUrl: z.string().url().optional().nullable(),
 });
