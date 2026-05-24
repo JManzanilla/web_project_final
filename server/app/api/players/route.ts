@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 import { NextRequest } from "next/server";
-import { eq, and } from "drizzle-orm";
+import { eq, and, ne } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import { players, teams } from "@/db/schema";
@@ -53,16 +53,32 @@ export async function POST(req: NextRequest) {
     return err(`El número #${body.data.number} ya está asignado a ${duplicate.name} ${duplicate.lastName}`, 400);
   }
 
-  // Verificar que no exista otro jugador con el mismo nombre y apellido en el equipo
-  const nameDuplicate = await db.query.players.findFirst({
+  // Verificar que no exista otro jugador con el mismo nombre y apellido en el mismo equipo
+  const sameDuplicate = await db.query.players.findFirst({
     where: and(
       eq(players.teamId, body.data.teamId),
       eq(players.name, body.data.name),
       eq(players.lastName, body.data.lastName),
     ),
   });
-  if (nameDuplicate) {
+  if (sameDuplicate) {
     return err(`Ya existe un jugador llamado ${body.data.name} ${body.data.lastName} en este equipo`, 400);
+  }
+
+  // Verificar si el jugador ya está registrado en otro equipo del torneo
+  const crossDuplicate = await db.query.players.findFirst({
+    where: and(
+      eq(players.name, body.data.name),
+      eq(players.lastName, body.data.lastName),
+      ne(players.teamId, body.data.teamId),
+    ),
+    with: { team: true },
+  });
+  if (crossDuplicate) {
+    return err(
+      `${body.data.name} ${body.data.lastName} ya está registrado en el equipo "${crossDuplicate.team.name}". Un jugador no puede pertenecer a dos equipos.`,
+      400,
+    );
   }
 
   const [player] = await db.insert(players).values(body.data).returning();
