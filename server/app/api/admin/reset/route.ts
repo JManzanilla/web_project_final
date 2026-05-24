@@ -4,6 +4,7 @@ import { z } from "zod";
 import { db } from "@/db";
 import { matches, teams, players, playerMatchStats, matchOfficials } from "@/db/schema";
 import { requireAuth, ok, err } from "@/lib/api";
+import { notifyDangerZone } from "@/lib/email";
 
 const schema = z.object({
   scope: z.enum(["matches", "players", "all"]),
@@ -11,7 +12,7 @@ const schema = z.object({
 
 // DELETE /api/admin/reset — solo admin
 export async function DELETE(req: NextRequest) {
-  const { error } = await requireAuth(["admin"]);
+  const { user, error } = await requireAuth(["admin"]);
   if (error) return error;
 
   const body = schema.safeParse(await req.json());
@@ -32,6 +33,9 @@ export async function DELETE(req: NextRequest) {
   if (scope === "all") {
     await db.delete(teams);
   }
+
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "desconocida";
+  notifyDangerZone(scope, user!.name, ip).catch(() => {});
 
   return ok({ scope, message: "Datos eliminados correctamente" });
 }
