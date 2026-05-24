@@ -6,7 +6,7 @@ import { matches, teams, players, playerMatchStats, matchOfficials } from "@/db/
 import { requireAuth, ok, err } from "@/lib/api";
 
 const schema = z.object({
-  scope: z.enum(["matches", "teams", "all"]),
+  scope: z.enum(["matches", "players", "all"]),
 });
 
 // DELETE /api/admin/reset — solo admin
@@ -24,11 +24,12 @@ export async function DELETE(req: NextRequest) {
     await db.delete(matches);
   }
 
-  if (scope === "teams" || scope === "all") {
-    // players tiene onDelete: cascade desde teams
+  if (scope === "players" || scope === "all") {
     // playerMatchStats tiene onDelete: cascade desde players
-    // matches tiene FK a teams pero no tiene onDelete cascade — borrar antes
-    if (scope === "teams") await db.delete(matches);
+    await db.delete(players);
+  }
+
+  if (scope === "all") {
     await db.delete(teams);
   }
 
