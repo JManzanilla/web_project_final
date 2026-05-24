@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { SectionTitle } from "@/components/ui/SectionTitle";
-import { FileText, ChevronRight, ChevronDown, X } from "lucide-react";
+import { FileText, ChevronRight, ChevronDown } from "lucide-react";
 import { apiGet } from "@/lib/apiClient";
-import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 interface ApiPlayer {
   id: string; name: string; lastName: string; number: string; teamId: string;
@@ -94,11 +94,6 @@ function PartidoModal({ match }: { match: ApiMatch }) {
 
   return (
     <div className="bg-[#0d0d0d] rounded-2xl p-6 relative">
-      {/* Botón cerrar */}
-      <DialogClose className="absolute right-4 top-4 w-8 h-8 rounded-full bg-white/8 border border-white/10 flex items-center justify-center hover:bg-white/15 transition-colors">
-        <X className="w-4 h-4 text-white/60" />
-      </DialogClose>
-
       {/* Fecha */}
       <p className="text-center text-[11px] text-white/30 font-bold uppercase tracking-widest mb-4">
         {new Date(match.scheduledAt).toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" })}
