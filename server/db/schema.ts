@@ -8,6 +8,9 @@ export type SectionKey = "roster" | "match" | "schedule" | "config" | "accounts"
 export type SectionPerm = { view: boolean; edit: boolean };
 export type UserPermissions = Partial<Record<SectionKey, SectionPerm>>;
 
+// Roles que un árbitro/oficial puede desempeñar
+export type OfficialRoles = { mainRef: boolean; assistRef: boolean; scorer: boolean };
+
 // ---------------------------------------------------------------------------
 // ENUMS
 // ---------------------------------------------------------------------------
@@ -107,6 +110,20 @@ export const tournamentConfig = pgTable("tournament_config", {
   rosterLockJornada:     integer("roster_lock_jornada").notNull().default(4),
   transferWindowJornada: integer("transfer_window_jornada"),         // null = sin ventana
   updatedAt:             timestamp("updated_at").defaultNow().notNull(),
+});
+
+// ---------------------------------------------------------------------------
+// OFFICIALS (árbitros y mesa técnica — catálogo reutilizable)
+// ---------------------------------------------------------------------------
+export const officials = pgTable("officials", {
+  id:            uuid("id").primaryKey().defaultRandom(),
+  name:          text("name").notNull(),
+  lastName:      text("last_name").notNull(),
+  photoUrl:      text("photo_url"),
+  roles:         jsonb("roles").$type<OfficialRoles>().notNull().default({ mainRef: false, assistRef: false, scorer: false }),
+  availableDays: integer("available_days").array().notNull().default([]),
+  active:        boolean("active").notNull().default(true),
+  createdAt:     timestamp("created_at").defaultNow().notNull(),
 });
 
 // ---------------------------------------------------------------------------

@@ -21,6 +21,7 @@ interface ApiPlayer {
 }
 interface ApiMatch {
   id: string; jornada: number; status: string; actaUrl: string | null;
+  scheduledAt: string;
   homeTeam: { id: string; name: string };
   awayTeam: { id: string; name: string };
 }
@@ -205,6 +206,7 @@ export default function MatchPage() {
         <OfficialStep
           refs={refs}
           setRefs={setRefs}
+          scheduledAt={match.scheduledAt}
           onNext={() => officialsMutation.mutate()}
           loading={officialsMutation.isPending}
         />

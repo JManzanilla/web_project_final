@@ -229,7 +229,7 @@ export default function ConfigPage() {
       setResetConfirm("");
       const labels: Record<ResetScope, string> = {
         matches: "Calendario eliminado",
-        teams:   "Equipos eliminados",
+        players: "Jugadores eliminados",
         all:     "Base de datos reseteada",
       };
       sileo.success({ title: labels[scope], description: "Los datos fueron eliminados correctamente" });
