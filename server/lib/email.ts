@@ -77,14 +77,14 @@ export function trackFailedLogin(username: string, ip: string): void {
 
   // Notifica al 3er intento y cada 3 después, con cooldown de 1 hora
   if (entry.count >= 3 && entry.count % 3 === 0) {
-    const now = Date.now();
-    if (now - entry.lastSent > 3_600_000) {
-      entry.lastSent = now;
+    const nowMs = Date.now();
+    if (nowMs - entry.lastSent > 3_600_000) {
+      entry.lastSent = nowMs;
       send(`${entry.count} intentos fallidos: "${username}"`, `
         <p>Se detectaron <strong style="color:#ff4500">${entry.count} intentos fallidos</strong>
         de inicio de sesión para el usuario <strong>${username}</strong>.</p>
         <table style="width:100%;font-size:14px;color:#aaa;margin-top:12px">
-          <tr><td>📅 Fecha</td><td>${now}</td></tr>
+          <tr><td>📅 Fecha</td><td>${now()}</td></tr>
           <tr><td>🌐 IP</td><td>${ip}</td></tr>
         </table>
         <p style="color:#f87171;margin-top:16px">Si no eres tú, alguien podría estar intentando acceder a tu sistema.</p>

@@ -20,7 +20,7 @@ export async function GET() {
 
 // POST /api/teams — solo admin
 export async function POST(req: NextRequest) {
-  const { user, error } = await requireAuth(["admin"]);
+  const { error } = await requireAuth(["admin"]);
   if (error) return error;
 
   const body = createSchema.safeParse(await req.json());
