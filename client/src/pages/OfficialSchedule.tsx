@@ -12,12 +12,12 @@ interface OfficialRoles { mainRef: boolean; assistRef: boolean; scorer: boolean 
 interface Official { id: string; name: string; lastName: string; roles: OfficialRoles; active: boolean }
 interface Slot { id: string; officialId: string; jornada: number; dayOfWeek: number; startTime: string; endTime: string }
 interface MatchItem {
-  id: string; jornada: number; scheduledAt: string; status: string;
+  id: string; jornada: number; scheduledAt: string; status: string; phase: string;
   homeTeam: { id: string; name: string };
   awayTeam: { id: string; name: string };
-  officials: { ref1: string | null; ref2: string | null; scorer: string | null } | null;
+  officials: { ref1: string | null; ref2: string | null; scorer: string | null; extRef1?: string | null; extRef2?: string | null; extScorer?: string | null } | null;
 }
-interface Assignment { ref1: string; ref2: string; scorer: string }
+interface Assignment { ref1: string; ref2: string; scorer: string; extRef1: string; extRef2: string; extScorer: string; isExternal: boolean }
 
 const DAYS  = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
 const DAYS_FULL = ["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
@@ -239,7 +239,12 @@ export default function OfficialSchedulePage() {
       const next = { ...prev };
       matches.forEach((m) => {
         if (!next[m.id]) {
-          next[m.id] = { ref1: m.officials?.ref1 ?? "", ref2: m.officials?.ref2 ?? "", scorer: m.officials?.scorer ?? "" };
+          const isExternal = !!(m.officials?.extRef1 || m.officials?.extRef2 || m.officials?.extScorer);
+          next[m.id] = {
+            ref1: m.officials?.ref1 ?? "", ref2: m.officials?.ref2 ?? "", scorer: m.officials?.scorer ?? "",
+            extRef1: m.officials?.extRef1 ?? "", extRef2: m.officials?.extRef2 ?? "", extScorer: m.officials?.extScorer ?? "",
+            isExternal,
+          };
         }
       });
       return next;
@@ -265,7 +270,13 @@ export default function OfficialSchedulePage() {
   // ── Guardar asignaciones ────────────────────────────────────────────────
   const saveMutation = useMutation({
     mutationFn: () =>
-      Promise.all(matches.map((m) => apiPut(`/api/matches/${m.id}/officials`, assignments[m.id] ?? { ref1: "", ref2: "", scorer: "" }))),
+      Promise.all(matches.map((m) => {
+        const a = assignments[m.id] ?? { ref1: "", ref2: "", scorer: "", extRef1: "", extRef2: "", extScorer: "", isExternal: false };
+        if (a.isExternal) {
+          return apiPut(`/api/matches/${m.id}/officials`, { ref1: null, ref2: null, scorer: null, extRef1: a.extRef1 || null, extRef2: a.extRef2 || null, extScorer: a.extScorer || null });
+        }
+        return apiPut(`/api/matches/${m.id}/officials`, { ref1: a.ref1 || null, ref2: a.ref2 || null, scorer: a.scorer || null, extRef1: null, extRef2: null, extScorer: null });
+      })),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["/api/matches", jornada] }); sileo.success({ title: "Rol guardado correctamente" }); },
     onError:   (e) => sileo.error({ title: "Error al guardar", description: (e as Error).message }),
   });
@@ -407,12 +418,48 @@ export default function OfficialSchedulePage() {
                             {candidates.length > 0 ? `${candidates.length} disp.` : "Sin disp."}
                           </span>
                         </div>
+                        {/* Toggle local/externo para playoffs */}
+                        {m.phase !== "regular" && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] text-white/30 uppercase font-bold">Árbitros:</span>
+                            {(["Locales", "Externos"] as const).map((mode) => {
+                              const isExt = mode === "Externos";
+                              const active = (assignments[m.id]?.isExternal ?? false) === isExt;
+                              return (
+                                <button key={mode} onClick={() => setAssignments((p) => ({ ...p, [m.id]: { ...(p[m.id] ?? { ref1:"",ref2:"",scorer:"",extRef1:"",extRef2:"",extScorer:"" }), isExternal: isExt } }))}
+                                  className={`px-3 py-1 rounded-full text-[11px] font-bold border transition-all ${active ? "bg-brand-orange text-white border-brand-orange" : "bg-white/5 text-white/40 border-white/10 hover:border-white/25"}`}>
+                                  {mode}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+
                         {/* Selectores */}
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                           {(() => {
-                            const a = assignments[m.id] ?? { ref1: "", ref2: "", scorer: "" };
+                            const a = assignments[m.id] ?? { ref1: "", ref2: "", scorer: "", extRef1: "", extRef2: "", extScorer: "", isExternal: false };
                             const set = (patch: Partial<Assignment>) =>
-                              setAssignments((p) => ({ ...p, [m.id]: { ...(p[m.id] ?? { ref1:"",ref2:"",scorer:"" }), ...patch } }));
+                              setAssignments((p) => ({ ...p, [m.id]: { ...(p[m.id] ?? { ref1:"",ref2:"",scorer:"",extRef1:"",extRef2:"",extScorer:"",isExternal:false }), ...patch } }));
+
+                            if (a.isExternal) {
+                              return (
+                                <>
+                                  {[
+                                    { label: "🟠 Principal", key: "extRef1" as const },
+                                    { label: "🔵 Auxiliar",  key: "extRef2" as const },
+                                    { label: "📋 Anotador",  key: "extScorer" as const },
+                                  ].map(({ label, key }) => (
+                                    <div key={key} className="flex-1 min-w-0 space-y-1">
+                                      <p className="text-[10px] font-bold uppercase tracking-widest text-white/30">{label}</p>
+                                      <Input placeholder="Nombre Apellido" value={a[key]} onChange={(e) => set({ [key]: e.target.value })}
+                                        className="glass-input h-9 text-sm" />
+                                    </div>
+                                  ))}
+                                </>
+                              );
+                            }
+
                             return (
                               <>
                                 <OfficialSelect label="🟠 Principal" value={a.ref1}

@@ -9,7 +9,7 @@ import {
 import {
   Settings2, Calendar, Clock, Check, AlertTriangle,
   Shuffle, ChevronDown, ChevronUp, Plus, Minus, Pencil, Lock,
-  Trash2, TriangleAlert, UserPlus, ShieldCheck,
+  Trash2, TriangleAlert, UserPlus, ShieldCheck, Trophy,
 } from "lucide-react";
 import { apiGet, apiPut, apiPost, apiDelete } from "@/lib/apiClient";
 import { sileo } from "sileo";
@@ -59,9 +59,21 @@ export default function ConfigPage() {
 
   const { data: upcomingMatches = [] } = useQuery<{ id: string }[]>({
     queryKey: ["/api/matches", "upcoming"],
-    queryFn:  () => apiGet<{ id: string }[]>("/api/matches?status=upcoming"),
+    queryFn:  () => apiGet<{ id: string }[]>("/api/matches?status=upcoming&phase=regular"),
   });
   const hasExistingCalendar = upcomingMatches.length > 0;
+
+  // Detectar si todos los partidos regulares están finalizados (para mostrar playoffs)
+  const { data: allRegularMatches = [] } = useQuery<{ id: string; status: string }[]>({
+    queryKey: ["/api/matches", "regular-all"],
+    queryFn:  () => apiGet<{ id: string; status: string }[]>("/api/matches?phase=regular"),
+  });
+  const { data: playoffStatus } = useQuery<{ status: string }>({
+    queryKey: ["/api/playoffs"],
+    queryFn:  () => apiGet<{ status: string }>("/api/playoffs"),
+  });
+  const allRegularDone = allRegularMatches.length > 0 && allRegularMatches.every(m => m.status === "finished");
+  const playoffsGenerated = playoffStatus?.status === "playoffs_in_progress";
 
   // ── Estado ─────────────────────────────────────────────────────────────────
   const [totalTeams,      setTotalTeams]      = useState(8);
@@ -87,6 +99,25 @@ export default function ConfigPage() {
   const [suppOpen,        setSuppOpen]        = useState(false);
   const [suppNewIds,      setSuppNewIds]      = useState<string[]>([]);
   const [suppFromJornada, setSuppFromJornada] = useState(2);
+
+  // Playoffs
+  const [sfFormat,    setSfFormat]    = useState<1 | 3>(1);
+  const [finalFormat, setFinalFormat] = useState<1 | 3>(1);
+  const [sf1Date,     setSf1Date]     = useState("");
+  const [sf2Date,     setSf2Date]     = useState("");
+
+  const playoffMutation = useMutation({
+    mutationFn: () => apiPost("/api/playoffs/generate", {
+      sfFormat, finalFormat,
+      sf1Date: new Date(sf1Date).toISOString(),
+      sf2Date: new Date(sf2Date).toISOString(),
+    }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/playoffs"] });
+      sileo.success({ title: "Playoffs generados", description: "SF1 y SF2 creados correctamente" });
+    },
+    onError: (e) => sileo.error({ title: "Error", description: (e as Error).message }),
+  });
 
   const [rosterLockJornada,     setRosterLockJornada]     = useState(4);
   const [transferWindowEnabled, setTransferWindowEnabled] = useState(false);
@@ -870,6 +901,95 @@ export default function ConfigPage() {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* ================================================================== */}
+      {/* FASE FINAL — PLAYOFFS                                                 */}
+      {/* ================================================================== */}
+      {allRegularDone && (
+        <div className="mt-8">
+          <div className="flex items-center gap-2 mb-3">
+            <Trophy className="w-4 h-4 text-brand-orange" />
+            <span className="text-[11px] font-bold uppercase tracking-widest text-brand-orange">
+              Fase Final
+            </span>
+          </div>
+
+          {playoffsGenerated ? (
+            <div className="glass-panel p-5 border-brand-orange/25 bg-brand-orange/5 flex items-center gap-3">
+              <Check className="w-5 h-5 text-green-400 flex-shrink-0" />
+              <div>
+                <p className="font-bold text-white text-sm">Playoffs generados</p>
+                <p className="text-[11px] text-white/50">SF1 y SF2 están activos. Puedes ver el bracket en Clasificación.</p>
+              </div>
+            </div>
+          ) : (
+            <div className="glass-panel p-5 sm:p-6 border-brand-orange/20 bg-brand-orange/3">
+              <p className="text-[11px] text-white/55 mb-5">
+                Todos los partidos regulares han finalizado. Configura y genera la fase eliminatoria.
+              </p>
+
+              <div className="grid sm:grid-cols-2 gap-5 mb-5">
+                {/* Formato Semifinales */}
+                <div>
+                  <label className="text-[11px] text-white/65 uppercase tracking-widest font-bold block mb-2">
+                    Formato Semifinal
+                  </label>
+                  <div className="flex gap-2">
+                    {([1, 3] as const).map((f) => (
+                      <button key={f} onClick={() => setSfFormat(f)}
+                        className={`flex-1 h-10 rounded-xl font-bold text-sm border transition-all ${sfFormat === f ? "bg-brand-orange text-white border-brand-orange" : "bg-white/5 text-white/60 border-white/10 hover:border-white/25"}`}>
+                        {f === 1 ? "1 partido" : "Mejor de 3"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Formato Final */}
+                <div>
+                  <label className="text-[11px] text-white/65 uppercase tracking-widest font-bold block mb-2">
+                    Formato Final
+                  </label>
+                  <div className="flex gap-2">
+                    {([1, 3] as const).map((f) => (
+                      <button key={f} onClick={() => setFinalFormat(f)}
+                        className={`flex-1 h-10 rounded-xl font-bold text-sm border transition-all ${finalFormat === f ? "bg-brand-orange text-white border-brand-orange" : "bg-white/5 text-white/60 border-white/10 hover:border-white/25"}`}>
+                        {f === 1 ? "1 partido" : "Mejor de 3"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Fecha SF1 */}
+                <div>
+                  <label className="text-[11px] text-white/65 uppercase tracking-widest font-bold block mb-2">
+                    Fecha/hora SF1 (1° vs 4°)
+                  </label>
+                  <input type="datetime-local" value={sf1Date} onChange={e => setSf1Date(e.target.value)}
+                    className="w-full glass-input h-11 px-3 text-sm rounded-xl" />
+                </div>
+
+                {/* Fecha SF2 */}
+                <div>
+                  <label className="text-[11px] text-white/65 uppercase tracking-widest font-bold block mb-2">
+                    Fecha/hora SF2 (2° vs 3°)
+                  </label>
+                  <input type="datetime-local" value={sf2Date} onChange={e => setSf2Date(e.target.value)}
+                    className="w-full glass-input h-11 px-3 text-sm rounded-xl" />
+                </div>
+              </div>
+
+              <Button
+                onClick={() => playoffMutation.mutate()}
+                disabled={!sf1Date || !sf2Date || playoffMutation.isPending}
+                className="w-full rounded-full h-12 font-bold bg-brand-orange hover:bg-brand-orange/85 text-white glow-orange disabled:opacity-40">
+                {playoffMutation.isPending
+                  ? <><Shuffle className="w-4 h-4 mr-2 animate-spin" />Generando...</>
+                  : <><Trophy className="w-4 h-4 mr-2" />Generar Playoffs</>}
+              </Button>
+            </div>
+          )}
         </div>
       )}
 

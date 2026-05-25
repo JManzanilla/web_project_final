@@ -61,28 +61,35 @@ export const players = pgTable("players", {
 // MATCHES
 // ---------------------------------------------------------------------------
 export const matches = pgTable("matches", {
-  id:          uuid("id").primaryKey().defaultRandom(),
-  jornada:     integer("jornada").notNull(),
-  homeTeamId:  uuid("home_team_id").notNull().references(() => teams.id),
-  awayTeamId:  uuid("away_team_id").notNull().references(() => teams.id),
-  scoreHome:   integer("score_home"),
-  scoreAway:   integer("score_away"),
-  scheduledAt: timestamp("scheduled_at").notNull(),
-  status:      statusEnum("status").notNull().default("upcoming"),
-  streamUrl:   text("stream_url"),
-  actaUrl:     text("acta_url"),
-  createdAt:   timestamp("created_at").defaultNow().notNull(),
+  id:           uuid("id").primaryKey().defaultRandom(),
+  jornada:      integer("jornada").notNull(),
+  homeTeamId:   uuid("home_team_id").notNull().references(() => teams.id),
+  awayTeamId:   uuid("away_team_id").notNull().references(() => teams.id),
+  scoreHome:    integer("score_home"),
+  scoreAway:    integer("score_away"),
+  scheduledAt:  timestamp("scheduled_at").notNull(),
+  status:       statusEnum("status").notNull().default("upcoming"),
+  streamUrl:    text("stream_url"),
+  actaUrl:      text("acta_url"),
+  // Fase eliminatoria: "regular" | "sf1" | "sf2" | "final"
+  phase:        text("phase").notNull().default("regular"),
+  seriesGame:   integer("series_game"),   // 1 | 2 | 3 dentro de la serie
+  seriesLength: integer("series_length"), // 1 = a 1 partido, 3 = mejor de 3
+  createdAt:    timestamp("created_at").defaultNow().notNull(),
 });
 
 // ---------------------------------------------------------------------------
 // MATCH OFFICIALS (árbitros + anotador)
 // ---------------------------------------------------------------------------
 export const matchOfficials = pgTable("match_officials", {
-  id:       uuid("id").primaryKey().defaultRandom(),
-  matchId:  uuid("match_id").notNull().references(() => matches.id, { onDelete: "cascade" }),
-  ref1:     text("ref1"),
-  ref2:     text("ref2"),
-  scorer:   text("scorer"),
+  id:        uuid("id").primaryKey().defaultRandom(),
+  matchId:   uuid("match_id").notNull().references(() => matches.id, { onDelete: "cascade" }),
+  ref1:      text("ref1"),    // official ID (local)
+  ref2:      text("ref2"),
+  scorer:    text("scorer"),
+  extRef1:   text("ext_ref1"),   // nombre libre (árbitro externo)
+  extRef2:   text("ext_ref2"),
+  extScorer: text("ext_scorer"),
 });
 
 // ---------------------------------------------------------------------------

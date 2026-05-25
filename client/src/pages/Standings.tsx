@@ -3,6 +3,7 @@ import { SectionTitle } from "@/components/ui/SectionTitle";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import { Trophy, Swords } from "lucide-react";
 import { apiGet } from "@/lib/apiClient";
 
 interface StandingRow {
@@ -16,6 +17,90 @@ interface ScorerRow {
   teamName: string; pts: number; ast: number; flt: number; pj: number;
 }
 
+interface PlayoffGame {
+  id: string; seriesGame: number | null; status: string;
+  scoreHome: number | null; scoreAway: number | null; scheduledAt: string;
+}
+
+interface PlayoffSeries {
+  team1: { id: string; name: string };
+  team2: { id: string; name: string };
+  wins: [number, number];
+  seriesLength: number;
+  games: PlayoffGame[];
+  winnerId: string | null;
+}
+
+interface PlayoffData {
+  status: string;
+  sf1: PlayoffSeries | null;
+  sf2: PlayoffSeries | null;
+  final: PlayoffSeries | null;
+}
+
+// ── Componente de una serie (SF1, SF2 o Final) ────────────────────────────────
+function SeriesCard({ label, series, highlight }: { label: string; series: PlayoffSeries | null; highlight?: boolean }) {
+  const isDone = !!series?.winnerId;
+  const winner = series?.winnerId
+    ? (series.winnerId === series.team1.id ? series.team1 : series.team2)
+    : null;
+
+  return (
+    <div className={`glass-panel rounded-2xl overflow-hidden ${highlight ? "border-brand-orange/30 bg-brand-orange/5" : ""}`}>
+      <div className="px-4 py-2.5 border-b border-white/8 flex items-center gap-2">
+        <Trophy className={`w-3.5 h-3.5 flex-shrink-0 ${highlight ? "text-brand-orange" : "text-white/30"}`} />
+        <span className="text-[11px] font-bold uppercase tracking-widest text-white/50">{label}</span>
+        {isDone && winner && (
+          <span className="ml-auto text-[10px] font-bold text-green-400 bg-green-500/10 border border-green-500/20 px-2 py-0.5 rounded-full">
+            {winner.name} campeón
+          </span>
+        )}
+      </div>
+
+      {series ? (
+        <div className="p-4">
+          {/* Equipos y marcador serie */}
+          <div className="flex items-center justify-between gap-3 mb-3">
+            <div className={`flex-1 text-center ${series.winnerId === series.team1.id ? "text-white" : "text-white/60"}`}>
+              <p className="font-bold text-sm truncate">{series.team1.name}</p>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <span className={`text-2xl font-black font-display ${series.winnerId === series.team1.id ? "text-brand-orange" : "text-white/70"}`}>
+                {series.wins[0]}
+              </span>
+              <span className="text-white/20 text-sm">-</span>
+              <span className={`text-2xl font-black font-display ${series.winnerId === series.team2.id ? "text-brand-orange" : "text-white/70"}`}>
+                {series.wins[1]}
+              </span>
+            </div>
+            <div className={`flex-1 text-center ${series.winnerId === series.team2.id ? "text-white" : "text-white/60"}`}>
+              <p className="font-bold text-sm truncate">{series.team2.name}</p>
+            </div>
+          </div>
+
+          {/* Juegos individuales */}
+          {series.games.map((g, i) => (
+            <div key={g.id} className="flex items-center justify-between text-xs py-1 border-t border-white/5">
+              <span className="text-white/30">Juego {g.seriesGame ?? i + 1}</span>
+              {g.status === "finished" && g.scoreHome !== null && g.scoreAway !== null ? (
+                <span className="font-bold text-white/70">{g.scoreHome} – {g.scoreAway}</span>
+              ) : (
+                <span className="text-white/20">{g.status === "upcoming" ? "Próximo" : g.status === "live" ? "🔴 En vivo" : "—"}</span>
+              )}
+            </div>
+          ))}
+
+          {series.seriesLength === 3 && !isDone && (
+            <p className="text-[10px] text-white/25 text-center mt-2">Mejor de 3 — gana quien llegue a 2</p>
+          )}
+        </div>
+      ) : (
+        <div className="p-4 text-center text-white/25 text-sm py-6">Por definirse</div>
+      )}
+    </div>
+  );
+}
+
 export default function StandingsPage() {
   const { data: standings = [], isLoading } = useQuery<StandingRow[]>({
     queryKey: ["/api/standings"],
@@ -27,123 +112,170 @@ export default function StandingsPage() {
     queryFn: () => apiGet<ScorerRow[]>("/api/standings/scorers"),
   });
 
+  const { data: playoffs } = useQuery<PlayoffData>({
+    queryKey: ["/api/playoffs"],
+    queryFn: () => apiGet<PlayoffData>("/api/playoffs"),
+    refetchInterval: 30_000,
+  });
+
+  const allRegularDone = playoffs?.status === "regular_done" || playoffs?.status === "playoffs_in_progress";
+  const playoffsActive = playoffs?.status === "playoffs_in_progress";
+  const champion = playoffs?.final?.winnerId
+    ? (playoffs.final.winnerId === playoffs.final.team1?.id ? playoffs.final.team1 : playoffs.final.team2)
+    : null;
+
   return (
     <div className="container max-w-5xl mx-auto px-4 py-8">
       <SectionTitle whiteText="Tabla de" orangeText="Clasificación" />
 
-      {/* Legend */}
-      <div className="flex items-center gap-3 mb-4">
-        <div className="w-3 h-3 rounded-full bg-brand-orange shadow-[0_0_10px_rgba(255,69,0,0.8)] flex-shrink-0" />
-        <span className="text-white/70 text-xs font-semibold uppercase tracking-wider">
-          Zona de Semifinales — los primeros {Math.min(4, standings.length)} clasifican
-        </span>
-      </div>
+      {/* ── Banner campeón ── */}
+      {champion && (
+        <div className="mb-8 glass-panel p-6 border-brand-orange/40 bg-brand-orange/8 text-center animate-in fade-in duration-500">
+          <Trophy className="w-10 h-10 text-brand-orange mx-auto mb-2" />
+          <p className="text-[11px] text-brand-orange/70 uppercase tracking-widest font-bold mb-1">Campeón del torneo</p>
+          <p className="text-3xl font-black font-display text-white">{champion.name}</p>
+        </div>
+      )}
 
-      {/* ── Tabla de posiciones ── */}
-      <div className="glass-panel overflow-hidden mb-10">
-        {isLoading ? (
-          <div className="text-center text-white/40 py-12">Cargando clasificación...</div>
-        ) : (
-          <>
-            {/* Desktop */}
-            <div className="hidden md:block overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-b border-white/10 hover:bg-transparent">
-                    <TableHead className="w-16 text-center text-white/60 font-display">POS</TableHead>
-                    <TableHead className="text-brand-orange font-display">EQUIPO</TableHead>
-                    <TableHead className="text-center text-white/60 font-display">PTS</TableHead>
-                    <TableHead className="text-center text-white/60 font-display">PJ</TableHead>
-                    <TableHead className="text-center text-white/60 font-display">G</TableHead>
-                    <TableHead className="text-center text-white/60 font-display">P</TableHead>
-                    <TableHead className="text-center text-green-400/60 font-display">CF</TableHead>
-                    <TableHead className="text-center text-red-400/60 font-display">CE</TableHead>
-                    <TableHead className="text-center text-white/60 font-display">DIF</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+      {/* ── Bracket de playoffs (cuando todos los partidos regulares terminaron) ── */}
+      {allRegularDone && (
+        <div className="mb-10">
+          <div className="flex items-center gap-2 mb-4">
+            <Swords className="w-4 h-4 text-brand-orange" />
+            <span className="text-[11px] font-bold uppercase tracking-widest text-brand-orange">Fase Eliminatoria</span>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-4">
+            <SeriesCard label="Semifinal 1 · 1° vs 4°" series={playoffs?.sf1 ?? null} />
+            <SeriesCard label="Final" series={playoffs?.final ?? null} highlight />
+            <SeriesCard label="Semifinal 2 · 2° vs 3°" series={playoffs?.sf2 ?? null} />
+          </div>
+
+          {!playoffsActive && (
+            <p className="text-[11px] text-white/30 text-center mt-3">
+              Fase regular terminada · El administrador generará los partidos de playoffs próximamente
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* ── Tabla de posiciones (se oculta cuando los playoffs terminan con campeón) ── */}
+      {!champion && (
+        <>
+          {!allRegularDone && (
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-3 h-3 rounded-full bg-brand-orange shadow-[0_0_10px_rgba(255,69,0,0.8)] flex-shrink-0" />
+              <span className="text-white/70 text-xs font-semibold uppercase tracking-wider">
+                Zona de Semifinales — los primeros {Math.min(4, standings.length)} clasifican
+              </span>
+            </div>
+          )}
+
+          <div className="glass-panel overflow-hidden mb-10">
+            {isLoading ? (
+              <div className="text-center text-white/40 py-12">Cargando clasificación...</div>
+            ) : (
+              <>
+                {/* Desktop */}
+                <div className="hidden md:block overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="border-b border-white/10 hover:bg-transparent">
+                        <TableHead className="w-16 text-center text-white/60 font-display">POS</TableHead>
+                        <TableHead className="text-brand-orange font-display">EQUIPO</TableHead>
+                        <TableHead className="text-center text-white/60 font-display">PTS</TableHead>
+                        <TableHead className="text-center text-white/60 font-display">PJ</TableHead>
+                        <TableHead className="text-center text-white/60 font-display">G</TableHead>
+                        <TableHead className="text-center text-white/60 font-display">P</TableHead>
+                        <TableHead className="text-center text-green-400/60 font-display">CF</TableHead>
+                        <TableHead className="text-center text-red-400/60 font-display">CE</TableHead>
+                        <TableHead className="text-center text-white/60 font-display">DIF</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {standings.map((row, idx) => {
+                        const rank = idx + 1;
+                        const isPlayoffZone = rank <= Math.min(4, standings.length);
+                        const diff = row.pf - row.pc;
+                        return (
+                          <TableRow key={row.teamId} className={`border-b border-white/5 transition-all ${isPlayoffZone ? "bg-brand-orange/5 hover:bg-brand-orange/10" : "hover:bg-white/5"}`}>
+                            <TableCell className="py-4">
+                              <div className={`mx-auto w-8 h-8 rounded-full flex items-center justify-center font-bold font-display ${isPlayoffZone ? "bg-brand-orange text-white glow-orange" : "bg-white/10 text-white/60"}`}>
+                                {rank}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <span className={`font-bold text-base ${isPlayoffZone ? "text-white" : "text-white/70"}`}>{row.name}</span>
+                            </TableCell>
+                            <TableCell className="text-center font-display font-bold text-xl text-white">{row.pts}</TableCell>
+                            <TableCell className="text-center text-white/60 font-semibold">{row.pj}</TableCell>
+                            <TableCell className="text-center text-green-400 font-semibold">{row.pg}</TableCell>
+                            <TableCell className="text-center text-red-400 font-semibold">{row.pp}</TableCell>
+                            <TableCell className="text-center text-green-400/80 font-semibold">{row.pf}</TableCell>
+                            <TableCell className="text-center text-red-400/80 font-semibold">{row.pc}</TableCell>
+                            <TableCell className={`text-center font-semibold ${diff >= 0 ? "text-green-400/70" : "text-red-400/70"}`}>
+                              {diff >= 0 ? `+${diff}` : diff}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                      {standings.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={9} className="text-center text-white/30 py-10">No hay partidos finalizados aún</TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {/* Mobile */}
+                <div className="md:hidden p-3 space-y-2.5">
                   {standings.map((row, idx) => {
                     const rank = idx + 1;
                     const isPlayoffZone = rank <= Math.min(4, standings.length);
                     const diff = row.pf - row.pc;
                     return (
-                      <TableRow key={row.teamId} className={`border-b border-white/5 transition-all ${isPlayoffZone ? "bg-brand-orange/5 hover:bg-brand-orange/10" : "hover:bg-white/5"}`}>
-                        <TableCell className="py-4">
-                          <div className={`mx-auto w-8 h-8 rounded-full flex items-center justify-center font-bold font-display ${isPlayoffZone ? "bg-brand-orange text-white glow-orange" : "bg-white/10 text-white/60"}`}>
-                            {rank}
+                      <div key={`mobile-${row.teamId}`} className={`rounded-2xl border p-3 ${isPlayoffZone ? "bg-brand-orange/8 border-brand-orange/25" : "bg-white/4 border-white/8"}`}>
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${isPlayoffZone ? "bg-brand-orange text-white" : "bg-white/10 text-white/70"}`}>{rank}</div>
+                            <p className="font-bold text-sm truncate">{row.name}</p>
                           </div>
-                        </TableCell>
-                        <TableCell>
-                          <span className={`font-bold text-base ${isPlayoffZone ? "text-white" : "text-white/70"}`}>{row.name}</span>
-                        </TableCell>
-                        <TableCell className="text-center font-display font-bold text-xl text-white">{row.pts}</TableCell>
-                        <TableCell className="text-center text-white/60 font-semibold">{row.pj}</TableCell>
-                        <TableCell className="text-center text-green-400 font-semibold">{row.pg}</TableCell>
-                        <TableCell className="text-center text-red-400 font-semibold">{row.pp}</TableCell>
-                        <TableCell className="text-center text-green-400/80 font-semibold">{row.pf}</TableCell>
-                        <TableCell className="text-center text-red-400/80 font-semibold">{row.pc}</TableCell>
-                        <TableCell className={`text-center font-semibold ${diff >= 0 ? "text-green-400/70" : "text-red-400/70"}`}>
-                          {diff >= 0 ? `+${diff}` : diff}
-                        </TableCell>
-                      </TableRow>
+                          <p className="text-lg font-black text-white">{row.pts}</p>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 text-xs">
+                          <div className="rounded-lg bg-black/30 p-2 text-center">
+                            <p className="text-white/30 uppercase font-bold text-[10px]">Ganados</p>
+                            <p className="text-green-400 font-bold">{row.pg}</p>
+                          </div>
+                          <div className="rounded-lg bg-black/30 p-2 text-center">
+                            <p className="text-white/30 uppercase font-bold text-[10px]">Perdidos</p>
+                            <p className="text-red-400 font-bold">{row.pp}</p>
+                          </div>
+                          <div className="rounded-lg bg-black/30 p-2 text-center">
+                            <p className="text-white/30 uppercase font-bold text-[10px]">DIF</p>
+                            <p className={`font-bold ${diff >= 0 ? "text-green-400/80" : "text-red-400/80"}`}>{diff >= 0 ? `+${diff}` : diff}</p>
+                          </div>
+                        </div>
+                      </div>
                     );
                   })}
                   {standings.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={9} className="text-center text-white/30 py-10">No hay partidos finalizados aún</TableCell>
-                    </TableRow>
+                    <p className="text-center text-white/30 py-8">No hay partidos finalizados aún</p>
                   )}
-                </TableBody>
-              </Table>
-            </div>
-
-            {/* Mobile */}
-            <div className="md:hidden p-3 space-y-2.5">
-              {standings.map((row, idx) => {
-                const rank = idx + 1;
-                const isPlayoffZone = rank <= Math.min(4, standings.length);
-                const diff = row.pf - row.pc;
-                return (
-                  <div key={`mobile-${row.teamId}`} className={`rounded-2xl border p-3 ${isPlayoffZone ? "bg-brand-orange/8 border-brand-orange/25" : "bg-white/4 border-white/8"}`}>
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${isPlayoffZone ? "bg-brand-orange text-white" : "bg-white/10 text-white/70"}`}>{rank}</div>
-                        <p className="font-bold text-sm truncate">{row.name}</p>
-                      </div>
-                      <p className="text-lg font-black text-white">{row.pts}</p>
-                    </div>
-                    <div className="grid grid-cols-3 gap-2 text-xs">
-                      <div className="rounded-lg bg-black/30 p-2 text-center">
-                        <p className="text-white/30 uppercase font-bold text-[10px]">Ganados</p>
-                        <p className="text-green-400 font-bold">{row.pg}</p>
-                      </div>
-                      <div className="rounded-lg bg-black/30 p-2 text-center">
-                        <p className="text-white/30 uppercase font-bold text-[10px]">Perdidos</p>
-                        <p className="text-red-400 font-bold">{row.pp}</p>
-                      </div>
-                      <div className="rounded-lg bg-black/30 p-2 text-center">
-                        <p className="text-white/30 uppercase font-bold text-[10px]">DIF</p>
-                        <p className={`font-bold ${diff >= 0 ? "text-green-400/80" : "text-red-400/80"}`}>{diff >= 0 ? `+${diff}` : diff}</p>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-              {standings.length === 0 && (
-                <p className="text-center text-white/30 py-8">No hay partidos finalizados aún</p>
-              )}
-            </div>
-          </>
-        )}
-      </div>
+                </div>
+              </>
+            )}
+          </div>
+        </>
+      )}
 
       {/* ── Canasteo individual ── */}
       <SectionTitle whiteText="Canasteo" orangeText="Individual" />
-
       <div className="flex items-center gap-3 mb-4">
         <div className="w-3 h-3 rounded-full bg-brand-orange shadow-[0_0_10px_rgba(255,69,0,0.8)] flex-shrink-0" />
         <span className="text-white/70 text-xs font-semibold uppercase tracking-wider">
-          Puntos acumulados en el torneo
+          Puntos acumulados en fase regular
         </span>
       </div>
 

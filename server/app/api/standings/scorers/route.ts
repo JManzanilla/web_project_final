@@ -1,5 +1,5 @@
 export const dynamic = "force-dynamic";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, and } from "drizzle-orm";
 import { db } from "@/db";
 import { playerMatchStats, players, teams, matches } from "@/db/schema";
 import { ok } from "@/lib/api";
@@ -23,7 +23,7 @@ export async function GET() {
     .innerJoin(players, eq(playerMatchStats.playerId, players.id))
     .innerJoin(teams,   eq(players.teamId, teams.id))
     .innerJoin(matches, eq(playerMatchStats.matchId, matches.id))
-    .where(eq(matches.status, "finished"))
+    .where(and(eq(matches.status, "finished"), eq(matches.phase, "regular")))
     .groupBy(players.id, players.name, players.lastName, players.number, teams.name)
     .orderBy(sql`sum(${playerMatchStats.pts}) desc`)
     .limit(5);

@@ -1,5 +1,5 @@
 export const dynamic = "force-dynamic";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { db } from "@/db";
 import { matches, teams } from "@/db/schema";
 import { ok } from "@/lib/api";
@@ -8,7 +8,7 @@ import { ok } from "@/lib/api";
 // Calcula la tabla de posiciones a partir de los partidos finalizados
 export async function GET() {
   const allTeams   = await db.select().from(teams);
-  const allMatches = await db.select().from(matches).where(eq(matches.status, "finished"));
+  const allMatches = await db.select().from(matches).where(and(eq(matches.status, "finished"), eq(matches.phase, "regular")));
 
   // Mapa de stats por equipo
   const stats: Record<string, {

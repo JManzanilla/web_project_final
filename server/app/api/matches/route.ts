@@ -17,11 +17,14 @@ export async function GET(req: NextRequest) {
   const jornada = req.nextUrl.searchParams.get("jornada");
   const status  = req.nextUrl.searchParams.get("status");
 
+  const phase = req.nextUrl.searchParams.get("phase");
+
   const all = await db.query.matches.findMany({
     where: (m, { eq, and }) => {
       const filters = [];
       if (jornada) filters.push(eq(m.jornada, parseInt(jornada)));
       if (status)  filters.push(eq(m.status, status as "upcoming" | "live" | "finished"));
+      if (phase)   filters.push(eq(m.phase, phase));
       return filters.length ? and(...filters) : undefined;
     },
     with: {
