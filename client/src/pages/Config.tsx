@@ -1028,48 +1028,56 @@ export default function ConfigPage() {
         </div>
 
         <div className="glass-panel p-5 sm:p-6 space-y-5">
-          <p className="text-[11px] text-white/55">
-            Define qué porcentaje de asistencia y cuántas jornadas mínimas debe tener un jugador para participar en la fase eliminatoria.
+          <p className="text-[11px] text-white/70">
+            Define los requisitos mínimos para que un jugador participe en la fase eliminatoria.
           </p>
 
           <div className="grid sm:grid-cols-2 gap-5">
             {/* Porcentaje mínimo */}
-            <div>
-              <label className="text-[11px] text-white/65 uppercase tracking-widest font-bold block mb-1">
+            <div className="bg-white/3 border border-white/8 rounded-2xl p-4">
+              <label className="text-[11px] text-white/70 uppercase tracking-widest font-bold block mb-1">
                 Asistencia mínima
               </label>
-              <p className="text-[10px] text-white/45 mb-3">% de jornadas del equipo en que participó (desde su jornada de registro)</p>
-              <div className="flex items-center gap-3">
+              <p className="text-[10px] text-white/50 mb-4">
+                % de partidos que el jugador debe haber asistido del total de su equipo
+              </p>
+              <div className="flex items-center gap-3 mb-3">
                 <button onClick={() => setMinAttendancePct(Math.max(0, minAttendancePct - 5))}
                   className="w-9 h-9 rounded-full bg-white/8 hover:bg-white/15 border border-white/10 text-white font-bold flex items-center justify-center text-lg flex-shrink-0">−</button>
-                <span className="text-3xl font-display font-black text-brand-orange flex-1 text-center">{minAttendancePct}%</span>
+                <span className="text-4xl font-display font-black text-brand-orange flex-1 text-center">{minAttendancePct}%</span>
                 <button onClick={() => setMinAttendancePct(Math.min(100, minAttendancePct + 5))}
                   className="w-9 h-9 rounded-full bg-white/8 hover:bg-white/15 border border-white/10 text-white font-bold flex items-center justify-center text-lg flex-shrink-0">+</button>
               </div>
-              <div className="flex justify-between mt-2">
+              <div className="flex justify-between">
                 {[0, 25, 50, 75, 100].map((v) => (
                   <button key={v} onClick={() => setMinAttendancePct(v)}
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full border transition-all ${minAttendancePct === v ? "bg-brand-orange/15 border-brand-orange/40 text-brand-orange" : "border-white/10 text-white/40 hover:border-white/25"}`}>
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full border transition-all ${minAttendancePct === v ? "bg-brand-orange/20 border-brand-orange/50 text-brand-orange" : "border-white/15 text-white/55 hover:border-white/30 hover:text-white/80"}`}>
                     {v}%
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Jornadas mínimas */}
-            <div>
-              <label className="text-[11px] text-white/65 uppercase tracking-widest font-bold block mb-1">
-                Jornadas mínimas jugadas
+            {/* Partidos mínimos */}
+            <div className="bg-white/3 border border-white/8 rounded-2xl p-4">
+              <label className="text-[11px] text-white/70 uppercase tracking-widest font-bold block mb-1">
+                Partidos mínimos jugados
               </label>
-              <p className="text-[10px] text-white/45 mb-3">Número absoluto de jornadas en que debe haber asistido</p>
+              <p className="text-[10px] text-white/50 mb-4">
+                Cantidad mínima de partidos en que debe haber asistido (número absoluto)
+              </p>
               <div className="flex items-center gap-3">
                 <button onClick={() => setPlayoffMinJornadas(Math.max(0, playoffMinJornadas - 1))}
                   className="w-9 h-9 rounded-full bg-white/8 hover:bg-white/15 border border-white/10 text-white font-bold flex items-center justify-center text-lg flex-shrink-0">−</button>
-                <span className="text-3xl font-display font-black text-brand-orange flex-1 text-center">{playoffMinJornadas}</span>
+                <div className="flex-1 text-center">
+                  <span className="text-4xl font-display font-black text-brand-orange">{playoffMinJornadas}</span>
+                  <p className="text-[10px] text-white/50 mt-1">
+                    {playoffMinJornadas === 0 ? "Sin requisito" : `partido${playoffMinJornadas !== 1 ? "s" : ""} mínimo`}
+                  </p>
+                </div>
                 <button onClick={() => setPlayoffMinJornadas(playoffMinJornadas + 1)}
                   className="w-9 h-9 rounded-full bg-white/8 hover:bg-white/15 border border-white/10 text-white font-bold flex items-center justify-center text-lg flex-shrink-0">+</button>
               </div>
-              <p className="text-[10px] text-white/40 text-center mt-2">0 = sin requisito de mínimo</p>
             </div>
           </div>
 
@@ -1080,7 +1088,7 @@ export default function ConfigPage() {
               className="flex items-center gap-2 w-full hover:opacity-80 transition-opacity"
             >
               <Users className="w-4 h-4 text-brand-orange flex-shrink-0" />
-              <span className="font-display font-semibold text-white/70 flex-1 text-left text-sm">
+              <span className="font-display font-semibold text-white flex-1 text-left text-sm">
                 Ver lista de elegibles
               </span>
               {showEligibility ? <ChevronUp className="w-4 h-4 text-white/55" /> : <ChevronDown className="w-4 h-4 text-white/55" />}
@@ -1088,20 +1096,28 @@ export default function ConfigPage() {
 
             {showEligibility && (
               <div className="mt-4">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-3 text-[11px] font-semibold">
-                    <span className="flex items-center gap-1.5 text-green-400">
-                      <span className="w-2 h-2 rounded-full bg-green-400 inline-block" />
-                      {eligibility.filter(r => r.eligible).length} elegibles
-                    </span>
-                    <span className="flex items-center gap-1.5 text-red-400">
-                      <span className="w-2 h-2 rounded-full bg-red-400 inline-block" />
-                      {eligibility.filter(r => !r.eligible).length} no cumplen
-                    </span>
-                  </div>
-                  <button onClick={() => refetchEligibility()} className="text-[11px] text-brand-orange font-bold hover:opacity-70 transition-opacity">
+                {/* Criterios actuales como chips separados */}
+                <div className="flex flex-wrap items-center gap-2 mb-4">
+                  <span className="text-[11px] text-white/60 font-semibold">Criterios:</span>
+                  <span className="text-[11px] font-bold px-3 py-1 rounded-full bg-brand-orange/15 border border-brand-orange/30 text-brand-orange">
+                    {minAttendancePct}% de asistencia
+                  </span>
+                  <span className="text-[11px] font-bold px-3 py-1 rounded-full bg-brand-orange/15 border border-brand-orange/30 text-brand-orange">
+                    {playoffMinJornadas === 0 ? "Sin mínimo de partidos" : `≥ ${playoffMinJornadas} partido${playoffMinJornadas !== 1 ? "s" : ""}`}
+                  </span>
+                  <button onClick={() => refetchEligibility()} className="ml-auto text-[11px] text-white/50 font-bold hover:text-brand-orange transition-colors">
                     {fetchingEligibility ? "Actualizando..." : "↻ Actualizar"}
                   </button>
+                </div>
+                <div className="flex items-center gap-4 mb-3 text-[11px] font-semibold">
+                  <span className="flex items-center gap-1.5 text-green-400">
+                    <span className="w-2 h-2 rounded-full bg-green-400 inline-block" />
+                    {eligibility.filter(r => r.eligible).length} elegibles
+                  </span>
+                  <span className="flex items-center gap-1.5 text-red-400">
+                    <span className="w-2 h-2 rounded-full bg-red-400 inline-block" />
+                    {eligibility.filter(r => !r.eligible).length} no cumplen
+                  </span>
                 </div>
 
                 {eligibility.length === 0 ? (
@@ -1130,7 +1146,7 @@ export default function ConfigPage() {
                         {/* Barra de asistencia */}
                         <div className="w-24 flex-shrink-0 hidden sm:block">
                           <div className="flex justify-between text-[10px] mb-0.5">
-                            <span className="text-white/60">{row.attendedJornadas} de {row.totalJornadas}</span>
+                            <span className="text-white/60">{row.attendedJornadas} de {row.totalJornadas} partidos</span>
                             <span className={`font-bold ${row.pct >= minAttendancePct ? "text-green-400" : "text-red-400"}`}>{row.pct}%</span>
                           </div>
                           <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
