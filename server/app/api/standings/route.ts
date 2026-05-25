@@ -45,6 +45,7 @@ export async function GET() {
   }
 
   const table = Object.values(stats)
+    .filter((s) => s.pj > 0)
     .sort((a, b) => b.pts - a.pts || (b.pf - b.pc) - (a.pf - a.pc));
 
   return ok(table);

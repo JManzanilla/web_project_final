@@ -35,7 +35,7 @@ export default function StandingsPage() {
       <div className="flex items-center gap-3 mb-4">
         <div className="w-3 h-3 rounded-full bg-brand-orange shadow-[0_0_10px_rgba(255,69,0,0.8)] flex-shrink-0" />
         <span className="text-white/70 text-xs font-semibold uppercase tracking-wider">
-          Zona de Semifinales — los primeros 4 clasifican
+          Zona de Semifinales — los primeros {Math.min(4, standings.length)} clasifican
         </span>
       </div>
 
@@ -64,7 +64,7 @@ export default function StandingsPage() {
                 <TableBody>
                   {standings.map((row, idx) => {
                     const rank = idx + 1;
-                    const isPlayoffZone = rank <= 4;
+                    const isPlayoffZone = rank <= Math.min(4, standings.length);
                     const diff = row.pf - row.pc;
                     return (
                       <TableRow key={row.teamId} className={`border-b border-white/5 transition-all ${isPlayoffZone ? "bg-brand-orange/5 hover:bg-brand-orange/10" : "hover:bg-white/5"}`}>
@@ -101,7 +101,7 @@ export default function StandingsPage() {
             <div className="md:hidden p-3 space-y-2.5">
               {standings.map((row, idx) => {
                 const rank = idx + 1;
-                const isPlayoffZone = rank <= 4;
+                const isPlayoffZone = rank <= Math.min(4, standings.length);
                 const diff = row.pf - row.pc;
                 return (
                   <div key={`mobile-${row.teamId}`} className={`rounded-2xl border p-3 ${isPlayoffZone ? "bg-brand-orange/8 border-brand-orange/25" : "bg-white/4 border-white/8"}`}>
