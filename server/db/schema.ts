@@ -48,13 +48,14 @@ export const users = pgTable("users", {
 // PLAYERS
 // ---------------------------------------------------------------------------
 export const players = pgTable("players", {
-  id:        uuid("id").primaryKey().defaultRandom(),
-  name:      text("name").notNull(),
-  lastName:  text("last_name").notNull(),
-  number:    text("number").notNull(),
-  teamId:    uuid("team_id").notNull().references(() => teams.id, { onDelete: "cascade" }),
-  photoUrl:  text("photo_url"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  id:                    uuid("id").primaryKey().defaultRandom(),
+  name:                  text("name").notNull(),
+  lastName:              text("last_name").notNull(),
+  number:                text("number").notNull(),
+  teamId:                uuid("team_id").notNull().references(() => teams.id, { onDelete: "cascade" }),
+  photoUrl:              text("photo_url"),
+  registeredFromJornada: integer("registered_from_jornada").notNull().default(1),
+  createdAt:             timestamp("created_at").defaultNow().notNull(),
 });
 
 // ---------------------------------------------------------------------------
@@ -116,6 +117,8 @@ export const tournamentConfig = pgTable("tournament_config", {
   totalTeams:            integer("total_teams").notNull().default(8),
   rosterLockJornada:     integer("roster_lock_jornada").notNull().default(4),
   transferWindowJornada: integer("transfer_window_jornada"),         // null = sin ventana
+  minAttendancePct:      integer("min_attendance_pct").notNull().default(50),
+  playoffMinJornadas:    integer("playoff_min_jornadas").notNull().default(1),
   updatedAt:             timestamp("updated_at").defaultNow().notNull(),
 });
 

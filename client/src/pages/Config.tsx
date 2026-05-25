@@ -9,7 +9,7 @@ import {
 import {
   Settings2, Calendar, Clock, Check, AlertTriangle,
   Shuffle, ChevronDown, ChevronUp, Plus, Minus, Pencil, Lock,
-  Trash2, TriangleAlert, UserPlus, ShieldCheck, Trophy,
+  Trash2, TriangleAlert, UserPlus, ShieldCheck, Trophy, Users,
 } from "lucide-react";
 import { apiGet, apiPut, apiPost, apiDelete } from "@/lib/apiClient";
 import { sileo } from "sileo";
@@ -22,6 +22,14 @@ interface TournamentConfig {
   vueltas: number; totalTeams: number;
   rosterLockJornada: number;
   transferWindowJornada: number | null;
+  minAttendancePct: number;
+  playoffMinJornadas: number;
+}
+
+interface EligibilityRow {
+  id: string; name: string; lastName: string; number: string;
+  teamName: string; registeredFromJornada: number;
+  totalJornadas: number; attendedJornadas: number; pct: number; eligible: boolean;
 }
 
 interface Team { id: string; name: string; }
@@ -72,6 +80,13 @@ export default function ConfigPage() {
     queryKey: ["/api/playoffs"],
     queryFn:  () => apiGet<{ status: string }>("/api/playoffs"),
   });
+
+  const [showEligibility, setShowEligibility] = useState(false);
+  const { data: eligibility = [], refetch: refetchEligibility, isFetching: fetchingEligibility } = useQuery<EligibilityRow[]>({
+    queryKey: ["/api/players/eligibility"],
+    queryFn:  () => apiGet<EligibilityRow[]>("/api/players/eligibility"),
+    enabled:  showEligibility,
+  });
   const allRegularDone = allRegularMatches.length > 0 && allRegularMatches.every(m => m.status === "finished");
   const playoffsGenerated = playoffStatus?.status === "playoffs_in_progress";
 
@@ -106,6 +121,10 @@ export default function ConfigPage() {
   const [sf1Date,     setSf1Date]     = useState("");
   const [sf2Date,     setSf2Date]     = useState("");
 
+  // Elegibilidad
+  const [minAttendancePct,   setMinAttendancePct]   = useState(50);
+  const [playoffMinJornadas, setPlayoffMinJornadas] = useState(1);
+
   const playoffMutation = useMutation({
     mutationFn: () => apiPost("/api/playoffs/generate", {
       sfFormat, finalFormat,
@@ -131,6 +150,8 @@ export default function ConfigPage() {
       setRosterLockJornada(config.rosterLockJornada ?? 4);
       setTransferWindowEnabled(config.transferWindowJornada !== null);
       setTransferWindowJornada(config.transferWindowJornada ?? 8);
+      setMinAttendancePct(config.minAttendancePct ?? 50);
+      setPlayoffMinJornadas(config.playoffMinJornadas ?? 1);
     }
   }, [config]);
 
@@ -142,10 +163,12 @@ export default function ConfigPage() {
         totalTeams,
         rosterLockJornada,
         transferWindowJornada: transferWindowEnabled ? transferWindowJornada : null,
+        minAttendancePct,
+        playoffMinJornadas,
       }).catch(() => {});
     }, 800);
     return () => clearTimeout(t);
-  }, [vueltas, totalTeams, rosterLockJornada, transferWindowEnabled, transferWindowJornada]);
+  }, [vueltas, totalTeams, rosterLockJornada, transferWindowEnabled, transferWindowJornada, minAttendancePct, playoffMinJornadas]);
 
   // ── Mutations ──────────────────────────────────────────────────────────────
   const generateMutation = useMutation({
@@ -992,6 +1015,138 @@ export default function ConfigPage() {
           )}
         </div>
       )}
+
+      {/* ================================================================== */}
+      {/* ELEGIBILIDAD PARA PLAYOFFS                                            */}
+      {/* ================================================================== */}
+      <div className="mt-8">
+        <div className="flex items-center gap-2 mb-3">
+          <Users className="w-4 h-4 text-brand-orange" />
+          <span className="text-[11px] font-bold uppercase tracking-widest text-brand-orange">
+            Elegibilidad para Playoffs
+          </span>
+        </div>
+
+        <div className="glass-panel p-5 sm:p-6 space-y-5">
+          <p className="text-[11px] text-white/55">
+            Define qué porcentaje de asistencia y cuántas jornadas mínimas debe tener un jugador para participar en la fase eliminatoria.
+          </p>
+
+          <div className="grid sm:grid-cols-2 gap-5">
+            {/* Porcentaje mínimo */}
+            <div>
+              <label className="text-[11px] text-white/65 uppercase tracking-widest font-bold block mb-1">
+                Asistencia mínima
+              </label>
+              <p className="text-[10px] text-white/45 mb-3">% de jornadas del equipo en que participó (desde su jornada de registro)</p>
+              <div className="flex items-center gap-3">
+                <button onClick={() => setMinAttendancePct(Math.max(0, minAttendancePct - 5))}
+                  className="w-9 h-9 rounded-full bg-white/8 hover:bg-white/15 border border-white/10 text-white font-bold flex items-center justify-center text-lg flex-shrink-0">−</button>
+                <span className="text-3xl font-display font-black text-brand-orange flex-1 text-center">{minAttendancePct}%</span>
+                <button onClick={() => setMinAttendancePct(Math.min(100, minAttendancePct + 5))}
+                  className="w-9 h-9 rounded-full bg-white/8 hover:bg-white/15 border border-white/10 text-white font-bold flex items-center justify-center text-lg flex-shrink-0">+</button>
+              </div>
+              <div className="flex justify-between mt-2">
+                {[0, 25, 50, 75, 100].map((v) => (
+                  <button key={v} onClick={() => setMinAttendancePct(v)}
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full border transition-all ${minAttendancePct === v ? "bg-brand-orange/15 border-brand-orange/40 text-brand-orange" : "border-white/10 text-white/40 hover:border-white/25"}`}>
+                    {v}%
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Jornadas mínimas */}
+            <div>
+              <label className="text-[11px] text-white/65 uppercase tracking-widest font-bold block mb-1">
+                Jornadas mínimas jugadas
+              </label>
+              <p className="text-[10px] text-white/45 mb-3">Número absoluto de jornadas en que debe haber asistido</p>
+              <div className="flex items-center gap-3">
+                <button onClick={() => setPlayoffMinJornadas(Math.max(0, playoffMinJornadas - 1))}
+                  className="w-9 h-9 rounded-full bg-white/8 hover:bg-white/15 border border-white/10 text-white font-bold flex items-center justify-center text-lg flex-shrink-0">−</button>
+                <span className="text-3xl font-display font-black text-brand-orange flex-1 text-center">{playoffMinJornadas}</span>
+                <button onClick={() => setPlayoffMinJornadas(playoffMinJornadas + 1)}
+                  className="w-9 h-9 rounded-full bg-white/8 hover:bg-white/15 border border-white/10 text-white font-bold flex items-center justify-center text-lg flex-shrink-0">+</button>
+              </div>
+              <p className="text-[10px] text-white/40 text-center mt-2">0 = sin requisito de mínimo</p>
+            </div>
+          </div>
+
+          {/* Botón ver elegibles */}
+          <div className="border-t border-white/8 pt-4">
+            <button
+              onClick={() => { setShowEligibility(!showEligibility); if (!showEligibility) refetchEligibility(); }}
+              className="flex items-center gap-2 w-full hover:opacity-80 transition-opacity"
+            >
+              <Users className="w-4 h-4 text-brand-orange flex-shrink-0" />
+              <span className="font-display font-semibold text-white/70 flex-1 text-left text-sm">
+                Ver lista de elegibles
+              </span>
+              {showEligibility ? <ChevronUp className="w-4 h-4 text-white/55" /> : <ChevronDown className="w-4 h-4 text-white/55" />}
+            </button>
+
+            {showEligibility && (
+              <div className="mt-4">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-[10px] text-white/45">Con criterios actuales: {minAttendancePct}% asistencia y ≥{playoffMinJornadas} jornadas</p>
+                  <button onClick={() => refetchEligibility()} className="text-[10px] text-brand-orange/70 hover:text-brand-orange font-bold">
+                    {fetchingEligibility ? "Actualizando..." : "↻ Actualizar"}
+                  </button>
+                </div>
+
+                {eligibility.length === 0 ? (
+                  <p className="text-white/30 text-center py-6 text-sm">No hay datos de asistencia aún</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="border-b border-white/8">
+                          <th className="text-left text-white/40 font-bold uppercase tracking-wider pb-2 pr-3">Jugador</th>
+                          <th className="text-left text-white/40 font-bold uppercase tracking-wider pb-2 pr-3">Equipo</th>
+                          <th className="text-center text-white/40 font-bold uppercase tracking-wider pb-2 pr-3">Jornadas</th>
+                          <th className="text-center text-white/40 font-bold uppercase tracking-wider pb-2 pr-3">%</th>
+                          <th className="text-center text-white/40 font-bold uppercase tracking-wider pb-2">Estado</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {eligibility.map((row) => (
+                          <tr key={row.id} className="border-b border-white/4 hover:bg-white/3 transition-colors">
+                            <td className="py-2 pr-3">
+                              <span className="text-brand-orange/60 font-black mr-1">#{row.number}</span>
+                              <span className={row.eligible ? "text-white font-semibold" : "text-white/50"}>{row.lastName} {row.name}</span>
+                            </td>
+                            <td className="py-2 pr-3 text-white/50">{row.teamName}</td>
+                            <td className="py-2 pr-3 text-center">
+                              <span className={row.eligible ? "text-white" : "text-white/50"}>{row.attendedJornadas}</span>
+                              <span className="text-white/25">/{row.totalJornadas}</span>
+                            </td>
+                            <td className="py-2 pr-3 text-center">
+                              <span className={`font-bold ${row.pct >= minAttendancePct ? "text-green-400" : "text-red-400/70"}`}>{row.pct}%</span>
+                            </td>
+                            <td className="py-2 text-center">
+                              {row.eligible ? (
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-500/15 border border-green-500/25 text-green-400">✓ Elegible</span>
+                              ) : (
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500/10 border border-red-500/20 text-red-400/70">✗ No cumple</span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+
+                    <div className="mt-3 flex items-center gap-4 text-[10px] text-white/40">
+                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-400 inline-block" />{eligibility.filter(r => r.eligible).length} elegibles</span>
+                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-400/60 inline-block" />{eligibility.filter(r => !r.eligible).length} no cumplen</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* ================================================================== */}
       {/* ZONA DE PELIGRO                                                       */}

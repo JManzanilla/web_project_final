@@ -12,6 +12,8 @@ const updateSchema = z.object({
   totalTeams:            z.number().int().min(4).max(32).optional(),
   rosterLockJornada:     z.number().int().min(1).max(50).optional(),
   transferWindowJornada: z.number().int().min(1).max(50).nullable().optional(),
+  minAttendancePct:      z.number().int().min(0).max(100).optional(),
+  playoffMinJornadas:    z.number().int().min(0).max(50).optional(),
 });
 
 // GET /api/config — público
