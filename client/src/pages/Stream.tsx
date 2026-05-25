@@ -96,7 +96,7 @@ function MatchStreamCard({
 
       {/* hidden while editing so the URL input gets full focus without layout shift */}
       {!editing && (
-        <div className="flex items-center gap-1.5 flex-wrap mb-2">
+        <div className="flex items-center justify-center gap-1.5 flex-wrap mb-2">
           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${statusColor}`}>
             {statusLabel}
           </span>
@@ -212,6 +212,63 @@ function MatchStreamCard({
 }
 
 // ---------------------------------------------------------------------------
+// Acordeón de una jornada
+// ---------------------------------------------------------------------------
+function JornadaAccordion({
+  jornada, matches, isOpen, isActive, onToggle, onSave, onStatusChange,
+}: {
+  jornada: number;
+  matches: MatchStream[];
+  isOpen: boolean;
+  isActive: boolean;
+  onToggle: () => void;
+  onSave: (id: string, url: string | null) => void;
+  onStatusChange: (id: string, status: "live" | "upcoming") => void;
+}) {
+  const withLink = matches.filter((m) => m.streamUrl).length;
+  const hasLive  = matches.some((m) => m.status === "live");
+
+  return (
+    <div className="glass-panel overflow-hidden">
+      <button onClick={onToggle}
+        className="w-full flex items-center justify-between px-5 py-4 hover:bg-white/3 transition-colors">
+        <div className="flex items-center gap-3">
+          <span className="font-display font-black text-lg text-brand-orange">
+            Jornada {jornada}
+          </span>
+          {isActive && (
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-brand-orange/15 border border-brand-orange/30 text-brand-orange">
+              Activa
+            </span>
+          )}
+          {hasLive && (
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-500/15 border border-green-500/25 text-green-400">
+              En vivo
+            </span>
+          )}
+          <span className="text-[10px] text-white/50 font-semibold">{withLink}/{matches.length} con enlace</span>
+        </div>
+        <div className="text-white/50">
+          {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        </div>
+      </button>
+      {isOpen && (
+        <div className="border-t border-white/5 p-3 space-y-2">
+          {matches
+            .slice()
+            .sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime())
+            .map((match) => (
+              <MatchStreamCard key={match.id} match={match}
+                onSave={onSave}
+                onStatusChange={onStatusChange} />
+            ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Página principal
 // ---------------------------------------------------------------------------
 export default function StreamPage() {
@@ -285,54 +342,43 @@ export default function StreamPage() {
       ) : sortedJornadas.length === 0 ? (
         <div className="text-center text-white/30 py-12">No hay partidos registrados.</div>
       ) : (
-        <div className="flex flex-col md:flex-row gap-3 items-start">
-          {[sortedJornadas.filter((_, i) => i % 2 === 0), sortedJornadas.filter((_, i) => i % 2 !== 0)].map((col, ci) => (
-            <div key={ci} className="flex-1 flex flex-col gap-3">
-              {col.map((jornada) => {
-                const isOpen = expanded.has(jornada);
-                const withLink = byJornada[jornada].filter((m) => m.streamUrl).length;
-                const hasLive = byJornada[jornada].some((m) => m.status === "live");
-                return (
-                  <div key={jornada} className="glass-panel overflow-hidden">
-                    <button onClick={() => toggleExpand(jornada)}
-                      className="w-full flex items-center justify-between px-5 py-4 hover:bg-white/3 transition-colors">
-                      <div className="flex items-center gap-3">
-                        <span className="font-display font-black text-lg text-brand-orange">
-                          Jornada {jornada}
-                        </span>
-                        {jornada === activeJornada && (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-brand-orange/15 border border-brand-orange/30 text-brand-orange">
-                            Activa
-                          </span>
-                        )}
-                        {hasLive && (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-500/15 border border-green-500/25 text-green-400">
-                            En vivo
-                          </span>
-                        )}
-                        <span className="text-[10px] text-white/50 font-semibold">{withLink}/{byJornada[jornada].length} con enlace</span>
-                      </div>
-                      <div className="text-white/50">
-                        {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                      </div>
-                    </button>
-                    {isOpen && (
-                      <div className="border-t border-white/5 p-3 space-y-2">
-                        {byJornada[jornada]
-                          .sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime())
-                          .map((match) => (
-                            <MatchStreamCard key={match.id} match={match}
-                              onSave={(id, url) => streamMutation.mutate({ id, streamUrl: url })}
-                              onStatusChange={(id, status) => statusMutation.mutate({ id, status })} />
-                          ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          ))}
-        </div>
+        <>
+          {/* Mobile: columna única en orden */}
+          <div className="flex flex-col gap-3 md:hidden">
+            {sortedJornadas.map((jornada) => (
+              <JornadaAccordion
+                key={jornada}
+                jornada={jornada}
+                matches={byJornada[jornada]}
+                isOpen={expanded.has(jornada)}
+                isActive={jornada === activeJornada}
+                onToggle={() => toggleExpand(jornada)}
+                onSave={(id, url) => streamMutation.mutate({ id, streamUrl: url })}
+                onStatusChange={(id, status) => statusMutation.mutate({ id, status })}
+              />
+            ))}
+          </div>
+
+          {/* Desktop: dos columnas alternas */}
+          <div className="hidden md:flex gap-3 items-start">
+            {[sortedJornadas.filter((_, i) => i % 2 === 0), sortedJornadas.filter((_, i) => i % 2 !== 0)].map((col, ci) => (
+              <div key={ci} className="flex-1 flex flex-col gap-3">
+                {col.map((jornada) => (
+                  <JornadaAccordion
+                    key={jornada}
+                    jornada={jornada}
+                    matches={byJornada[jornada]}
+                    isOpen={expanded.has(jornada)}
+                    isActive={jornada === activeJornada}
+                    onToggle={() => toggleExpand(jornada)}
+                    onSave={(id, url) => streamMutation.mutate({ id, streamUrl: url })}
+                    onStatusChange={(id, status) => statusMutation.mutate({ id, status })}
+                  />
+                ))}
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
     </div>
