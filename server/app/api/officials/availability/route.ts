@@ -8,7 +8,7 @@ import { requireAuth, ok, err } from "@/lib/api";
 // GET /api/officials/availability?jornada=N
 // Devuelve todos los slots de todos los árbitros para una jornada
 export async function GET(req: NextRequest) {
-  const { error } = await requireAuth(["admin"]);
+  const { error } = await requireAuth(["admin"], { section: "official-schedule", level: "view" });
   if (error) return error;
 
   const jornada = parseInt(req.nextUrl.searchParams.get("jornada") ?? "");

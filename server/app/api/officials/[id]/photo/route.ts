@@ -17,7 +17,7 @@ const ACCEPTED_TYPES: Record<string, string> = {
 // POST /api/officials/:id/photo — solo admin
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { error: authErr } = await requireAuth(["admin"]);
+    const { error: authErr } = await requireAuth(["admin"], { section: "officials", level: "edit" });
     if (authErr) return authErr;
 
     const { id } = await params;

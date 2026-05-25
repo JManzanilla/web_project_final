@@ -17,10 +17,10 @@ const updateSchema = z.object({
   active:   z.boolean().optional(),
 });
 
-// PUT /api/officials/:id — solo admin
+// PUT /api/officials/:id — admin o con permiso officials:edit
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { error } = await requireAuth(["admin"]);
+  const { error } = await requireAuth(["admin"], { section: "officials", level: "edit" });
   if (error) return error;
 
   const body = updateSchema.safeParse(await req.json());
@@ -36,10 +36,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   return ok(updated);
 }
 
-// DELETE /api/officials/:id — solo admin
+// DELETE /api/officials/:id — admin o con permiso officials:edit
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { error } = await requireAuth(["admin"]);
+  const { error } = await requireAuth(["admin"], { section: "officials", level: "edit" });
   if (error) return error;
 
   const [deleted] = await db.delete(officials).where(eq(officials.id, id)).returning({ id: officials.id });

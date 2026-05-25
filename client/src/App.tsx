@@ -104,8 +104,10 @@ function Navigation() {
   if (user?.role === "admin" || canAccess("accounts")) {
     roleItems.push({ href: "/accounts",  icon: Users,         label: "Cuentas"       });
   }
-  if (user?.role === "admin") {
+  if (user?.role === "admin" || canAccess("officials")) {
     roleItems.push({ href: "/officials",         icon: ShieldCheck, label: "Árbitros"      });
+  }
+  if (user?.role === "admin" || canAccess("official-schedule")) {
     roleItems.push({ href: "/official-schedule", icon: ScrollText,  label: "Rol Árbitros"  });
   }
 
@@ -235,10 +237,10 @@ function Router() {
         {() => <ProtectedRoute component={StreamPage}    roles={["admin", "transmision"]}                 />}
       </Route>
       <Route path="/officials">
-        {() => <ProtectedRoute component={OfficialsPage}         roles={["admin"]} />}
+        {() => <ProtectedRoute component={OfficialsPage}         roles={["admin"]} section="officials"          />}
       </Route>
       <Route path="/official-schedule">
-        {() => <ProtectedRoute component={OfficialSchedulePage}  roles={["admin"]} />}
+        {() => <ProtectedRoute component={OfficialSchedulePage}  roles={["admin"]} section="official-schedule"  />}
       </Route>
 
       <Route component={NotFound} />

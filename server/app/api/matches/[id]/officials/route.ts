@@ -15,7 +15,7 @@ const schema = z.object({
 // PUT /api/matches/:id/officials — anotador o admin
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id: matchId } = await params;
-  const { error } = await requireAuth(["admin", "anotador"]);
+  const { error } = await requireAuth(["admin", "anotador"], { section: "official-schedule", level: "edit" });
   if (error) return error;
 
   const body = schema.safeParse(await req.json());

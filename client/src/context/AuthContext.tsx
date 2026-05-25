@@ -5,7 +5,7 @@ import { apiPost, apiPut, getToken, setToken, clearToken } from "@/lib/apiClient
 // TIPOS
 // ---------------------------------------------------------------------------
 export type UserRole = "admin" | "lider" | "anotador" | "transmision";
-export type SectionKey = "roster" | "match" | "schedule" | "config" | "accounts" | "stream";
+export type SectionKey = "roster" | "match" | "schedule" | "config" | "accounts" | "stream" | "officials" | "official-schedule";
 export type SectionPerm = { view: boolean; edit: boolean };
 export type UserPermissions = Partial<Record<SectionKey, SectionPerm>>;
 

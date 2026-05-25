@@ -28,9 +28,9 @@ export async function GET() {
   return ok(all);
 }
 
-// POST /api/officials — solo admin
+// POST /api/officials — admin o con permiso officials:edit
 export async function POST(req: NextRequest) {
-  const { error } = await requireAuth(["admin"]);
+  const { error } = await requireAuth(["admin"], { section: "officials", level: "edit" });
   if (error) return error;
 
   const body = createSchema.safeParse(await req.json());

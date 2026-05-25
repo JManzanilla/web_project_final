@@ -52,12 +52,14 @@ const ROLE_BASE: Record<Role, SectionKey[]> = {
 };
 
 const SECTIONS: { key: SectionKey; label: string }[] = [
-  { key: "roster",   label: "Roster"        },
-  { key: "match",    label: "Mesa Técnica"  },
-  { key: "schedule", label: "Calendario"    },
-  { key: "config",   label: "Configuración" },
-  { key: "accounts", label: "Cuentas"       },
-  { key: "stream",   label: "Transmisiones" },
+  { key: "roster",            label: "Roster"          },
+  { key: "match",             label: "Mesa Técnica"    },
+  { key: "schedule",          label: "Calendario"      },
+  { key: "officials",         label: "Árbitros"        },
+  { key: "official-schedule", label: "Rol Árbitros"    },
+  { key: "config",            label: "Configuración"   },
+  { key: "accounts",          label: "Cuentas"         },
+  { key: "stream",            label: "Transmisiones"   },
 ];
 
 // ── Sub-componente: matriz de permisos editable ───────────────────────────────

@@ -11,7 +11,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string; slotId: string }> }
 ) {
   const { slotId } = await params;
-  const { error } = await requireAuth(["admin"]);
+  const { error } = await requireAuth(["admin"], { section: "official-schedule", level: "edit" });
   if (error) return error;
 
   const [deleted] = await db

@@ -4,7 +4,7 @@ import {
 import { relations } from "drizzle-orm";
 
 // Tipo de permisos por sección (compartido con el cliente vía shared/)
-export type SectionKey = "roster" | "match" | "schedule" | "config" | "accounts" | "stream";
+export type SectionKey = "roster" | "match" | "schedule" | "config" | "accounts" | "stream" | "officials" | "official-schedule";
 export type SectionPerm = { view: boolean; edit: boolean };
 export type UserPermissions = Partial<Record<SectionKey, SectionPerm>>;
 

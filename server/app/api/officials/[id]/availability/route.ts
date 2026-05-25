@@ -28,10 +28,10 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   return ok(slots);
 }
 
-// POST /api/officials/:id/availability — agregar un slot
+// POST /api/officials/:id/availability — admin o con permiso official-schedule:edit
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id: officialId } = await params;
-  const { error } = await requireAuth(["admin"]);
+  const { error } = await requireAuth(["admin"], { section: "official-schedule", level: "edit" });
   if (error) return error;
 
   const body = slotSchema.safeParse(await req.json());
