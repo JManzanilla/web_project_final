@@ -142,12 +142,15 @@ function AvailRow({
 
 // ── Select de árbitro para asignación ─────────────────────────────────────────
 function OfficialSelect({
-  label, value, onChange, candidates, roleKey,
+  label, value, onChange, candidates, roleKey, exclude,
 }: {
   label: string; value: string; onChange: (v: string) => void;
-  candidates: Official[]; roleKey: keyof OfficialRoles;
+  candidates: Official[]; roleKey: keyof OfficialRoles; exclude: string[];
 }) {
-  const filtered = candidates.filter((o) => o.roles[roleKey]);
+  const filtered = candidates.filter((o) => {
+    const full = `${o.name} ${o.lastName}`;
+    return o.roles[roleKey] && !exclude.includes(full);
+  });
   const isManual = value !== "" && !filtered.some((o) => `${o.name} ${o.lastName}` === value);
 
   return (
@@ -406,15 +409,24 @@ export default function OfficialSchedulePage() {
                         </div>
                         {/* Selectores */}
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                          <OfficialSelect label="🟠 Principal" value={assignments[m.id]?.ref1 ?? ""}
-                            onChange={(v) => setAssignments((p) => ({ ...p, [m.id]: { ...(p[m.id] ?? { ref1:"",ref2:"",scorer:"" }), ref1: v } }))}
-                            candidates={candidates} roleKey="mainRef" />
-                          <OfficialSelect label="🔵 Auxiliar" value={assignments[m.id]?.ref2 ?? ""}
-                            onChange={(v) => setAssignments((p) => ({ ...p, [m.id]: { ...(p[m.id] ?? { ref1:"",ref2:"",scorer:"" }), ref2: v } }))}
-                            candidates={candidates} roleKey="assistRef" />
-                          <OfficialSelect label="📋 Anotador" value={assignments[m.id]?.scorer ?? ""}
-                            onChange={(v) => setAssignments((p) => ({ ...p, [m.id]: { ...(p[m.id] ?? { ref1:"",ref2:"",scorer:"" }), scorer: v } }))}
-                            candidates={candidates} roleKey="scorer" />
+                          {(() => {
+                            const a = assignments[m.id] ?? { ref1: "", ref2: "", scorer: "" };
+                            const set = (patch: Partial<Assignment>) =>
+                              setAssignments((p) => ({ ...p, [m.id]: { ...(p[m.id] ?? { ref1:"",ref2:"",scorer:"" }), ...patch } }));
+                            return (
+                              <>
+                                <OfficialSelect label="🟠 Principal" value={a.ref1}
+                                  onChange={(v) => set({ ref1: v })} candidates={candidates} roleKey="mainRef"
+                                  exclude={[a.ref2, a.scorer].filter(Boolean)} />
+                                <OfficialSelect label="🔵 Auxiliar" value={a.ref2}
+                                  onChange={(v) => set({ ref2: v })} candidates={candidates} roleKey="assistRef"
+                                  exclude={[a.ref1, a.scorer].filter(Boolean)} />
+                                <OfficialSelect label="📋 Anotador" value={a.scorer}
+                                  onChange={(v) => set({ scorer: v })} candidates={candidates} roleKey="scorer"
+                                  exclude={[a.ref1, a.ref2].filter(Boolean)} />
+                              </>
+                            );
+                          })()}
                         </div>
                       </div>
                     );
