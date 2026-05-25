@@ -53,10 +53,10 @@ function AvailRow({
   return (
     <div className="border-b border-white/5 last:border-0">
       <div
-        className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-white/3 transition-colors"
+        className="flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-white/3 transition-colors"
         onClick={() => setOpen(!open)}
       >
-        {/* Nombre + roles */}
+        {/* Nombre + roles + chips (columna izquierda) */}
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-sm text-white truncate">{official.name} {official.lastName}</p>
           <div className="flex gap-2 flex-wrap">
@@ -64,28 +64,26 @@ function AvailRow({
               <span key={r.label} className={`text-[10px] font-bold ${r.cls}`}>{r.label}</span>
             ))}
           </div>
-        </div>
-
-        {/* Slots resumen */}
-        <div className="flex flex-wrap gap-1 justify-end">
           {mySlots.length === 0 ? (
-            <span className="text-[11px] text-white/20">Sin disponibilidad</span>
+            <span className="text-[11px] text-white/20 mt-0.5 block">Sin disponibilidad</span>
           ) : (
-            mySlots.map((s) => (
-              <span key={s.id} className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-brand-orange/10 border border-brand-orange/20 text-brand-orange/70">
-                {DAYS[s.dayOfWeek]} {s.startTime}–{s.endTime}
-                <button
-                  onClick={(e) => { e.stopPropagation(); onDelete(s.id); }}
-                  className="text-brand-orange/50 hover:text-red-400 transition-colors ml-0.5"
-                >
-                  <X className="w-2.5 h-2.5" />
-                </button>
-              </span>
-            ))
+            <div className="flex flex-wrap gap-1 mt-1.5">
+              {mySlots.map((s) => (
+                <span key={s.id} className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-brand-orange/10 border border-brand-orange/20 text-brand-orange/70">
+                  {DAYS[s.dayOfWeek]} {s.startTime}–{s.endTime}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onDelete(s.id); }}
+                    className="text-brand-orange/50 hover:text-red-400 transition-colors ml-0.5"
+                  >
+                    <X className="w-2.5 h-2.5" />
+                  </button>
+                </span>
+              ))}
+            </div>
           )}
         </div>
 
-        {open ? <ChevronUp className="w-4 h-4 text-white/30 flex-shrink-0" /> : <ChevronDown className="w-4 h-4 text-white/30 flex-shrink-0" />}
+        {open ? <ChevronUp className="w-4 h-4 text-white/30 flex-shrink-0 mt-1" /> : <ChevronDown className="w-4 h-4 text-white/30 flex-shrink-0 mt-1" />}
       </div>
 
       {/* Panel expandible */}
@@ -109,27 +107,29 @@ function AvailRow({
           )}
 
           {/* Formulario agregar */}
-          <div className="flex flex-wrap gap-2 items-end pt-1">
-            <div className="space-y-1 flex-1 min-w-[100px]">
-              <label className="text-[10px] text-white/30 uppercase font-bold">Día</label>
-              <select value={dayOfWeek} onChange={(e) => setDayOfWeek(parseInt(e.target.value))}
-                className="glass-input h-9 px-2 text-sm bg-transparent text-white w-full appearance-none">
-                {DAYS_FULL.map((d, i) => <option key={i} value={i} className="bg-gray-900">{d}</option>)}
-              </select>
-            </div>
-            <div className="space-y-1">
-              <label className="text-[10px] text-white/30 uppercase font-bold">Desde</label>
-              <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)}
-                className="glass-input h-9 px-2 text-sm text-white bg-transparent w-28" />
-            </div>
-            <div className="space-y-1">
-              <label className="text-[10px] text-white/30 uppercase font-bold">Hasta</label>
-              <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)}
-                className="glass-input h-9 px-2 text-sm text-white bg-transparent w-28" />
+          <div className="space-y-2 pt-1">
+            <div className="grid grid-cols-3 gap-2">
+              <div className="space-y-1">
+                <label className="text-[10px] text-white/30 uppercase font-bold">Día</label>
+                <select value={dayOfWeek} onChange={(e) => setDayOfWeek(parseInt(e.target.value))}
+                  className="glass-input h-9 px-2 text-sm bg-transparent text-white w-full appearance-none">
+                  {DAYS_FULL.map((d, i) => <option key={i} value={i} className="bg-gray-900">{d}</option>)}
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] text-white/30 uppercase font-bold">Desde</label>
+                <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)}
+                  className="glass-input h-9 px-2 text-sm text-white bg-transparent w-full" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] text-white/30 uppercase font-bold">Hasta</label>
+                <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)}
+                  className="glass-input h-9 px-2 text-sm text-white bg-transparent w-full" />
+              </div>
             </div>
             <button
               onClick={() => { onAdd({ dayOfWeek, startTime, endTime }); }}
-              className="h-9 px-4 rounded-xl bg-brand-orange hover:bg-brand-orange/85 text-white text-sm font-bold flex items-center gap-1 glow-orange"
+              className="w-full h-9 rounded-xl bg-brand-orange hover:bg-brand-orange/85 text-white text-sm font-bold flex items-center justify-center gap-1.5 glow-orange"
             >
               <Plus className="w-3.5 h-3.5" /> Agregar
             </button>
