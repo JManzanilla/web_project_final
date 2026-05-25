@@ -1,24 +1,26 @@
 import {
   User, ClipboardList, CalendarDays, Settings, Users2,
-  Home, Trophy, History, Pencil, Eye, Minus, Radio,
+  Home, Trophy, History, Pencil, Eye, Minus, Radio, ShieldCheck, ScrollText,
 } from "lucide-react";
 import type { ApiUser, SectionKey, UserPermissions } from "./UserTableRow";
 
 // ── Configuración de secciones ────────────────────────────────────────────────
 const ROLE_BASE: Record<string, SectionKey[]> = {
-  admin: ["roster", "match", "schedule", "config", "accounts", "stream"],
-  lider: ["roster"],
-  anotador: ["match"],
+  admin:       ["roster", "match", "schedule", "config", "accounts", "stream", "officials", "official-schedule"],
+  lider:       ["roster"],
+  anotador:    ["match"],
   transmision: ["stream"],
 };
 
 const RESTRICTED_SECTIONS: { key: SectionKey; label: string; Icon: React.ElementType }[] = [
-  { key: "roster", label: "Roster", Icon: User },
-  { key: "match", label: "Mesa Técnica", Icon: ClipboardList },
-  { key: "schedule", label: "Calendario", Icon: CalendarDays },
-  { key: "config", label: "Configuración", Icon: Settings },
-  { key: "accounts", label: "Cuentas", Icon: Users2 },
-  { key: "stream", label: "Transmisiones", Icon: Radio },
+  { key: "roster",            label: "Roster",          Icon: User          },
+  { key: "match",             label: "Mesa Técnica",    Icon: ClipboardList },
+  { key: "schedule",          label: "Calendario",      Icon: CalendarDays  },
+  { key: "officials",         label: "Árbitros",        Icon: ShieldCheck   },
+  { key: "official-schedule", label: "Rol Árbitros",    Icon: ScrollText    },
+  { key: "config",            label: "Configuración",   Icon: Settings      },
+  { key: "accounts",          label: "Cuentas",         Icon: Users2        },
+  { key: "stream",            label: "Transmisiones",   Icon: Radio         },
 ];
 
 const PUBLIC_SECTIONS = [

@@ -5,7 +5,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Shield, ShieldAlert, User, Edit2, Trash2, RefreshCw, Check, X } from "lucide-react";
 
-export type SectionKey = "roster" | "match" | "schedule" | "config" | "accounts" | "stream";
+export type SectionKey = "roster" | "match" | "schedule" | "config" | "accounts" | "stream" | "officials" | "official-schedule";
 export type SectionPerm = { view: boolean; edit: boolean };
 export type UserPermissions = Partial<Record<SectionKey, SectionPerm>>;
 
