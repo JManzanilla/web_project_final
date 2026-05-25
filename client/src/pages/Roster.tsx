@@ -1,9 +1,10 @@
 import React, { useState, useRef } from "react";
+import * as XLSX from "xlsx";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Camera, Plus, User, Trophy, Check, Pencil, ChevronDown, X } from "lucide-react";
+import { Camera, Plus, User, Trophy, Check, Pencil, ChevronDown, X, FileSpreadsheet, Download } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { apiGet, apiPost, apiPut, apiUpload } from "@/lib/apiClient";
 import { sileo } from "sileo";
@@ -30,6 +31,19 @@ interface TournamentConfig {
 }
 
 interface FinishedMatch { jornada: number; }
+
+interface ImportRow {
+  name: string;
+  lastName: string;
+  number: string;
+  error?: string;
+}
+
+interface ImportProgress {
+  done: number;
+  total: number;
+  serverErrors: string[];
+}
 
 const MIN_PLAYERS = 8;
 const MAX_PLAYERS = 15;
@@ -137,8 +151,77 @@ export default function RosterPage() {
   const [logoPreview,  setLogoPreview]  = useState<string | null>(null);
   const [showSelector, setShowSelector] = useState(false);
 
-  const photoInputRef = useRef<HTMLInputElement>(null);
-  const logoInputRef  = useRef<HTMLInputElement>(null);
+  const photoInputRef  = useRef<HTMLInputElement>(null);
+  const logoInputRef   = useRef<HTMLInputElement>(null);
+  const importFileRef  = useRef<HTMLInputElement>(null);
+
+  // ── Importación Excel ──────────────────────────────────────────────────────
+  const [importRows,     setImportRows]     = useState<ImportRow[] | null>(null);
+  const [importProgress, setImportProgress] = useState<ImportProgress | null>(null);
+
+  const downloadTemplate = () => {
+    const ws = XLSX.utils.aoa_to_sheet([
+      ["Nombre", "Apellido", "Número"],
+      ["Juan", "García", "23"],
+      ["María", "López", "7"],
+    ]);
+    ws["!cols"] = [{ wch: 18 }, { wch: 18 }, { wch: 10 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Jugadores");
+    XLSX.writeFile(wb, "plantilla_roster.xlsx");
+  };
+
+  const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const data = new Uint8Array(ev.target?.result as ArrayBuffer);
+      const wb = XLSX.read(data, { type: "array" });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows: string[][] = XLSX.utils.sheet_to_json(ws, { header: 1 });
+      const dataRows = rows.slice(1).filter((r) => r.some((c) => c !== undefined && c !== ""));
+      const parsed: ImportRow[] = dataRows.map((row) => {
+        const name     = (row[0] ?? "").toString().trim();
+        const lastName = (row[1] ?? "").toString().trim();
+        const number   = (row[2] ?? "").toString().trim();
+        const num      = parseInt(number);
+        let error: string | undefined;
+        if (!name)                                  error = "Nombre requerido";
+        else if (!lastName)                         error = "Apellido requerido";
+        else if (!number || isNaN(num) || num < 0 || num > 99) error = "Número inválido (0-99)";
+        return { name, lastName, number, error };
+      });
+      setImportRows(parsed.length > 0 ? parsed : null);
+      if (parsed.length === 0) sileo.error({ title: "Archivo vacío o sin datos" });
+    };
+    reader.readAsArrayBuffer(file);
+    if (importFileRef.current) importFileRef.current.value = "";
+  };
+
+  const runImport = async () => {
+    if (!importRows || !selectedTeamId) return;
+    const valid = importRows.filter((r) => !r.error);
+    setImportProgress({ done: 0, total: valid.length, serverErrors: [] });
+    const serverErrors: string[] = [];
+    for (let i = 0; i < valid.length; i++) {
+      try {
+        await apiPost<ApiPlayer>("/api/players", { ...valid[i], teamId: selectedTeamId });
+      } catch (e) {
+        serverErrors.push(`#${valid[i].number} ${valid[i].name} ${valid[i].lastName}: ${(e as Error).message}`);
+      }
+      setImportProgress({ done: i + 1, total: valid.length, serverErrors: [...serverErrors] });
+    }
+    await qc.invalidateQueries({ queryKey: ["/api/players", { teamId: selectedTeamId }] });
+    const imported = valid.length - serverErrors.length;
+    if (serverErrors.length === 0) {
+      sileo.success({ title: "Importación completada", description: `${imported} jugador${imported !== 1 ? "es" : ""} agregado${imported !== 1 ? "s" : ""}` });
+    } else {
+      sileo.error({ title: `${imported} importados, ${serverErrors.length} con error`, description: serverErrors[0] });
+    }
+    setImportRows(null);
+    setImportProgress(null);
+  };
 
   // ── Editar jugador ─────────────────────────────────────────────────────────
   const canEdit = isAdmin || !!user?.permissions?.roster?.edit;
@@ -429,6 +512,32 @@ export default function RosterPage() {
               })()}
             </div>
 
+            {/* Importar desde Excel */}
+            {!rosterLocked && (
+              <div className="mt-5 pt-5 border-t border-white/8">
+                <p className="text-[10px] text-white/25 uppercase tracking-widest font-bold text-center mb-3">
+                  o importar desde Excel
+                </p>
+                <input ref={importFileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImportFile} />
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={downloadTemplate}
+                    className="flex items-center justify-center gap-1.5 h-9 rounded-xl border border-white/12 bg-white/4 text-white/50 hover:text-white hover:bg-white/8 hover:border-white/20 transition-all text-[12px] font-semibold"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    Plantilla
+                  </button>
+                  <button
+                    onClick={() => importFileRef.current?.click()}
+                    className="flex items-center justify-center gap-1.5 h-9 rounded-xl border border-brand-orange/25 bg-brand-orange/8 text-brand-orange/70 hover:text-brand-orange hover:bg-brand-orange/15 hover:border-brand-orange/40 transition-all text-[12px] font-semibold"
+                  >
+                    <FileSpreadsheet className="w-3.5 h-3.5" />
+                    Importar
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Finalizar / Estado del roster */}
             <div className="mt-7 pt-7 border-t border-white/10">
               {selectedTeam?.rosterLocked ? (
@@ -472,6 +581,82 @@ export default function RosterPage() {
             </div>
           </div>
         </div>
+
+        {/* ── Modal importación Excel ────────────────────────────────────── */}
+        {importRows && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+            <div className="glass-panel rounded-3xl w-full max-w-md flex flex-col overflow-hidden max-h-[85vh]">
+              {/* Header */}
+              <div className="p-5 border-b border-white/8 flex items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-base font-bold font-display flex items-center gap-2">
+                    <FileSpreadsheet className="w-4 h-4 text-brand-orange" />
+                    Vista previa — Importar jugadores
+                  </h2>
+                  <p className="text-xs text-white/40 mt-1">
+                    {importRows.filter(r => !r.error).length} listo{importRows.filter(r => !r.error).length !== 1 ? "s" : ""} para importar
+                    {importRows.filter(r => r.error).length > 0 && (
+                      <span className="text-red-400/70"> · {importRows.filter(r => r.error).length} con error</span>
+                    )}
+                  </p>
+                </div>
+                {!importProgress && (
+                  <button onClick={() => setImportRows(null)}
+                    className="w-7 h-7 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/30 hover:text-white flex-shrink-0">
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+
+              {/* Lista de filas */}
+              <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
+                {importRows.map((row, i) => (
+                  <div key={i} className={`flex items-center gap-2.5 px-3 py-2 rounded-xl border text-sm ${row.error ? "bg-red-500/8 border-red-500/20" : "bg-green-500/5 border-green-500/15"}`}>
+                    {row.error
+                      ? <X className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
+                      : <Check className="w-3.5 h-3.5 text-green-400 flex-shrink-0" />
+                    }
+                    <span className="font-bold text-white/70 w-8 text-right flex-shrink-0">#{row.number}</span>
+                    <span className="flex-1 text-white/80 font-semibold truncate">{row.name} {row.lastName}</span>
+                    {row.error && <span className="text-red-400/60 text-[11px] flex-shrink-0">{row.error}</span>}
+                  </div>
+                ))}
+              </div>
+
+              {/* Barra de progreso */}
+              {importProgress && (
+                <div className="px-5 py-3 border-t border-white/8">
+                  <div className="flex justify-between text-[11px] text-white/40 mb-1.5">
+                    <span>Importando jugadores...</span>
+                    <span>{importProgress.done}/{importProgress.total}</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-brand-orange rounded-full transition-all duration-300"
+                      style={{ width: `${importProgress.total > 0 ? (importProgress.done / importProgress.total) * 100 : 0}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Acciones */}
+              {!importProgress && (
+                <div className="p-4 border-t border-white/8 flex gap-2">
+                  <Button variant="ghost" onClick={() => setImportRows(null)}
+                    className="flex-1 rounded-full border border-white/10 hover:bg-white/8 text-sm">
+                    Cancelar
+                  </Button>
+                  <Button
+                    onClick={runImport}
+                    disabled={importRows.filter(r => !r.error).length === 0}
+                    className="flex-1 rounded-full bg-brand-orange hover:bg-brand-orange/85 text-white font-bold text-sm glow-orange disabled:opacity-40 disabled:cursor-not-allowed">
+                    Importar {importRows.filter(r => !r.error).length} jugador{importRows.filter(r => !r.error).length !== 1 ? "es" : ""}
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* ── Tarjetas de jugadores ───────────────────────────────────────── */}
         <div className="md:col-span-1 lg:col-span-2">
