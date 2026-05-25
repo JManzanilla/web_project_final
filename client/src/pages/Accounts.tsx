@@ -45,7 +45,7 @@ const ROLE_OPTIONS: { value: Role; label: string }[] = [
 
 // Permisos que cada rol YA tiene por defecto (no necesitan configurarse)
 const ROLE_BASE: Record<Role, SectionKey[]> = {
-  admin:       ["roster", "match", "schedule", "config", "accounts", "stream"],
+  admin:       ["roster", "match", "schedule", "config", "accounts", "stream", "officials", "official-schedule"],
   lider:       ["roster"],
   anotador:    ["match"],
   transmision: ["stream"],
