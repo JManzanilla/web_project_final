@@ -146,9 +146,15 @@ export default function StandingsPage() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-4">
-            <SeriesCard label="Semifinal 1 · 1° vs 4°" series={playoffs?.sf1 ?? null} />
-            <SeriesCard label="Final" series={playoffs?.final ?? null} highlight />
-            <SeriesCard label="Semifinal 2 · 2° vs 3°" series={playoffs?.sf2 ?? null} />
+            <div className="order-1 md:order-1">
+              <SeriesCard label="Semifinal 1 · 1° vs 4°" series={playoffs?.sf1 ?? null} />
+            </div>
+            <div className="order-3 md:order-2">
+              <SeriesCard label="Final" series={playoffs?.final ?? null} highlight />
+            </div>
+            <div className="order-2 md:order-3">
+              <SeriesCard label="Semifinal 2 · 2° vs 3°" series={playoffs?.sf2 ?? null} />
+            </div>
           </div>
 
           {!playoffsActive && (
