@@ -217,7 +217,7 @@ export default function ConfigPage() {
   const RESET_OPTIONS: { scope: ResetScope; label: string; desc: string; color: string }[] = [
     { scope: "matches", label: "Borrar calendario",  desc: "Elimina todos los partidos y estadísticas. Conserva equipos y jugadores.",       color: "amber"  },
     { scope: "players", label: "Borrar jugadores",   desc: "Elimina todos los jugadores de todos los equipos. Conserva equipos y partidos.", color: "orange" },
-    { scope: "all",     label: "Resetear todo",      desc: "Elimina partidos, jugadores y equipos. No se puede deshacer.",                   color: "red"    },
+    { scope: "all",     label: "Resetear todo",      desc: "Elimina partidos, jugadores, equipos y árbitros. No se puede deshacer.",       color: "red"    },
   ];
 
   const resetMutation = useMutation({

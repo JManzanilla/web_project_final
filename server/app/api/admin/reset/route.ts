@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { db } from "@/db";
-import { matches, teams, players, playerMatchStats, matchOfficials } from "@/db/schema";
+import { matches, teams, players, playerMatchStats, matchOfficials, officials } from "@/db/schema";
 import { requireAuth, ok, err } from "@/lib/api";
 import { notifyDangerZone } from "@/lib/email";
 
@@ -32,6 +32,7 @@ export async function DELETE(req: NextRequest) {
 
   if (scope === "all") {
     await db.delete(teams);
+    await db.delete(officials); // CASCADE elimina officialAvailability
   }
 
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "desconocida";
