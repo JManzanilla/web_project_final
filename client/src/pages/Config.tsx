@@ -1089,57 +1089,75 @@ export default function ConfigPage() {
             {showEligibility && (
               <div className="mt-4">
                 <div className="flex items-center justify-between mb-3">
-                  <p className="text-[10px] text-white/45">Con criterios actuales: {minAttendancePct}% asistencia y ≥{playoffMinJornadas} jornadas</p>
-                  <button onClick={() => refetchEligibility()} className="text-[10px] text-brand-orange/70 hover:text-brand-orange font-bold">
+                  <div className="flex items-center gap-3 text-[11px] font-semibold">
+                    <span className="flex items-center gap-1.5 text-green-400">
+                      <span className="w-2 h-2 rounded-full bg-green-400 inline-block" />
+                      {eligibility.filter(r => r.eligible).length} elegibles
+                    </span>
+                    <span className="flex items-center gap-1.5 text-red-400">
+                      <span className="w-2 h-2 rounded-full bg-red-400 inline-block" />
+                      {eligibility.filter(r => !r.eligible).length} no cumplen
+                    </span>
+                  </div>
+                  <button onClick={() => refetchEligibility()} className="text-[11px] text-brand-orange font-bold hover:opacity-70 transition-opacity">
                     {fetchingEligibility ? "Actualizando..." : "↻ Actualizar"}
                   </button>
                 </div>
 
                 {eligibility.length === 0 ? (
-                  <p className="text-white/30 text-center py-6 text-sm">No hay datos de asistencia aún</p>
+                  <p className="text-white/50 text-center py-8 text-sm">No hay datos de asistencia aún</p>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-xs">
-                      <thead>
-                        <tr className="border-b border-white/8">
-                          <th className="text-left text-white/40 font-bold uppercase tracking-wider pb-2 pr-3">Jugador</th>
-                          <th className="text-left text-white/40 font-bold uppercase tracking-wider pb-2 pr-3">Equipo</th>
-                          <th className="text-center text-white/40 font-bold uppercase tracking-wider pb-2 pr-3">Jornadas</th>
-                          <th className="text-center text-white/40 font-bold uppercase tracking-wider pb-2 pr-3">%</th>
-                          <th className="text-center text-white/40 font-bold uppercase tracking-wider pb-2">Estado</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {eligibility.map((row) => (
-                          <tr key={row.id} className="border-b border-white/4 hover:bg-white/3 transition-colors">
-                            <td className="py-2 pr-3">
-                              <span className="text-brand-orange/60 font-black mr-1">#{row.number}</span>
-                              <span className={row.eligible ? "text-white font-semibold" : "text-white/50"}>{row.lastName} {row.name}</span>
-                            </td>
-                            <td className="py-2 pr-3 text-white/50">{row.teamName}</td>
-                            <td className="py-2 pr-3 text-center">
-                              <span className={row.eligible ? "text-white" : "text-white/50"}>{row.attendedJornadas}</span>
-                              <span className="text-white/25">/{row.totalJornadas}</span>
-                            </td>
-                            <td className="py-2 pr-3 text-center">
-                              <span className={`font-bold ${row.pct >= minAttendancePct ? "text-green-400" : "text-red-400/70"}`}>{row.pct}%</span>
-                            </td>
-                            <td className="py-2 text-center">
-                              {row.eligible ? (
-                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-500/15 border border-green-500/25 text-green-400">✓ Elegible</span>
-                              ) : (
-                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500/10 border border-red-500/20 text-red-400/70">✗ No cumple</span>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                  <div className="space-y-2">
+                    {eligibility.map((row) => (
+                      <div key={row.id} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 border ${
+                        row.eligible
+                          ? "bg-green-500/8 border-green-500/20"
+                          : "bg-white/4 border-white/8"
+                      }`}>
+                        {/* Número */}
+                        <span className="text-[11px] font-black text-brand-orange w-6 text-center flex-shrink-0">
+                          #{row.number}
+                        </span>
 
-                    <div className="mt-3 flex items-center gap-4 text-[10px] text-white/40">
-                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-400 inline-block" />{eligibility.filter(r => r.eligible).length} elegibles</span>
-                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-400/60 inline-block" />{eligibility.filter(r => !r.eligible).length} no cumplen</span>
-                    </div>
+                        {/* Nombre + equipo */}
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-sm font-bold truncate ${row.eligible ? "text-white" : "text-white/70"}`}>
+                            {row.lastName} {row.name}
+                          </p>
+                          <p className="text-[10px] text-white/50 truncate">{row.teamName}</p>
+                        </div>
+
+                        {/* Barra de asistencia */}
+                        <div className="w-24 flex-shrink-0 hidden sm:block">
+                          <div className="flex justify-between text-[10px] mb-0.5">
+                            <span className="text-white/60">{row.attendedJornadas} de {row.totalJornadas}</span>
+                            <span className={`font-bold ${row.pct >= minAttendancePct ? "text-green-400" : "text-red-400"}`}>{row.pct}%</span>
+                          </div>
+                          <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all ${row.pct >= minAttendancePct ? "bg-green-400" : "bg-red-400/70"}`}
+                              style={{ width: `${row.pct}%` }}
+                            />
+                          </div>
+                        </div>
+
+                        {/* % en mobile */}
+                        <span className={`text-sm font-bold sm:hidden flex-shrink-0 ${row.pct >= minAttendancePct ? "text-green-400" : "text-red-400"}`}>
+                          {row.pct}%
+                        </span>
+
+                        {/* Badge */}
+                        {row.eligible ? (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-500/20 border border-green-500/30 text-green-400 flex-shrink-0">
+                            ✓
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500/15 border border-red-500/25 text-red-400 flex-shrink-0">
+                            ✗
+                          </span>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
