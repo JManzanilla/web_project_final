@@ -122,7 +122,7 @@ export default function ConfigPage() {
   const [sf2Date,     setSf2Date]     = useState("");
 
   // Elegibilidad
-  const [minAttendancePct,   setMinAttendancePct]   = useState(50);
+  const [minAttendancePct,   setMinAttendancePct]   = useState(40);
   const [playoffMinJornadas, setPlayoffMinJornadas] = useState(1);
 
   const playoffMutation = useMutation({
@@ -1028,56 +1028,60 @@ export default function ConfigPage() {
         </div>
 
         <div className="glass-panel p-5 sm:p-6 space-y-5">
-          <p className="text-[11px] text-white/70">
-            Define los requisitos mínimos para que un jugador participe en la fase eliminatoria.
-          </p>
 
-          <div className="grid sm:grid-cols-2 gap-5">
-            {/* Porcentaje mínimo */}
-            <div className="bg-white/3 border border-white/8 rounded-2xl p-4">
-              <label className="text-[11px] text-white/70 uppercase tracking-widest font-bold block mb-1">
-                Asistencia mínima
-              </label>
-              <p className="text-[10px] text-white/50 mb-4">
-                % de partidos que el jugador debe haber asistido del total de su equipo
-              </p>
-              <div className="flex items-center gap-3 mb-3">
-                <button onClick={() => setMinAttendancePct(Math.max(0, minAttendancePct - 5))}
-                  className="w-9 h-9 rounded-full bg-white/8 hover:bg-white/15 border border-white/10 text-white font-bold flex items-center justify-center text-lg flex-shrink-0">−</button>
-                <span className="text-4xl font-display font-black text-brand-orange flex-1 text-center">{minAttendancePct}%</span>
-                <button onClick={() => setMinAttendancePct(Math.min(100, minAttendancePct + 5))}
-                  className="w-9 h-9 rounded-full bg-white/8 hover:bg-white/15 border border-white/10 text-white font-bold flex items-center justify-center text-lg flex-shrink-0">+</button>
+          {/* Regla visual */}
+          <div className="bg-white/3 border border-white/10 rounded-2xl p-4">
+            <p className="text-[11px] text-white/60 uppercase tracking-widest font-bold mb-4">Regla de elegibilidad</p>
+
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              {/* % asistencia */}
+              <div className="flex-1 w-full bg-black/25 rounded-xl p-4 text-center">
+                <p className="text-[10px] text-white/55 font-bold uppercase tracking-wider mb-2">Asistencia mínima</p>
+                <div className="flex items-center justify-center gap-3 mb-2">
+                  <button onClick={() => setMinAttendancePct(Math.max(0, minAttendancePct - 5))}
+                    className="w-8 h-8 rounded-full bg-white/8 hover:bg-white/15 border border-white/10 text-white font-bold flex items-center justify-center flex-shrink-0">−</button>
+                  <span className="text-4xl font-display font-black text-brand-orange w-20">{minAttendancePct}%</span>
+                  <button onClick={() => setMinAttendancePct(Math.min(100, minAttendancePct + 5))}
+                    className="w-8 h-8 rounded-full bg-white/8 hover:bg-white/15 border border-white/10 text-white font-bold flex items-center justify-center flex-shrink-0">+</button>
+                </div>
+                <div className="flex justify-center gap-1">
+                  {[25, 40, 50, 75].map((v) => (
+                    <button key={v} onClick={() => setMinAttendancePct(v)}
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full border transition-all ${minAttendancePct === v ? "bg-brand-orange/20 border-brand-orange/50 text-brand-orange" : "border-white/12 text-white/50 hover:border-white/25 hover:text-white/80"}`}>
+                      {v}%
+                    </button>
+                  ))}
+                </div>
               </div>
-              <div className="flex justify-between">
-                {[0, 25, 50, 75, 100].map((v) => (
-                  <button key={v} onClick={() => setMinAttendancePct(v)}
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full border transition-all ${minAttendancePct === v ? "bg-brand-orange/20 border-brand-orange/50 text-brand-orange" : "border-white/15 text-white/55 hover:border-white/30 hover:text-white/80"}`}>
-                    {v}%
-                  </button>
-                ))}
+
+              <div className="text-white/30 font-bold text-lg flex-shrink-0">+</div>
+
+              {/* Partidos mínimos */}
+              <div className="flex-1 w-full bg-black/25 rounded-xl p-4 text-center">
+                <p className="text-[10px] text-white/55 font-bold uppercase tracking-wider mb-2">Al menos N partido(s)</p>
+                <div className="flex items-center justify-center gap-3 mb-2">
+                  <button onClick={() => setPlayoffMinJornadas(Math.max(1, playoffMinJornadas - 1))}
+                    className="w-8 h-8 rounded-full bg-white/8 hover:bg-white/15 border border-white/10 text-white font-bold flex items-center justify-center flex-shrink-0">−</button>
+                  <span className="text-4xl font-display font-black text-brand-orange w-20">{playoffMinJornadas}</span>
+                  <button onClick={() => setPlayoffMinJornadas(playoffMinJornadas + 1)}
+                    className="w-8 h-8 rounded-full bg-white/8 hover:bg-white/15 border border-white/10 text-white font-bold flex items-center justify-center flex-shrink-0">+</button>
+                </div>
+                <p className="text-[10px] text-white/45">
+                  {playoffMinJornadas === 1 ? "al menos 1 partido jugado" : `al menos ${playoffMinJornadas} partidos jugados`}
+                </p>
               </div>
             </div>
 
-            {/* Partidos mínimos */}
-            <div className="bg-white/3 border border-white/8 rounded-2xl p-4">
-              <label className="text-[11px] text-white/70 uppercase tracking-widest font-bold block mb-1">
-                Partidos mínimos jugados
-              </label>
-              <p className="text-[10px] text-white/50 mb-4">
-                Cantidad mínima de partidos en que debe haber asistido (número absoluto)
+            {/* Explicación del caso altas */}
+            <div className="mt-4 bg-brand-orange/5 border border-brand-orange/15 rounded-xl p-3 space-y-1.5">
+              <p className="text-[11px] text-white/75 leading-relaxed">
+                <span className="text-brand-orange font-bold">Vuelta única:</span>{" "}
+                el jugador debe tener el {minAttendancePct}% de los partidos del torneo + al menos {playoffMinJornadas} partido{playoffMinJornadas !== 1 ? "s" : ""}.
               </p>
-              <div className="flex items-center gap-3">
-                <button onClick={() => setPlayoffMinJornadas(Math.max(0, playoffMinJornadas - 1))}
-                  className="w-9 h-9 rounded-full bg-white/8 hover:bg-white/15 border border-white/10 text-white font-bold flex items-center justify-center text-lg flex-shrink-0">−</button>
-                <div className="flex-1 text-center">
-                  <span className="text-4xl font-display font-black text-brand-orange">{playoffMinJornadas}</span>
-                  <p className="text-[10px] text-white/50 mt-1">
-                    {playoffMinJornadas === 0 ? "Sin requisito" : `partido${playoffMinJornadas !== 1 ? "s" : ""} mínimo`}
-                  </p>
-                </div>
-                <button onClick={() => setPlayoffMinJornadas(playoffMinJornadas + 1)}
-                  className="w-9 h-9 rounded-full bg-white/8 hover:bg-white/15 border border-white/10 text-white font-bold flex items-center justify-center text-lg flex-shrink-0">+</button>
-              </div>
+              <p className="text-[11px] text-white/75 leading-relaxed">
+                <span className="text-brand-orange font-bold">Altas en el transcurso:</span>{" "}
+                el porcentaje se calcula desde la jornada en que el jugador fue registrado, no desde el inicio del torneo.
+              </p>
             </div>
           </div>
 
