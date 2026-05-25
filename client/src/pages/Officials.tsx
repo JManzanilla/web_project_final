@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/apiClient";
+import { apiGet, apiPost, apiPut, apiDelete, apiUpload } from "@/lib/apiClient";
 import { sileo } from "sileo";
 import { X, UserPlus, Camera, Trash2, Pencil } from "lucide-react";
 
@@ -241,7 +241,7 @@ export default function OfficialsPage() {
     if (!pendingPhoto) return;
     const fd = new FormData();
     fd.append("photo", pendingPhoto);
-    await fetch(`/api/officials/${id}/photo`, { method: "POST", body: fd });
+    await apiUpload<{ photoUrl: string }>(`/api/officials/${id}/photo`, fd);
   };
 
   const createMutation = useMutation({

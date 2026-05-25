@@ -10,7 +10,7 @@ interface ApiPlayer {
 }
 
 interface ApiStat {
-  playerId: string; attended: boolean; pts: number; flt: number;
+  playerId: string; attended: boolean; pts: number; ast: number; flt: number;
   player: ApiPlayer;
 }
 
