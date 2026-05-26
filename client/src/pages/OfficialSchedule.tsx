@@ -540,7 +540,7 @@ export default function OfficialSchedulePage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-3xl">
+    <div className="container mx-auto px-4 py-8 max-w-6xl">
 
       {/* Header */}
       <div className="flex items-start justify-between gap-4 mb-6">
@@ -604,171 +604,169 @@ export default function OfficialSchedulePage() {
 
       {jornada !== null && (
         <>
-          {/* ── SECCIÓN 1: Disponibilidad ─────────────────────────────────── */}
-          <div className="glass-panel rounded-2xl overflow-hidden mb-6">
-            <div className="px-4 py-3 border-b border-white/8 flex items-center justify-between">
-              <p className="font-bold text-white text-sm">Disponibilidad — Jornada {jornada}</p>
-              <p className="text-[11px] text-white/30">Toca cada árbitro para editar</p>
+          {/* ── Grid 2 columnas: Disponibilidad | Partidos ────────────────── */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 items-start">
+
+            {/* Columna izquierda: Disponibilidad */}
+            <div className="glass-panel rounded-2xl overflow-hidden">
+              <div className="px-4 py-3 border-b border-white/8 flex items-center justify-between">
+                <p className="font-bold text-white text-sm">Disponibilidad — Jornada {jornada}</p>
+                <p className="text-[11px] text-white/30">Toca cada árbitro para editar</p>
+              </div>
+              {loadingSlots ? (
+                <p className="text-center text-white/30 text-sm py-6">Cargando...</p>
+              ) : activeOfficials.length === 0 ? (
+                <p className="text-center text-white/20 text-sm py-6">Sin árbitros registrados</p>
+              ) : (
+                <div>
+                  {activeOfficials.map((o) => (
+                    <AvailRow
+                      key={o.id}
+                      official={o}
+                      slots={slots}
+                      jornada={jornada}
+                      onAdd={(data) => addSlotMutation.mutate({ officialId: o.id, data: { jornada, ...data } })}
+                      onDelete={(slotId) => deleteSlotMutation.mutate({ officialId: o.id, slotId })}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
 
-            {loadingSlots ? (
-              <p className="text-center text-white/30 text-sm py-6">Cargando...</p>
-            ) : activeOfficials.length === 0 ? (
-              <p className="text-center text-white/20 text-sm py-6">Sin árbitros registrados</p>
+            {/* Columna derecha: Partidos + Guardar */}
+            {loadingMatches ? (
+              <div className="text-center text-white/30 py-8">Cargando partidos...</div>
+            ) : matches.length === 0 ? (
+              <div className="glass-panel rounded-2xl p-8 text-center">
+                <p className="text-white/30">No hay partidos en la Jornada {jornada}</p>
+              </div>
             ) : (
-              <div>
-                {activeOfficials.map((o) => (
-                  <AvailRow
-                    key={o.id}
-                    official={o}
-                    slots={slots}
-                    jornada={jornada}
-                    onAdd={(data) => addSlotMutation.mutate({ officialId: o.id, data: { jornada, ...data } })}
-                    onDelete={(slotId) => deleteSlotMutation.mutate({ officialId: o.id, slotId })}
-                  />
-                ))}
+              <div className="space-y-4">
+                <div className="glass-panel rounded-2xl overflow-hidden">
+                  <div className="px-4 py-3 border-b border-white/8">
+                    <p className="font-bold text-white text-sm">Partidos — Jornada {jornada}</p>
+                  </div>
+                  <div className="divide-y divide-white/5">
+                    {matches.map((m) => {
+                      const candidates = candidatesFor(m);
+                      return (
+                        <div key={m.id} className="p-4 space-y-3">
+                          <div className="flex items-center gap-3">
+                            <div className="text-center min-w-[52px]">
+                              <p className="text-[10px] text-white/30 font-bold">{fmtDateShort(m.scheduledAt)}</p>
+                              <p className="text-lg font-black text-brand-orange">{fmtTime(m.scheduledAt)}</p>
+                            </div>
+                            <div className="flex-1 text-center">
+                              <p className="font-bold text-white text-sm">{m.homeTeam.name} <span className="text-white/30 font-normal">vs</span> {m.awayTeam.name}</p>
+                            </div>
+                            <span className={`text-[10px] font-bold ${candidates.length > 0 ? "text-green-400/60" : "text-yellow-400/40"}`}>
+                              {candidates.length > 0 ? `${candidates.length} disp.` : "Sin disp."}
+                            </span>
+                          </div>
+                          {m.phase !== "regular" && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] text-white/30 uppercase font-bold">Árbitros:</span>
+                              {(["Locales", "Externos"] as const).map((mode) => {
+                                const isExt = mode === "Externos";
+                                const active = (assignments[m.id]?.isExternal ?? false) === isExt;
+                                return (
+                                  <button key={mode} onClick={() => setAssignments((p) => ({ ...p, [m.id]: { ...(p[m.id] ?? { ref1:"",ref2:"",scorer:"",extRef1:"",extRef2:"",extScorer:"" }), isExternal: isExt } }))}
+                                    className={`px-3 py-1 rounded-full text-[11px] font-bold border transition-all ${active ? "bg-brand-orange text-white border-brand-orange" : "bg-white/5 text-white/40 border-white/10 hover:border-white/25"}`}>
+                                    {mode}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            {(() => {
+                              const a = assignments[m.id] ?? { ref1: "", ref2: "", scorer: "", extRef1: "", extRef2: "", extScorer: "", isExternal: false };
+                              const set = (patch: Partial<Assignment>) =>
+                                setAssignments((p) => ({ ...p, [m.id]: { ...(p[m.id] ?? { ref1:"",ref2:"",scorer:"",extRef1:"",extRef2:"",extScorer:"",isExternal:false }), ...patch } }));
+                              if (a.isExternal) {
+                                return (
+                                  <>
+                                    {[
+                                      { label: "🟠 Principal", key: "extRef1" as const },
+                                      { label: "🔵 Auxiliar",  key: "extRef2" as const },
+                                      { label: "📋 Anotador",  key: "extScorer" as const },
+                                    ].map(({ label, key }) => (
+                                      <div key={key} className="flex-1 min-w-0 space-y-1">
+                                        <p className="text-[10px] font-bold uppercase tracking-widest text-white/30">{label}</p>
+                                        <Input placeholder="Nombre Apellido" value={a[key]} onChange={(e) => set({ [key]: e.target.value })}
+                                          className="glass-input h-9 text-sm" />
+                                      </div>
+                                    ))}
+                                  </>
+                                );
+                              }
+                              return (
+                                <>
+                                  <OfficialSelect label="🟠 Principal" value={a.ref1}
+                                    onChange={(v) => set({ ref1: v })} candidates={candidates} roleKey="mainRef"
+                                    exclude={[a.ref2, a.scorer].filter(Boolean)} />
+                                  <OfficialSelect label="🔵 Auxiliar" value={a.ref2}
+                                    onChange={(v) => set({ ref2: v })} candidates={candidates} roleKey="assistRef"
+                                    exclude={[a.ref1, a.scorer].filter(Boolean)} />
+                                  <OfficialSelect label="📋 Anotador" value={a.scorer}
+                                    onChange={(v) => set({ scorer: v })} candidates={candidates} roleKey="scorer"
+                                    exclude={[a.ref1, a.ref2].filter(Boolean)} />
+                                </>
+                              );
+                            })()}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}
+                  className="w-full h-12 rounded-xl bg-white/8 border border-white/15 hover:bg-white/12 text-white font-bold disabled:opacity-40">
+                  <Save className="w-4 h-4 mr-2" />
+                  {saveMutation.isPending ? "Guardando…" : "Guardar asignaciones"}
+                </Button>
               </div>
             )}
           </div>
 
-          {/* ── SECCIÓN 2: Asignación de partidos ────────────────────────── */}
-          {loadingMatches ? (
-            <div className="text-center text-white/30 py-8">Cargando partidos...</div>
-          ) : matches.length === 0 ? (
-            <div className="glass-panel rounded-2xl p-8 text-center mb-6">
-              <p className="text-white/30">No hay partidos en la Jornada {jornada}</p>
-            </div>
-          ) : (
-            <>
-              <div className="glass-panel rounded-2xl overflow-hidden mb-4">
-                <div className="px-4 py-3 border-b border-white/8">
-                  <p className="font-bold text-white text-sm">Partidos — Jornada {jornada}</p>
-                </div>
-                <div className="divide-y divide-white/5">
-                  {matches.map((m) => {
-                    const candidates = candidatesFor(m);
-                    return (
-                      <div key={m.id} className="p-4 space-y-3">
-                        {/* Info partido */}
-                        <div className="flex items-center gap-3">
-                          <div className="text-center min-w-[52px]">
-                            <p className="text-[10px] text-white/30 font-bold">{fmtDateShort(m.scheduledAt)}</p>
-                            <p className="text-lg font-black text-brand-orange">{fmtTime(m.scheduledAt)}</p>
-                          </div>
-                          <div className="flex-1 text-center">
-                            <p className="font-bold text-white text-sm">{m.homeTeam.name} <span className="text-white/30 font-normal">vs</span> {m.awayTeam.name}</p>
-                          </div>
-                          <span className={`text-[10px] font-bold ${candidates.length > 0 ? "text-green-400/60" : "text-yellow-400/40"}`}>
-                            {candidates.length > 0 ? `${candidates.length} disp.` : "Sin disp."}
-                          </span>
-                        </div>
-                        {/* Toggle local/externo para playoffs */}
-                        {m.phase !== "regular" && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] text-white/30 uppercase font-bold">Árbitros:</span>
-                            {(["Locales", "Externos"] as const).map((mode) => {
-                              const isExt = mode === "Externos";
-                              const active = (assignments[m.id]?.isExternal ?? false) === isExt;
-                              return (
-                                <button key={mode} onClick={() => setAssignments((p) => ({ ...p, [m.id]: { ...(p[m.id] ?? { ref1:"",ref2:"",scorer:"",extRef1:"",extRef2:"",extScorer:"" }), isExternal: isExt } }))}
-                                  className={`px-3 py-1 rounded-full text-[11px] font-bold border transition-all ${active ? "bg-brand-orange text-white border-brand-orange" : "bg-white/5 text-white/40 border-white/10 hover:border-white/25"}`}>
-                                  {mode}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        )}
-
-                        {/* Selectores */}
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                          {(() => {
-                            const a = assignments[m.id] ?? { ref1: "", ref2: "", scorer: "", extRef1: "", extRef2: "", extScorer: "", isExternal: false };
-                            const set = (patch: Partial<Assignment>) =>
-                              setAssignments((p) => ({ ...p, [m.id]: { ...(p[m.id] ?? { ref1:"",ref2:"",scorer:"",extRef1:"",extRef2:"",extScorer:"",isExternal:false }), ...patch } }));
-
-                            if (a.isExternal) {
-                              return (
-                                <>
-                                  {[
-                                    { label: "🟠 Principal", key: "extRef1" as const },
-                                    { label: "🔵 Auxiliar",  key: "extRef2" as const },
-                                    { label: "📋 Anotador",  key: "extScorer" as const },
-                                  ].map(({ label, key }) => (
-                                    <div key={key} className="flex-1 min-w-0 space-y-1">
-                                      <p className="text-[10px] font-bold uppercase tracking-widest text-white/30">{label}</p>
-                                      <Input placeholder="Nombre Apellido" value={a[key]} onChange={(e) => set({ [key]: e.target.value })}
-                                        className="glass-input h-9 text-sm" />
-                                    </div>
-                                  ))}
-                                </>
-                              );
-                            }
-
-                            return (
-                              <>
-                                <OfficialSelect label="🟠 Principal" value={a.ref1}
-                                  onChange={(v) => set({ ref1: v })} candidates={candidates} roleKey="mainRef"
-                                  exclude={[a.ref2, a.scorer].filter(Boolean)} />
-                                <OfficialSelect label="🔵 Auxiliar" value={a.ref2}
-                                  onChange={(v) => set({ ref2: v })} candidates={candidates} roleKey="assistRef"
-                                  exclude={[a.ref1, a.scorer].filter(Boolean)} />
-                                <OfficialSelect label="📋 Anotador" value={a.scorer}
-                                  onChange={(v) => set({ scorer: v })} candidates={candidates} roleKey="scorer"
-                                  exclude={[a.ref1, a.ref2].filter(Boolean)} />
-                              </>
-                            );
-                          })()}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+          {/* ── WhatsApp — ancho completo ─────────────────────────────────── */}
+          {!loadingMatches && matches.length > 0 && (
+            <div className="glass-panel rounded-2xl p-5 space-y-4">
+              <div className="flex items-center justify-between">
+                <p className="font-bold text-white">Mensaje para el grupo</p>
+                <Button onClick={generateWA}
+                  className="h-9 px-4 rounded-xl bg-brand-orange hover:bg-brand-orange/85 text-white font-bold text-sm glow-orange">
+                  Generar mensaje
+                </Button>
               </div>
-
-              <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}
-                className="w-full h-12 rounded-xl bg-white/8 border border-white/15 hover:bg-white/12 text-white font-bold mb-6 disabled:opacity-40">
-                <Save className="w-4 h-4 mr-2" />
-                {saveMutation.isPending ? "Guardando…" : "Guardar asignaciones"}
-              </Button>
-
-              {/* ── SECCIÓN 3: WhatsApp ──────────────────────────────────── */}
-              <div className="glass-panel rounded-2xl p-5 space-y-4">
-                <div className="flex items-center justify-between">
-                  <p className="font-bold text-white">Mensaje para el grupo</p>
-                  <Button onClick={generateWA}
-                    className="h-9 px-4 rounded-xl bg-brand-orange hover:bg-brand-orange/85 text-white font-bold text-sm glow-orange">
-                    Generar mensaje
-                  </Button>
-                </div>
-
-                {waText ? (
-                  <>
-                    <pre className="whitespace-pre-wrap text-sm text-white/70 glass-panel rounded-xl p-4 font-sans leading-relaxed max-h-64 overflow-y-auto">
-                      {waText}
-                    </pre>
-                    <div className="flex gap-3">
-                      <Button onClick={copyText}
-                        className="flex-1 h-11 rounded-xl bg-white/8 border border-white/15 hover:bg-white/12 text-white font-bold">
-                        {copied ? <Check className="w-4 h-4 mr-2 text-green-400" /> : <Copy className="w-4 h-4 mr-2" />}
-                        {copied ? "¡Copiado!" : "Copiar texto"}
-                      </Button>
-                      <Button onClick={openWhatsApp}
-                        className="flex-1 h-11 rounded-xl font-bold text-white" style={{ background: "#25D366" }}>
-                        <ExternalLink className="w-4 h-4 mr-2" />
-                        Abrir en WhatsApp
-                      </Button>
-                    </div>
-                    <p className="text-[11px] text-white/20 text-center">
-                      WhatsApp se abre con el mensaje listo — selecciona el grupo y envía
-                    </p>
-                  </>
-                ) : (
-                  <p className="text-white/25 text-sm text-center py-3">
-                    Asigna los árbitros y genera el mensaje
+              {waText ? (
+                <>
+                  <pre className="whitespace-pre-wrap text-sm text-white/70 glass-panel rounded-xl p-4 font-sans leading-relaxed max-h-64 overflow-y-auto">
+                    {waText}
+                  </pre>
+                  <div className="flex gap-3">
+                    <Button onClick={copyText}
+                      className="flex-1 h-11 rounded-xl bg-white/8 border border-white/15 hover:bg-white/12 text-white font-bold">
+                      {copied ? <Check className="w-4 h-4 mr-2 text-green-400" /> : <Copy className="w-4 h-4 mr-2" />}
+                      {copied ? "¡Copiado!" : "Copiar texto"}
+                    </Button>
+                    <Button onClick={openWhatsApp}
+                      className="flex-1 h-11 rounded-xl font-bold text-white" style={{ background: "#25D366" }}>
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                      Abrir en WhatsApp
+                    </Button>
+                  </div>
+                  <p className="text-[11px] text-white/20 text-center">
+                    WhatsApp se abre con el mensaje listo — selecciona el grupo y envía
                   </p>
-                )}
-              </div>
-            </>
+                </>
+              ) : (
+                <p className="text-white/25 text-sm text-center py-3">
+                  Asigna los árbitros y genera el mensaje
+                </p>
+              )}
+            </div>
           )}
         </>
       )}
