@@ -308,7 +308,7 @@ function OfficialRow({ official: o, onEdit, onDelete }: { official: Official; on
   const [confirmDel, setConfirmDel] = useState(false);
   const roleBadges = ROLE_OPTIONS.filter(r => o.roles[r.key]);
   return (
-    <div className={`flex items-center gap-3 rounded-xl px-3 py-2.5 border ${o.active ? "bg-white/3 border-white/8" : "bg-white/1 border-white/4 opacity-50"}`}>
+    <div className={`flex items-center gap-3 rounded-xl px-3 py-2.5 border animate-in fade-in duration-300 ${o.active ? "bg-white/3 border-white/8" : "bg-white/1 border-white/4 opacity-50"}`}>
       <OfficialAvatar official={o} />
       <div className="flex-1 min-w-0">
         <p className="font-semibold text-sm text-white truncate">{o.name} {o.lastName}</p>
@@ -573,7 +573,7 @@ export default function OfficialSchedulePage() {
             {officials.length === 0 ? (
               <p className="text-white/30 text-sm text-center py-4">Sin árbitros registrados aún</p>
             ) : (
-              <div className="space-y-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {officials.map((o) => (
                   <OfficialRow key={o.id} official={o}
                     onEdit={() => openEdit(o)}
