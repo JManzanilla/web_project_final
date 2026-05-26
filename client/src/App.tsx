@@ -81,7 +81,7 @@ function NavGroupButton({ group, location, openId, setOpenId }: {
     <div className="relative flex-shrink-0">
       {/* Submenu flotante */}
       {isOpen && (
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 flex flex-col items-center gap-1.5 z-50">
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 flex flex-col items-center gap-1.5 z-50 animate-in fade-in slide-in-from-bottom-2 duration-200">
           {group.items.map((item) => {
             const ItemIcon = item.icon;
             const active = location === item.href || location.startsWith(item.href);
@@ -153,25 +153,25 @@ function Navigation() {
   if (user?.role === "lider" || user?.role === "admin" || canAccess("roster")) {
     entries.push({ kind: "link", href: "/roster", icon: User, label: "Roster" });
   }
-  if (user?.role === "anotador" || user?.role === "admin" || canAccess("match")) {
-    entries.push({ kind: "link", href: "/matches", icon: ClipboardList, label: "Mesa Técnica" });
+
+  // Rol Árbitros — icono propio
+  if (user?.role === "admin" || canAccess("official-schedule")) {
+    entries.push({ kind: "link", href: "/official-schedule", icon: ScrollText, label: "Rol Árbitros" });
   }
 
-  // Grupo Calendario: Calendario + Rol Árbitros
-  const calItems: NavGroup["items"] = [];
+  // Grupo Operaciones: Calendario + Mesa Técnica + Transmisiones
+  const opsItems: NavGroup["items"] = [];
   if (user?.role === "admin" || canAccess("schedule"))
-    calItems.push({ href: "/schedule",          label: "Calendario",   icon: CalendarDays });
-  if (user?.role === "admin" || canAccess("official-schedule"))
-    calItems.push({ href: "/official-schedule", label: "Rol Árbitros", icon: ScrollText   });
+    opsItems.push({ href: "/schedule", label: "Calendario",   icon: CalendarDays });
+  if (user?.role === "anotador" || user?.role === "admin" || canAccess("match"))
+    opsItems.push({ href: "/matches",  label: "Mesa Técnica", icon: ClipboardList });
+  if (user?.role === "admin" || user?.role === "transmision")
+    opsItems.push({ href: "/stream",   label: "Transmisiones", icon: Radio        });
 
-  if (calItems.length === 1) {
-    entries.push({ kind: "link", href: calItems[0].href, icon: calItems[0].icon, label: calItems[0].label });
-  } else if (calItems.length > 1) {
-    entries.push({ kind: "group", id: "calendar", icon: CalendarDays, label: "Calendario", items: calItems });
-  }
-
-  if (user?.role === "admin" || user?.role === "transmision") {
-    entries.push({ kind: "link", href: "/stream", icon: Radio, label: "Transmisiones" });
+  if (opsItems.length === 1) {
+    entries.push({ kind: "link", href: opsItems[0].href, icon: opsItems[0].icon, label: opsItems[0].label });
+  } else if (opsItems.length > 1) {
+    entries.push({ kind: "group", id: "operations", icon: CalendarDays, label: "Operaciones", items: opsItems });
   }
 
   // Grupo Admin: Configuración + Cuentas
