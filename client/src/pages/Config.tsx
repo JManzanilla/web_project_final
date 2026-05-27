@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { SectionTitle } from "@/components/ui/SectionTitle";
-import { QuickNav } from "@/components/ui/QuickNav";
+import { QuickNav, QuickNavItem } from "@/components/ui/QuickNav";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -324,7 +324,7 @@ export default function ConfigPage() {
       <SectionTitle whiteText="Configurar" orangeText="Torneo" />
 
       {(() => {
-        const navItems: import("@/components/ui/QuickNav").QuickNavItem[] = [
+        const navItems: QuickNavItem[] = [
           { href: "/config", icon: Settings2, label: "Configuración" },
         ];
         if (user?.role === "admin" || user?.permissions?.accounts?.view)

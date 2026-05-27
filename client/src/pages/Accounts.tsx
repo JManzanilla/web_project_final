@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { SectionTitle } from "@/components/ui/SectionTitle";
-import { QuickNav } from "@/components/ui/QuickNav";
+import { QuickNav, QuickNavItem } from "@/components/ui/QuickNav";
 import {
   Table, TableBody, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -565,7 +565,7 @@ export default function AccountsPage() {
       </div>
 
       {(() => {
-        const navItems: import("@/components/ui/QuickNav").QuickNavItem[] = [];
+        const navItems: QuickNavItem[] = [];
         if (user?.role === "admin" || user?.permissions?.config?.view)
           navItems.push({ href: "/config", icon: Settings, label: "Configuración" });
         navItems.push({ href: "/accounts", icon: UsersIcon, label: "Cuentas" });
