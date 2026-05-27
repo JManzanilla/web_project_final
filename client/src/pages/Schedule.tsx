@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Link } from "wouter";
 import { SectionTitle } from "@/components/ui/SectionTitle";
+import { QuickNav } from "@/components/ui/QuickNav";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import {
   ChevronDown, ChevronUp,
-  Pencil, PauseCircle, PlayCircle, Swords, ClipboardList, Radio, ScrollText,
+  Pencil, PauseCircle, PlayCircle, Swords, ClipboardList, Radio, ScrollText, CalendarDays,
 } from "lucide-react";
 import { apiGet, apiPut } from "@/lib/apiClient";
 import { sileo } from "sileo";
@@ -268,27 +268,16 @@ export default function SchedulePage() {
         ))}
       </div>
 
-      {/* Accesos rápidos según rol */}
+      {/* Accesos rápidos */}
       {(() => {
-        const links = [];
+        const items = [{ href: "/schedule", icon: CalendarDays, label: "Calendario" }];
         if (user?.role === "admin" || user?.role === "anotador")
-          links.push({ href: "/matches",           icon: ClipboardList, label: "Mesa Técnica"  });
+          items.push({ href: "/matches",           icon: ClipboardList, label: "Mesa Técnica"  });
         if (user?.role === "admin" || user?.role === "transmision")
-          links.push({ href: "/stream",            icon: Radio,         label: "Transmisiones" });
+          items.push({ href: "/stream",            icon: Radio,         label: "Transmisiones" });
         if (user?.role === "admin")
-          links.push({ href: "/official-schedule", icon: ScrollText,    label: "Rol Árbitros"  });
-        if (links.length === 0) return null;
-        return (
-          <div className="flex flex-wrap gap-2 mb-6">
-            {links.map(({ href, icon: Icon, label }) => (
-              <Link key={href} href={href}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold glass-panel border border-white/10 text-white/50 hover:text-white hover:border-white/25 transition-all">
-                <Icon size={13} />
-                {label}
-              </Link>
-            ))}
-          </div>
-        );
+          items.push({ href: "/official-schedule", icon: ScrollText,    label: "Rol Árbitros"  });
+        return <QuickNav items={items} />;
       })()}
 
       {/* Lista de jornadas — dos columnas flex para que las colapsadas llenen el espacio */}
