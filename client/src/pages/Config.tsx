@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import { QuickNav } from "@/components/ui/QuickNav";
+import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -55,6 +56,7 @@ function getRoundRobinInfo(n: number, vueltas: number) {
 // ---------------------------------------------------------------------------
 export default function ConfigPage() {
   const qc = useQueryClient();
+  const { user } = useAuth();
 
   const { data: config } = useQuery<TournamentConfig>({
     queryKey: ["/api/config"],
@@ -323,7 +325,9 @@ export default function ConfigPage() {
 
       <QuickNav items={[
         { href: "/config",   icon: Settings2, label: "Configuración" },
-        { href: "/accounts", icon: Users,     label: "Cuentas"       },
+        ...(user?.role === "admin" || user?.permissions?.accounts?.view
+          ? [{ href: "/accounts", icon: Users, label: "Cuentas" }]
+          : []),
       ]} />
 
       <div className="flex flex-col md:flex-row md:items-start gap-8 md:gap-6">

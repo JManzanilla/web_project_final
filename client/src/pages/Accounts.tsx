@@ -565,8 +565,10 @@ export default function AccountsPage() {
       </div>
 
       <QuickNav items={[
-        { href: "/config",   icon: Settings,   label: "Configuración" },
-        { href: "/accounts", icon: UsersIcon,  label: "Cuentas"       },
+        ...(user?.role === "admin" || user?.permissions?.config?.view
+          ? [{ href: "/config", icon: Settings, label: "Configuración" }]
+          : []),
+        { href: "/accounts", icon: UsersIcon, label: "Cuentas" },
       ]} />
 
       {/* Tabla */}

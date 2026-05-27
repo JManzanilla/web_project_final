@@ -273,7 +273,7 @@ export default function SchedulePage() {
         const items = [{ href: "/schedule", icon: CalendarDays, label: "Calendario" }];
         if (user?.role === "admin" || user?.role === "anotador")
           items.push({ href: "/matches",           icon: ClipboardList, label: "Mesa Técnica"  });
-        if (user?.role === "admin" || user?.role === "transmision")
+        if (user?.role === "admin" || user?.role === "transmision" || user?.permissions?.stream?.view)
           items.push({ href: "/stream",            icon: Radio,         label: "Transmisiones" });
         return <QuickNav items={items} />;
       })()}
