@@ -212,8 +212,8 @@ function Navigation() {
   );
 
   return (
-    <nav ref={navRef} className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
-      <div className="glass-panel rounded-full px-5 py-3.5 flex items-center gap-2 sm:gap-3">
+    <nav ref={navRef} className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 max-w-[calc(100vw-2rem)]">
+      <div className="glass-panel rounded-full px-5 py-3.5 flex items-center gap-2 sm:gap-3 overflow-x-auto scrollbar-hide">
         {navLinks}
       </div>
     </nav>
