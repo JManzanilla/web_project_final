@@ -275,8 +275,6 @@ export default function SchedulePage() {
           items.push({ href: "/matches",           icon: ClipboardList, label: "Mesa Técnica"  });
         if (user?.role === "admin" || user?.role === "transmision")
           items.push({ href: "/stream",            icon: Radio,         label: "Transmisiones" });
-        if (user?.role === "admin")
-          items.push({ href: "/official-schedule", icon: ScrollText,    label: "Rol Árbitros"  });
         return <QuickNav items={items} />;
       })()}
 

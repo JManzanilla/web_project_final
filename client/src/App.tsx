@@ -162,7 +162,7 @@ function Navigation() {
   // Accesos directos según rol
   if (user?.role === "admin" || canAccess("schedule"))
     entries.push({ kind: "link", href: "/schedule", icon: CalendarDays, label: "Calendario"    });
-  if (user?.role === "anotador" || canAccess("match"))
+  if (user?.role === "anotador" || (user?.role !== "admin" && canAccess("match")))
     entries.push({ kind: "link", href: "/matches",  icon: ClipboardList, label: "Mesa Técnica" });
   if (user?.role === "transmision")
     entries.push({ kind: "link", href: "/stream",   icon: Radio,         label: "Transmisiones" });

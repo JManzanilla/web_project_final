@@ -338,8 +338,6 @@ export default function StreamPage() {
         if (user?.role === "admin" || user?.role === "anotador")
           items.push({ href: "/matches", icon: ClipboardList, label: "Mesa Técnica" });
         items.push({ href: "/stream", icon: Radio, label: "Transmisiones" });
-        if (user?.role === "admin")
-          items.push({ href: "/official-schedule", icon: ScrollText, label: "Rol Árbitros" });
         return <QuickNav items={items} />;
       })()}
 
