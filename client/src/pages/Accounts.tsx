@@ -564,12 +564,13 @@ export default function AccountsPage() {
         </Button>
       </div>
 
-      <QuickNav items={[
-        ...(user?.role === "admin" || user?.permissions?.config?.view
-          ? [{ href: "/config", icon: Settings, label: "Configuración" }]
-          : []),
-        { href: "/accounts", icon: UsersIcon, label: "Cuentas" },
-      ]} />
+      {(() => {
+        const navItems: import("@/components/ui/QuickNav").QuickNavItem[] = [];
+        if (user?.role === "admin" || user?.permissions?.config?.view)
+          navItems.push({ href: "/config", icon: Settings, label: "Configuración" });
+        navItems.push({ href: "/accounts", icon: UsersIcon, label: "Cuentas" });
+        return <QuickNav items={navItems} />;
+      })()}
 
       {/* Tabla */}
       <div className="glass-panel overflow-hidden">

@@ -323,12 +323,14 @@ export default function ConfigPage() {
     <div className="container max-w-5xl mx-auto px-4 py-8">
       <SectionTitle whiteText="Configurar" orangeText="Torneo" />
 
-      <QuickNav items={[
-        { href: "/config",   icon: Settings2, label: "Configuración" },
-        ...(user?.role === "admin" || user?.permissions?.accounts?.view
-          ? [{ href: "/accounts", icon: Users, label: "Cuentas" }]
-          : []),
-      ]} />
+      {(() => {
+        const navItems: import("@/components/ui/QuickNav").QuickNavItem[] = [
+          { href: "/config", icon: Settings2, label: "Configuración" },
+        ];
+        if (user?.role === "admin" || user?.permissions?.accounts?.view)
+          navItems.push({ href: "/accounts", icon: Users, label: "Cuentas" });
+        return <QuickNav items={navItems} />;
+      })()}
 
       <div className="flex flex-col md:flex-row md:items-start gap-8 md:gap-6">
 
