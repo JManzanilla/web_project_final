@@ -84,11 +84,13 @@ function MatchRow({
   onEdit,
   onToggleSuspend,
   isPending,
+  isAdmin,
 }: {
   m: ScheduleMatch;
   onEdit: (m: ScheduleMatch) => void;
   onToggleSuspend: (id: string, status: MatchStatus) => void;
   isPending: boolean;
+  isAdmin: boolean;
 }) {
   const isFinished = m.status === "finished";
   const isLive     = m.status === "live";
@@ -137,8 +139,8 @@ function MatchRow({
         </div>
       </div>
 
-      {/* Acciones */}
-      {!isFinished && !isLive && (
+      {/* Acciones — solo admin */}
+      {isAdmin && !isFinished && !isLive && (
         <div className="flex items-center gap-1 flex-shrink-0">
           <button onClick={() => onEdit(m)} title="Reprogramar"
             className="w-7 h-7 rounded-full flex items-center justify-center bg-white/5 hover:bg-brand-orange/20 hover:text-brand-orange text-white/30 transition-all border border-white/8 hover:border-brand-orange/30">
@@ -244,7 +246,9 @@ export default function SchedulePage() {
         <div className="glass-panel p-10 text-center">
           <Swords className="w-10 h-10 text-white/10 mx-auto mb-3" />
           <p className="text-white/30 text-sm">No hay partidos generados todavía.</p>
-          <p className="text-white/20 text-xs mt-1">Genera el calendario desde Configuración.</p>
+          {user?.role === "admin" && (
+            <p className="text-white/20 text-xs mt-1">Genera el calendario desde Configuración.</p>
+          )}
         </div>
       </div>
     );
@@ -311,7 +315,7 @@ export default function SchedulePage() {
                   {pendingMatches.map((m) => (
                     <MatchRow key={m.id} m={m} onEdit={openEdit}
                       onToggleSuspend={(id, status) => suspendMutation.mutate({ id, status })}
-                      isPending={suspendMutation.isPending} />
+                      isPending={suspendMutation.isPending} isAdmin={user?.role === "admin"} />
                   ))}
                 </div>
               )}

@@ -148,6 +148,7 @@ function Navigation() {
     { kind: "link",  href: "/",          icon: Home,        label: "Inicio"        },
     { kind: "link",  href: "/standings", icon: Trophy,      label: "Clasificación" },
     { kind: "link",  href: "/history",   icon: History,     label: "Historial"     },
+    { kind: "link",  href: "/schedule",  icon: CalendarDays, label: "Calendario"   },
   ];
 
   if (user?.role === "lider" || user?.role === "admin" || canAccess("roster")) {
@@ -160,8 +161,6 @@ function Navigation() {
   }
 
   // Accesos directos según rol
-  if (user?.role === "admin" || canAccess("schedule"))
-    entries.push({ kind: "link", href: "/schedule", icon: CalendarDays, label: "Calendario"    });
   if (user?.role === "anotador" || (user?.role !== "admin" && canAccess("match")))
     entries.push({ kind: "link", href: "/matches",  icon: ClipboardList, label: "Mesa Técnica" });
   if (user?.role === "transmision")
@@ -234,6 +233,7 @@ function Router() {
       <Route path="/"          component={HomePage}      />
       <Route path="/standings" component={StandingsPage} />
       <Route path="/history"   component={HistoryPage}   />
+      <Route path="/schedule"  component={SchedulePage}  />
 
       {/* Rutas de autenticación */}
       <Route path="/login">
@@ -258,9 +258,6 @@ function Router() {
       </Route>
       <Route path="/match/:id">
         {() => <ProtectedRoute component={MatchPage}     roles={["admin", "anotador"]}  section="match"    />}
-      </Route>
-      <Route path="/schedule">
-        {() => <ProtectedRoute component={SchedulePage}  roles={["admin"]}              section="schedule" />}
       </Route>
       <Route path="/config">
         {() => <ProtectedRoute component={ConfigPage}    roles={["admin"]}              section="config"   />}
