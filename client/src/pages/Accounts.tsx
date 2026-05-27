@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Link } from "wouter";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import {
   Table, TableBody, TableHead, TableHeader, TableRow,
@@ -11,7 +12,7 @@ import { UserTableRow, ApiUser } from "@/components/accounts/UserTableRow";
 import { PermissionsMatrix } from "@/components/accounts/PermissionsMatrix";
 import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/apiClient";
 import { sileo } from "sileo";
-import { X, Eye, EyeOff, UserPlus } from "lucide-react";
+import { X, Eye, EyeOff, UserPlus, Settings } from "lucide-react";
 
 // ── Tipos ────────────────────────────────────────────────────────────────────
 type Role = "admin" | "lider" | "anotador" | "transmision";
@@ -551,6 +552,14 @@ export default function AccountsPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
+
+      {/* Acceso rápido */}
+      <div className="flex flex-wrap gap-2 mb-6">
+        <Link href="/config"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold glass-panel border border-white/10 text-white/50 hover:text-white hover:border-white/25 transition-all">
+          <Settings size={13} /> Configuración
+        </Link>
+      </div>
 
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">

@@ -167,18 +167,11 @@ function Navigation() {
   if (user?.role === "transmision")
     entries.push({ kind: "link", href: "/stream",   icon: Radio,         label: "Transmisiones" });
 
-  // Grupo Admin: Configuración + Cuentas
-  const adminItems: NavGroup["items"] = [];
+  // Acceso directo a Config (Cuentas accesible desde quick-access en Config)
   if (user?.role === "admin" || canAccess("config"))
-    adminItems.push({ href: "/config",   label: "Configuración", icon: Settings });
-  if (user?.role === "admin" || canAccess("accounts"))
-    adminItems.push({ href: "/accounts", label: "Cuentas",       icon: Users    });
-
-  if (adminItems.length === 1) {
-    entries.push({ kind: "link", href: adminItems[0].href, icon: adminItems[0].icon, label: adminItems[0].label });
-  } else if (adminItems.length > 1) {
-    entries.push({ kind: "group", id: "admin", icon: Settings, label: "Admin", items: adminItems });
-  }
+    entries.push({ kind: "link", href: "/config",   icon: Settings, label: "Configuración" });
+  if (canAccess("accounts") && !canAccess("config"))
+    entries.push({ kind: "link", href: "/accounts", icon: Users,    label: "Cuentas"       });
 
   const navLinks = (
     <>

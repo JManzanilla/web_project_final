@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Link } from "wouter";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -319,6 +320,13 @@ export default function ConfigPage() {
   return (
     <div className="container max-w-5xl mx-auto px-4 py-8">
       <SectionTitle whiteText="Configurar" orangeText="Torneo" />
+
+      <div className="flex flex-wrap gap-2 mb-6">
+        <Link href="/accounts"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold glass-panel border border-white/10 text-white/50 hover:text-white hover:border-white/25 transition-all">
+          <Users size={13} /> Cuentas
+        </Link>
+      </div>
 
       <div className="flex flex-col md:flex-row md:items-start gap-8 md:gap-6">
 
