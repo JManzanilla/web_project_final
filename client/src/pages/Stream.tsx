@@ -1,13 +1,16 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Link } from "wouter";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import { apiGet, apiPut } from "@/lib/apiClient";
 import { sileo } from "sileo";
 import {
   Radio, Link2, Check, X, PlayCircle, Tv, ExternalLink, ChevronUp, ChevronDown,
+  CalendarDays, ClipboardList, ScrollText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/context/AuthContext";
 
 // ---------------------------------------------------------------------------
 // Tipos
@@ -273,6 +276,7 @@ function JornadaAccordion({
 // ---------------------------------------------------------------------------
 export default function StreamPage() {
   const qc = useQueryClient();
+  const { user } = useAuth();
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
   const toggleExpand = (n: number) =>
     setExpanded((prev) => { const s = new Set(prev); s.has(n) ? s.delete(n) : s.add(n); return s; });
@@ -328,6 +332,27 @@ export default function StreamPage() {
           Asigna enlaces y controla el estado en vivo de cada partido
         </span>
       </div>
+      {(() => {
+        const links = [];
+        if (user?.role === "admin")
+          links.push({ href: "/schedule",          icon: CalendarDays,  label: "Calendario"   });
+        if (user?.role === "admin" || user?.role === "anotador")
+          links.push({ href: "/matches",           icon: ClipboardList, label: "Mesa Técnica"  });
+        if (user?.role === "admin")
+          links.push({ href: "/official-schedule", icon: ScrollText,    label: "Rol Árbitros"  });
+        if (links.length === 0) return null;
+        return (
+          <div className="flex flex-wrap gap-2 mb-6">
+            {links.map(({ href, icon: Icon, label }) => (
+              <Link key={href} href={href}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold glass-panel border border-white/10 text-white/50 hover:text-white hover:border-white/25 transition-all">
+                <Icon size={13} />
+                {label}
+              </Link>
+            ))}
+          </div>
+        );
+      })()}
 
       {/* Plataformas soportadas — referencia rápida antes de agregar links */}
       <div className="glass-panel px-4 py-2.5 rounded-2xl flex items-center gap-4 flex-wrap mb-6">

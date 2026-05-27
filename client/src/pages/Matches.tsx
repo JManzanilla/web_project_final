@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { SectionTitle } from "@/components/ui/SectionTitle";
 import { apiGet } from "@/lib/apiClient";
-import { ClipboardList, Lock, ChevronDown, ChevronUp, FileText } from "lucide-react";
+import { ClipboardList, Lock, ChevronDown, ChevronUp, FileText, CalendarDays, Radio, ScrollText } from "lucide-react";
 import { useState, useMemo } from "react";
+import { useAuth } from "@/context/AuthContext";
 
 // ---------------------------------------------------------------------------
 // Tipos
@@ -169,6 +170,7 @@ function JornadaGroup({ jornada, matches }: { jornada: number; matches: MatchIte
 // Página principal
 // ---------------------------------------------------------------------------
 export default function MatchesPage() {
+  const { user } = useAuth();
   const { data: matches = [], isLoading } = useQuery<MatchItem[]>({
     queryKey: ["/api/matches"],
     queryFn:  () => apiGet<MatchItem[]>("/api/matches"),
@@ -184,12 +186,33 @@ export default function MatchesPage() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl">
       <SectionTitle whiteText="Mesa" orangeText="Técnica" />
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-4">
         <div className="w-3 h-3 rounded-full bg-brand-orange shadow-[0_0_10px_rgba(255,69,0,0.8)] flex-shrink-0" />
         <span className="text-white/70 text-xs font-semibold uppercase tracking-wider">
           Selecciona un partido para abrir la hoja de anotación
         </span>
       </div>
+      {(() => {
+        const links = [];
+        if (user?.role === "admin")
+          links.push({ href: "/schedule",          icon: CalendarDays, label: "Calendario"   });
+        if (user?.role === "admin" || user?.role === "transmision")
+          links.push({ href: "/stream",            icon: Radio,        label: "Transmisiones" });
+        if (user?.role === "admin")
+          links.push({ href: "/official-schedule", icon: ScrollText,   label: "Rol Árbitros"  });
+        if (links.length === 0) return null;
+        return (
+          <div className="flex flex-wrap gap-2 mb-6">
+            {links.map(({ href, icon: Icon, label }) => (
+              <Link key={href} href={href}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold glass-panel border border-white/10 text-white/50 hover:text-white hover:border-white/25 transition-all">
+                <Icon size={13} />
+                {label}
+              </Link>
+            ))}
+          </div>
+        );
+      })()}
 
       {isLoading ? (
         <div className="text-center text-white/30 py-12">Cargando partidos…</div>
