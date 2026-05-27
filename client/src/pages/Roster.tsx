@@ -72,10 +72,6 @@ export default function RosterPage() {
     }
   }, [isAdmin, allTeams, selectedTeamId]);
 
-  const activeTeam = isAdmin
-    ? allTeams.find((t) => t.id === selectedTeamId) ?? null
-    : null;
-
   // ── Editar nombre de equipo ────────────────────────────────────────────────
   const [editingName,  setEditingName]  = useState(false);
   const [teamNameVal,  setTeamNameVal]  = useState("");

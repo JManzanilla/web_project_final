@@ -184,7 +184,7 @@ export async function POST(req: NextRequest) {
       const jornadaNum = dateJornada[dateIdx];
       const totalMin   = slotMinutes[slotInDay % slotMinutes.length];
       const dt         = new Date(playDate);
-      dt.setHours(Math.floor(totalMin / 60), Math.round(totalMin % 60), 0, 0);
+      dt.setHours(Math.floor(totalMin / 60), totalMin % 60, 0, 0);
       toInsert.push({ ...allMatchPairs[i], jornada: jornadaNum, scheduledAt: dt, status: "upcoming" });
     }
 

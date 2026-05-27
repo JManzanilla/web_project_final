@@ -23,7 +23,9 @@ export async function GET(req: NextRequest) {
     where: (m, { eq, and }) => {
       const filters = [];
       if (jornada) filters.push(eq(m.jornada, parseInt(jornada)));
-      if (status)  filters.push(eq(m.status, status as "upcoming" | "live" | "finished"));
+      const VALID_STATUSES = ["upcoming", "live", "finished", "suspended"] as const;
+      if (status && VALID_STATUSES.includes(status as typeof VALID_STATUSES[number]))
+        filters.push(eq(m.status, status as typeof VALID_STATUSES[number]));
       if (phase)   filters.push(eq(m.phase, phase));
       return filters.length ? and(...filters) : undefined;
     },

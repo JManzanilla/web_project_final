@@ -4,6 +4,7 @@ import { z } from "zod";
 import { db } from "@/db";
 import { tournamentConfig } from "@/db/schema";
 import { requireAuth, ok, err } from "@/lib/api";
+import { eq } from "drizzle-orm";
 
 const updateSchema = z.object({
   name:                  z.string().min(1).optional(),
@@ -47,6 +48,7 @@ export async function PUT(req: NextRequest) {
   const [updated] = await db
     .update(tournamentConfig)
     .set({ ...body.data, updatedAt: new Date() })
+    .where(eq(tournamentConfig.id, config.id))
     .returning();
 
   return ok(updated);

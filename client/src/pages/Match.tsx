@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { SectionTitle } from "@/components/ui/SectionTitle";
@@ -74,11 +74,13 @@ export default function MatchPage() {
   const [tempStats, setTempStats]           = useState<PlayerStats>({ pts: 0, ast: 0, flt: 0 });
 
   // Inicializar lista de jugadores cuando llegan de la API (solo una vez)
-  if (!playersReady && homeApiPlayers.length > 0 && awayApiPlayers.length > 0) {
-    setHomePlayers(homeApiPlayers.map(toPlayer));
-    setAwayPlayers(awayApiPlayers.map(toPlayer));
-    setPlayersReady(true);
-  }
+  useEffect(() => {
+    if (!playersReady && homeApiPlayers.length > 0 && awayApiPlayers.length > 0) {
+      setHomePlayers(homeApiPlayers.map(toPlayer));
+      setAwayPlayers(awayApiPlayers.map(toPlayer));
+      setPlayersReady(true);
+    }
+  }, [homeApiPlayers, awayApiPlayers]);
 
   // ── Mutations ─────────────────────────────────────────────────────────────
   const officialsMutation = useMutation({

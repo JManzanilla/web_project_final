@@ -6,7 +6,7 @@ import { apiGet, apiPut } from "@/lib/apiClient";
 import { sileo } from "sileo";
 import {
   Radio, Link2, Check, X, PlayCircle, Tv, ExternalLink, ChevronUp, ChevronDown,
-  CalendarDays, ClipboardList, ScrollText,
+  CalendarDays, ClipboardList,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

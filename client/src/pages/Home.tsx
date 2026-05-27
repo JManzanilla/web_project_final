@@ -299,10 +299,6 @@ function ResultCard({ match }: { match: ApiMatch }) {
   const winnerA = scoreA > scoreB;
 
   const topA = match.stats
-    .filter((s) => {
-      // we need to figure out which team this player is on - use pts sort
-      return true;
-    })
     .sort((a, b) => b.pts - a.pts)
     .slice(0, 3);
 
