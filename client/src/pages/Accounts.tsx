@@ -553,13 +553,8 @@ export default function AccountsPage() {
   return (
     <div className="container mx-auto px-4 py-8">
 
-      <QuickNav items={[
-        { href: "/config",   icon: Settings,   label: "Configuración" },
-        { href: "/accounts", icon: UsersIcon,  label: "Cuentas"       },
-      ]} />
-
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
         <SectionTitle whiteText="Cuentas" orangeText="& Permisos" className="mb-0" />
         <Button
           onClick={openCreate}
@@ -568,6 +563,11 @@ export default function AccountsPage() {
           + Nueva Cuenta
         </Button>
       </div>
+
+      <QuickNav items={[
+        { href: "/config",   icon: Settings,   label: "Configuración" },
+        { href: "/accounts", icon: UsersIcon,  label: "Cuentas"       },
+      ]} />
 
       {/* Tabla */}
       <div className="glass-panel overflow-hidden">
