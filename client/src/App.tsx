@@ -159,20 +159,13 @@ function Navigation() {
     entries.push({ kind: "link", href: "/official-schedule", icon: ScrollText, label: "Rol Árbitros" });
   }
 
-  // Grupo Operaciones: Calendario + Mesa Técnica + Transmisiones
-  const opsItems: NavGroup["items"] = [];
+  // Accesos directos según rol
   if (user?.role === "admin" || canAccess("schedule"))
-    opsItems.push({ href: "/schedule", label: "Calendario",   icon: CalendarDays });
-  if (user?.role === "anotador" || user?.role === "admin" || canAccess("match"))
-    opsItems.push({ href: "/matches",  label: "Mesa Técnica", icon: ClipboardList });
-  if (user?.role === "admin" || user?.role === "transmision")
-    opsItems.push({ href: "/stream",   label: "Transmisiones", icon: Radio        });
-
-  if (opsItems.length === 1) {
-    entries.push({ kind: "link", href: opsItems[0].href, icon: opsItems[0].icon, label: opsItems[0].label });
-  } else if (opsItems.length > 1) {
-    entries.push({ kind: "group", id: "operations", icon: CalendarDays, label: "Operaciones", items: opsItems });
-  }
+    entries.push({ kind: "link", href: "/schedule", icon: CalendarDays, label: "Calendario"    });
+  if (user?.role === "anotador" || canAccess("match"))
+    entries.push({ kind: "link", href: "/matches",  icon: ClipboardList, label: "Mesa Técnica" });
+  if (user?.role === "transmision")
+    entries.push({ kind: "link", href: "/stream",   icon: Radio,         label: "Transmisiones" });
 
   // Grupo Admin: Configuración + Cuentas
   const adminItems: NavGroup["items"] = [];
