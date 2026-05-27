@@ -164,7 +164,7 @@ function Navigation() {
     entries.push({ kind: "link", href: "/schedule", icon: CalendarDays, label: "Calendario"    });
   if (user?.role === "anotador" || (user?.role !== "admin" && canAccess("match")))
     entries.push({ kind: "link", href: "/matches",  icon: ClipboardList, label: "Mesa Técnica" });
-  if (user?.role === "transmision" || canAccess("stream"))
+  if (user?.role === "transmision")
     entries.push({ kind: "link", href: "/stream",   icon: Radio,         label: "Transmisiones" });
 
   // Acceso directo a Config (Cuentas accesible desde quick-access en Config)
