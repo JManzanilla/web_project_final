@@ -404,7 +404,7 @@ function UserModal({
 
 // ── Página principal ─────────────────────────────────────────────────────────
 export default function AccountsPage() {
-  const { resetPassword } = useAuth();
+  const { user, resetPassword } = useAuth();
   const qc = useQueryClient();
 
   const [resetDone,  setResetDone]  = useState<string | null>(null);
