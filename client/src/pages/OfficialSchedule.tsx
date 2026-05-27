@@ -608,7 +608,7 @@ export default function OfficialSchedulePage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 items-start">
 
             {/* Columna izquierda: Disponibilidad */}
-            <div className="glass-panel rounded-2xl overflow-hidden sticky top-4">
+            <div className="glass-panel rounded-2xl overflow-hidden lg:sticky lg:top-4">
               <div className="px-4 py-3 border-b border-white/8 flex items-center justify-between">
                 <p className="font-bold text-white text-sm">Disponibilidad — Jornada {jornada}</p>
                 <p className="text-[11px] text-white/30">Toca cada árbitro para editar</p>
