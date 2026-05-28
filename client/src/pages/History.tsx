@@ -101,23 +101,23 @@ function PartidoModal({ match }: { match: ApiMatch }) {
 
       {/* Score grande */}
       <div className="flex items-center justify-center gap-5 mb-6">
-        <div className="flex flex-col items-center gap-2 flex-1">
+        <div className="flex flex-col items-center gap-2 flex-1 min-w-0">
           <TeamLogo team={match.homeTeam} size="md" />
-          <span className="text-[11px] text-white/50 font-bold uppercase tracking-wide text-center truncate w-full">{match.homeTeam.name}</span>
+          <span className="text-[11px] text-white/50 font-bold uppercase tracking-wide text-center break-words w-full">{match.homeTeam.name}</span>
         </div>
 
-        <div className="flex flex-col items-center flex-shrink-0">
-          <div className="flex items-center gap-3">
-            <span className={`text-5xl font-black tabular-nums ${winA ? "text-brand-orange" : "text-white/25"}`}>{scoreA}</span>
-            <span className="text-2xl text-white/20 font-bold">–</span>
-            <span className={`text-5xl font-black tabular-nums ${!winA ? "text-brand-orange" : "text-white/25"}`}>{scoreB}</span>
+        <div className="flex flex-col items-center flex-shrink-0 px-2">
+          <div className="flex items-center gap-2">
+            <span className={`text-4xl font-black tabular-nums ${winA ? "text-brand-orange" : "text-white/25"}`}>{scoreA}</span>
+            <span className="text-xl text-white/20 font-bold">–</span>
+            <span className={`text-4xl font-black tabular-nums ${!winA ? "text-brand-orange" : "text-white/25"}`}>{scoreB}</span>
           </div>
           <span className="text-[10px] text-white/20 mt-1 uppercase tracking-widest">Final</span>
         </div>
 
-        <div className="flex flex-col items-center gap-2 flex-1">
+        <div className="flex flex-col items-center gap-2 flex-1 min-w-0">
           <TeamLogo team={match.awayTeam} size="md" />
-          <span className="text-[11px] text-white/50 font-bold uppercase tracking-wide text-center truncate w-full">{match.awayTeam.name}</span>
+          <span className="text-[11px] text-white/50 font-bold uppercase tracking-wide text-center break-words w-full">{match.awayTeam.name}</span>
         </div>
       </div>
 

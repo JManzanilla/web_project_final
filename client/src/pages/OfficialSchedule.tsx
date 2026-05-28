@@ -543,15 +543,15 @@ export default function OfficialSchedulePage() {
     <div className="container mx-auto px-4 py-8 max-w-6xl">
 
       {/* Header */}
-      <div className="flex items-start justify-between gap-4 mb-6">
-        <div>
+      <div className="mb-6">
+        <div className="flex items-center justify-between gap-4">
           <SectionTitle whiteText="Rol de" orangeText="Árbitros" className="mb-1" />
-          <p className="text-white/30 text-sm">Captura disponibilidad, asigna y envía el rol al grupo</p>
+          <Button onClick={openCreate}
+            className="flex-shrink-0 rounded-full bg-brand-orange hover:bg-brand-orange/85 text-white font-bold px-4 h-10 glow-orange text-sm mr-2">
+            <UserPlus className="w-4 h-4 mr-1.5" /> Nuevo árbitro
+          </Button>
         </div>
-        <Button onClick={openCreate}
-          className="flex-shrink-0 rounded-full bg-brand-orange hover:bg-brand-orange/85 text-white font-bold px-4 h-10 glow-orange text-sm">
-          <UserPlus className="w-4 h-4 mr-1.5" /> Nuevo árbitro
-        </Button>
+        <p className="text-white/30 text-sm">Captura disponibilidad, asigna y envía el rol al grupo</p>
       </div>
 
       {/* ── Lista de árbitros (colapsable) ───────────────────────────────────── */}
@@ -745,14 +745,14 @@ export default function OfficialSchedulePage() {
                   <pre className="whitespace-pre-wrap text-sm text-white/70 glass-panel rounded-xl p-4 font-sans leading-relaxed max-h-64 overflow-y-auto">
                     {waText}
                   </pre>
-                  <div className="flex gap-3">
+                  <div className="flex flex-col gap-2">
                     <Button onClick={copyText}
-                      className="flex-1 h-11 rounded-xl bg-white/8 border border-white/15 hover:bg-white/12 text-white font-bold">
+                      className="w-full h-11 rounded-xl bg-white/8 border border-white/15 hover:bg-white/12 text-white font-bold">
                       {copied ? <Check className="w-4 h-4 mr-2 text-green-400" /> : <Copy className="w-4 h-4 mr-2" />}
                       {copied ? "¡Copiado!" : "Copiar texto"}
                     </Button>
                     <Button onClick={openWhatsApp}
-                      className="flex-1 h-11 rounded-xl font-bold text-white" style={{ background: "#25D366" }}>
+                      className="w-full h-11 rounded-xl font-bold text-white" style={{ background: "#25D366" }}>
                       <ExternalLink className="w-4 h-4 mr-2" />
                       Abrir en WhatsApp
                     </Button>

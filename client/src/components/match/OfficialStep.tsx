@@ -77,7 +77,6 @@ function OfficialSelect({
 
 export function OfficialStep({ refs, setRefs, jornada, scheduledAt, onNext, loading }: OfficialStepProps) {
   const dayOfWeek = new Date(scheduledAt).getDay();
-  // "HH:MM" extraído del timestamp
   const time = scheduledAt.length >= 16 ? scheduledAt.substring(11, 16) : "00:00";
 
   const { data: available = [], isLoading } = useQuery<Official[]>({
@@ -85,6 +84,13 @@ export function OfficialStep({ refs, setRefs, jornada, scheduledAt, onNext, load
     queryFn:  () => apiGet<Official[]>(`/api/officials/available?jornada=${jornada}&day=${dayOfWeek}&time=${time}`),
     enabled:  !!jornada,
   });
+
+  const { data: allOfficials = [] } = useQuery<Official[]>({
+    queryKey: ["/api/officials"],
+    queryFn:  () => apiGet<Official[]>("/api/officials"),
+  });
+
+  const officialsList = available.length > 0 ? available : allOfficials.filter((o) => o.active);
 
   const valid = hasFullName(refs.ref1) && hasFullName(refs.ref2) && hasFullName(refs.scorer);
 
@@ -104,11 +110,11 @@ export function OfficialStep({ refs, setRefs, jornada, scheduledAt, onNext, load
 
       <div className="space-y-4 mt-4">
         <OfficialSelect label="Árbitro Principal" value={refs.ref1}
-          onChange={(v) => setRefs({ ...refs, ref1: v })} officials={available} roleKey="mainRef" />
+          onChange={(v) => setRefs({ ...refs, ref1: v })} officials={officialsList} roleKey="mainRef" />
         <OfficialSelect label="Árbitro Auxiliar" value={refs.ref2}
-          onChange={(v) => setRefs({ ...refs, ref2: v })} officials={available} roleKey="assistRef" />
+          onChange={(v) => setRefs({ ...refs, ref2: v })} officials={officialsList} roleKey="assistRef" />
         <OfficialSelect label="Anotador" value={refs.scorer}
-          onChange={(v) => setRefs({ ...refs, scorer: v })} officials={available} roleKey="scorer" />
+          onChange={(v) => setRefs({ ...refs, scorer: v })} officials={officialsList} roleKey="scorer" />
       </div>
 
       {!valid && (
