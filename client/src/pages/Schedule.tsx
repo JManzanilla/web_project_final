@@ -258,6 +258,16 @@ export default function SchedulePage() {
     <div className="container max-w-5xl mx-auto px-4 py-8">
       <SectionTitle whiteText="Calendario" orangeText="Partidos" />
 
+      {/* Accesos rápidos */}
+      {(() => {
+        const items = [{ href: "/schedule", icon: CalendarDays, label: "Calendario" }];
+        if (user?.role === "admin" || user?.role === "anotador")
+          items.push({ href: "/matches",           icon: ClipboardList, label: "Mesa Técnica"  });
+        if (user?.role === "admin" || user?.role === "transmision" || user?.permissions?.stream?.view)
+          items.push({ href: "/stream",            icon: Radio,         label: "Transmisiones" });
+        return <QuickNav items={items} />;
+      })()}
+
       {/* Resumen rápido */}
       <div className="grid grid-cols-3 gap-3 mb-6">
         {[
@@ -271,16 +281,6 @@ export default function SchedulePage() {
           </div>
         ))}
       </div>
-
-      {/* Accesos rápidos */}
-      {(() => {
-        const items = [{ href: "/schedule", icon: CalendarDays, label: "Calendario" }];
-        if (user?.role === "admin" || user?.role === "anotador")
-          items.push({ href: "/matches",           icon: ClipboardList, label: "Mesa Técnica"  });
-        if (user?.role === "admin" || user?.role === "transmision" || user?.permissions?.stream?.view)
-          items.push({ href: "/stream",            icon: Radio,         label: "Transmisiones" });
-        return <QuickNav items={items} />;
-      })()}
 
       {/* Lista de jornadas — dos columnas flex para que las colapsadas llenen el espacio */}
       <div className="flex flex-col md:flex-row gap-3 items-start">
