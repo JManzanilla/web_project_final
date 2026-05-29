@@ -156,7 +156,7 @@ export function MatchModal({
                 radius={18}
                 dimmed={status === "finished" && winner !== match.teamA}
               />
-              <span className={`text-[13px] font-semibold ${status === "finished" && winner === match.teamA ? "text-white" : "text-white/60"}`}>
+              <span className={`text-[13px] font-black ${status === "finished" && winner === match.teamA ? "text-white" : "text-white/30"}`}>
                 {match.teamA}
               </span>
             </div>
@@ -191,7 +191,7 @@ export function MatchModal({
                 radius={18}
                 dimmed={status === "finished" && winner !== match.teamB}
               />
-              <span className={`text-[13px] font-semibold ${status === "finished" && winner === match.teamB ? "text-white" : "text-white/60"}`}>
+              <span className={`text-[13px] font-black ${status === "finished" && winner === match.teamB ? "text-white" : "text-white/30"}`}>
                 {match.teamB}
               </span>
             </div>
@@ -199,8 +199,8 @@ export function MatchModal({
 
           {/* Ganador */}
           {status === "finished" && winner && (
-            <p className="text-center text-[11px] text-white/40 bg-white/5 border border-white/8 rounded-xl py-2.5 mb-5">
-              🏆 Ganador: <span className="text-white font-semibold">{winner}</span>
+            <p className="text-center text-[13px] font-black text-white bg-brand-orange/15 border border-brand-orange/30 rounded-xl py-2.5 mb-5 tracking-wide">
+              🏆 <span className="text-brand-orange">{winner}</span>
             </p>
           )}
 
@@ -221,12 +221,12 @@ export function MatchModal({
               href={match.actaUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full h-[52px] rounded-full font-semibold text-[15px] text-white/40 flex items-center justify-center gap-2 transition-all duration-200 border border-transparent hover:text-brand-orange/80 hover:border-brand-orange/50 active:text-brand-orange active:border-brand-orange"
+              className="w-full h-[46px] rounded-full font-semibold text-[13px] text-white/40 flex items-center justify-center gap-2 transition-all duration-200 border border-transparent hover:text-brand-orange/80 hover:border-brand-orange/50 active:text-brand-orange active:border-brand-orange"
             >
               <FileText className="w-4 h-4" /> Ver acta del partido
             </a>
           ) : (
-            <div className="w-full h-[52px] rounded-full bg-white/4 border border-white/8 flex items-center justify-center text-[13px] text-white/20">
+            <div className="w-full h-[46px] rounded-full bg-white/4 border border-white/8 flex items-center justify-center text-[13px] text-white/20">
               Acta no disponible
             </div>
           )}
@@ -236,13 +236,13 @@ export function MatchModal({
             <div className="flex gap-2 mt-3">
               <button
                 onClick={() => { onClose(); navigate("/history"); }}
-                className="flex-1 h-[44px] rounded-full font-semibold text-[13px] text-white/40 flex items-center justify-center gap-2 transition-all duration-200 border border-transparent hover:text-brand-orange/80 hover:border-brand-orange/50 active:text-brand-orange active:border-brand-orange"
+                className="flex-1 h-[38px] rounded-full font-semibold text-[12px] text-white/40 flex items-center justify-center gap-1.5 transition-all duration-200 border border-transparent hover:text-brand-orange/80 hover:border-brand-orange/50 active:text-brand-orange active:border-brand-orange"
               >
                 <History className="w-4 h-4" /> Historial
               </button>
               <button
                 onClick={() => { onClose(); navigate("/standings"); }}
-                className="flex-1 h-[44px] rounded-full font-semibold text-[13px] text-white/40 flex items-center justify-center gap-2 transition-all duration-200 border border-transparent hover:text-brand-orange/80 hover:border-brand-orange/50 active:text-brand-orange active:border-brand-orange"
+                className="flex-1 h-[38px] rounded-full font-semibold text-[12px] text-white/40 flex items-center justify-center gap-1.5 transition-all duration-200 border border-transparent hover:text-brand-orange/80 hover:border-brand-orange/50 active:text-brand-orange active:border-brand-orange"
               >
                 <Trophy className="w-4 h-4" /> Clasificación
               </button>
