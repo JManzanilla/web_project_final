@@ -322,7 +322,7 @@ export default function SchedulePage() {
               <button onClick={() => toggleExpand(num)}
                 className="w-full flex items-center justify-between px-5 py-4 hover:bg-white/3 transition-colors">
                 <div className="flex items-center gap-3">
-                  <span className="font-display font-black text-brand-orange text-lg">Jornada {num}</span>
+                  <span className="font-display font-black text-brand-orange text-lg whitespace-nowrap">Jornada {num}</span>
                   {pending > 0 && (
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/20">
                       {pending} pendiente{pending !== 1 ? "s" : ""}
