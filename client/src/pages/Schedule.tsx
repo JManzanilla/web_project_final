@@ -282,37 +282,68 @@ export default function SchedulePage() {
         ))}
       </div>
 
-      {/* Lista de jornadas — dos columnas flex para que las colapsadas llenen el espacio */}
-      <div className="flex flex-col md:flex-row gap-3 items-start">
+      {/* Partidos pendientes (recuperación) */}
+      {pendingMatches.length > 0 && (
+        <div className="glass-panel overflow-hidden border-amber-500/20 mb-3">
+          <button onClick={() => toggleExpand(0)}
+            className="w-full flex items-center justify-between px-5 py-4 hover:bg-white/3 transition-colors">
+            <div className="flex items-center gap-3">
+              <span className="font-display font-black text-amber-400 text-lg">Partidos pendientes</span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/20">recuperación</span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/20">
+                {pendingMatches.filter((m) => m.status === "upcoming").length} pendiente{pendingMatches.filter((m) => m.status === "upcoming").length !== 1 ? "s" : ""}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-white/30">
+              <span className="text-[10px] text-white/25 hidden sm:block">Equipos integrados al torneo</span>
+              {expanded.has(0) ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </div>
+          </button>
+          {expanded.has(0) && (
+            <div className="border-t border-amber-500/10 divide-y divide-white/5">
+              {pendingMatches.map((m) => (
+                <MatchRow key={m.id} m={m} onEdit={openEdit}
+                  onToggleSuspend={(id, status) => suspendMutation.mutate({ id, status })}
+                  isPending={suspendMutation.isPending} isAdmin={user?.role === "admin"} />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
-        {/* Columna izquierda */}
-        <div className="flex-1 flex flex-col gap-3">
-          {/* Partidos pendientes siempre en columna izquierda */}
-          {pendingMatches.length > 0 && (
-            <div className="glass-panel overflow-hidden border-amber-500/20">
-              <button
-                onClick={() => toggleExpand(0)}
-                className="w-full flex items-center justify-between px-5 py-4 hover:bg-white/3 transition-colors"
-              >
+      {/* Lista de jornadas — 1 columna en móvil, 2 en desktop */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {jornadas.map(({ num, matches: jMatches }) => {
+          const isOpen = expanded.has(num);
+          const pending = jMatches.filter((m) => m.status === "upcoming").length;
+          const hasSuspended = jMatches.some((m) => m.status === "suspended");
+          return (
+            <div key={num} className="glass-panel overflow-hidden">
+              <button onClick={() => toggleExpand(num)}
+                className="w-full flex items-center justify-between px-5 py-4 hover:bg-white/3 transition-colors">
                 <div className="flex items-center gap-3">
-                  <span className="font-display font-black text-amber-400 text-lg">
-                    Partidos pendientes
-                  </span>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/20">
-                    recuperación
-                  </span>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/20">
-                    {pendingMatches.filter((m) => m.status === "upcoming").length} pendiente{pendingMatches.filter((m) => m.status === "upcoming").length !== 1 ? "s" : ""}
-                  </span>
+                  <span className="font-display font-black text-brand-orange text-lg">Jornada {num}</span>
+                  {pending > 0 && (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/20">
+                      {pending} pendiente{pending !== 1 ? "s" : ""}
+                    </span>
+                  )}
+                  {hasSuspended && (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/20">
+                      suspendido
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-2 text-white/30">
-                  <span className="text-[10px] text-white/25 hidden sm:block">Equipos integrados al torneo</span>
-                  {expanded.has(0) ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  <span className="text-[11px]">
+                    {new Date(jMatches[0].scheduledAt).toLocaleDateString("es-MX", { day: "numeric", month: "short" })}
+                  </span>
+                  {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                 </div>
               </button>
-              {expanded.has(0) && (
-                <div className="border-t border-amber-500/10 divide-y divide-white/5">
-                  {pendingMatches.map((m) => (
+              {isOpen && (
+                <div className="border-t border-white/5 divide-y divide-white/5">
+                  {jMatches.map((m) => (
                     <MatchRow key={m.id} m={m} onEdit={openEdit}
                       onToggleSuspend={(id, status) => suspendMutation.mutate({ id, status })}
                       isPending={suspendMutation.isPending} isAdmin={user?.role === "admin"} />
@@ -320,92 +351,8 @@ export default function SchedulePage() {
                 </div>
               )}
             </div>
-          )}
-          {jornadas.filter((_, i) => i % 2 === 0).map(({ num, matches: jMatches }) => {
-            const isOpen = expanded.has(num);
-            const pending = jMatches.filter((m) => m.status === "upcoming").length;
-            const hasSuspended = jMatches.some((m) => m.status === "suspended");
-            return (
-              <div key={num} className="glass-panel overflow-hidden">
-                <button onClick={() => toggleExpand(num)}
-                  className="w-full flex items-center justify-between px-5 py-4 hover:bg-white/3 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <span className="font-display font-black text-brand-orange text-lg">Jornada {num}</span>
-                    {pending > 0 && (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/20">
-                        {pending} pendiente{pending !== 1 ? "s" : ""}
-                      </span>
-                    )}
-                    {hasSuspended && (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/20">
-                        suspendido
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2 text-white/30">
-                    <span className="text-[11px]">
-                      {new Date(jMatches[0].scheduledAt).toLocaleDateString("es-MX", { day: "numeric", month: "short" })}
-                    </span>
-                    {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                  </div>
-                </button>
-                {isOpen && (
-                  <div className="border-t border-white/5 divide-y divide-white/5">
-                    {jMatches.map((m) => (
-                      <MatchRow key={m.id} m={m} onEdit={openEdit}
-                        onToggleSuspend={(id, status) => suspendMutation.mutate({ id, status })}
-                        isPending={suspendMutation.isPending} />
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Columna derecha */}
-        <div className="flex-1 flex flex-col gap-3">
-          {jornadas.filter((_, i) => i % 2 !== 0).map(({ num, matches: jMatches }) => {
-            const isOpen = expanded.has(num);
-            const pending = jMatches.filter((m) => m.status === "upcoming").length;
-            const hasSuspended = jMatches.some((m) => m.status === "suspended");
-            return (
-              <div key={num} className="glass-panel overflow-hidden">
-                <button onClick={() => toggleExpand(num)}
-                  className="w-full flex items-center justify-between px-5 py-4 hover:bg-white/3 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <span className="font-display font-black text-brand-orange text-lg">Jornada {num}</span>
-                    {pending > 0 && (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/20">
-                        {pending} pendiente{pending !== 1 ? "s" : ""}
-                      </span>
-                    )}
-                    {hasSuspended && (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/20">
-                        suspendido
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2 text-white/30">
-                    <span className="text-[11px]">
-                      {new Date(jMatches[0].scheduledAt).toLocaleDateString("es-MX", { day: "numeric", month: "short" })}
-                    </span>
-                    {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                  </div>
-                </button>
-                {isOpen && (
-                  <div className="border-t border-white/5 divide-y divide-white/5">
-                    {jMatches.map((m) => (
-                      <MatchRow key={m.id} m={m} onEdit={openEdit}
-                        onToggleSuspend={(id, status) => suspendMutation.mutate({ id, status })}
-                        isPending={suspendMutation.isPending} />
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+          );
+        })}
       </div>
 
       {/* ── Modal: reprogramar partido ── */}
