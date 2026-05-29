@@ -6,6 +6,7 @@ import { ChevronRight, FileText, LogIn, ExternalLink, Radio, Check } from "lucid
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { InfiniteCarousel } from "@/components/home/InfiniteCarousel";
+import { ResultsCarousel } from "@/components/home/ResultsCarousel";
 import { useAuth } from "@/context/AuthContext";
 import { apiGet, apiPut } from "@/lib/apiClient";
 import { sileo } from "sileo";
@@ -468,15 +469,11 @@ export default function HomePage() {
 
       {/* Resultados de la jornada anterior */}
       {prevResults.length > 0 && (
-        <div className="mt-8 max-w-md mx-auto">
+        <div className="mt-8">
           <p className="text-xs text-brand-orange/60 font-bold uppercase tracking-widest mb-3">
             Jornada {prevJornada} — Resultados
           </p>
-          <div className="flex flex-col gap-4">
-            {prevResults.map((match) => (
-              <ResultCard key={match.id} match={match} />
-            ))}
-          </div>
+          <ResultsCarousel matches={prevResults} />
         </div>
       )}
     </div>
