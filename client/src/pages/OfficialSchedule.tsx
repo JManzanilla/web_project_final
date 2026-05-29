@@ -399,7 +399,7 @@ export default function OfficialSchedulePage() {
 
   // Todos los partidos → extraer jornadas disponibles
   const { data: allMatches = [] } = useQuery<MatchItem[]>({
-    queryKey: ["/api/matches/all"],
+    queryKey: ["/api/matches"],
     queryFn:  () => apiGet<MatchItem[]>("/api/matches"),
   });
 

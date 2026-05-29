@@ -69,14 +69,14 @@ export default function ConfigPage() {
   });
 
   const { data: upcomingMatches = [] } = useQuery<{ id: string }[]>({
-    queryKey: ["/api/matches", "upcoming"],
+    queryKey: ["/api/matches", { status: "upcoming", phase: "regular" }],
     queryFn:  () => apiGet<{ id: string }[]>("/api/matches?status=upcoming&phase=regular"),
   });
   const hasExistingCalendar = upcomingMatches.length > 0;
 
   // Detectar si todos los partidos regulares están finalizados (para mostrar playoffs)
   const { data: allRegularMatches = [] } = useQuery<{ id: string; status: string }[]>({
-    queryKey: ["/api/matches", "regular-all"],
+    queryKey: ["/api/matches", { phase: "regular" }],
     queryFn:  () => apiGet<{ id: string; status: string }[]>("/api/matches?phase=regular"),
   });
   const { data: playoffStatus } = useQuery<{ status: string }>({
