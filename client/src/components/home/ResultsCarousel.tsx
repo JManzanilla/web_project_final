@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from "react";
-import { FileText } from "lucide-react";
+import { useLocation } from "wouter";
 import { CAROUSEL_SPEED } from "@/types/carousel.types";
 
 interface ResultMatch {
@@ -12,7 +12,7 @@ interface ResultMatch {
   actaUrl: string | null;
 }
 
-function ResultSlide({ match }: { match: ResultMatch }) {
+function ResultSlide({ match, onClick }: { match: ResultMatch; onClick: () => void }) {
   const scoreA = match.scoreHome ?? 0;
   const scoreB = match.scoreAway ?? 0;
   const winA   = scoreA > scoreB;
@@ -22,7 +22,10 @@ function ResultSlide({ match }: { match: ResultMatch }) {
   });
 
   return (
-    <div className="flex-shrink-0 min-w-[min(220px,calc(100vw-80px))] bg-white/6 border border-white/12 rounded-2xl px-4 py-3 select-none">
+    <div
+      onClick={onClick}
+      className="flex-shrink-0 min-w-[min(200px,calc(100vw-80px))] bg-white/6 border border-white/12 rounded-2xl px-4 py-3 select-none cursor-pointer hover:bg-white/10 hover:border-white/20 transition-all duration-200"
+    >
       <div className="text-[9px] text-white/25 font-bold uppercase tracking-widest mb-2">{date}</div>
 
       <div className="flex items-center justify-between gap-2">
@@ -53,19 +56,12 @@ function ResultSlide({ match }: { match: ResultMatch }) {
           </span>
         </div>
       </div>
-
-      {match.actaUrl && (
-        <a href={match.actaUrl} target="_blank" rel="noopener noreferrer"
-          onClick={(e) => e.stopPropagation()}
-          className="mt-2 flex items-center justify-center gap-1 text-[9px] text-brand-orange/40 hover:text-brand-orange transition-colors">
-          <FileText className="w-3 h-3" /> Acta
-        </a>
-      )}
     </div>
   );
 }
 
 export function ResultsCarousel({ matches }: { matches: ResultMatch[] }) {
+  const [, navigate] = useLocation();
   const trackRef  = useRef<HTMLDivElement>(null);
   const xRef      = useRef(0);
   const lastRef   = useRef<number | null>(null);
@@ -149,7 +145,8 @@ export function ResultsCarousel({ matches }: { matches: ResultMatch[] }) {
     >
       <div ref={trackRef} className="flex gap-3 w-max">
         {display.map((match, idx) => (
-          <ResultSlide key={`${match.id}-${idx}`} match={match} />
+          <ResultSlide key={`${match.id}-${idx}`} match={match}
+            onClick={() => { if (!dragMovedRef.current) navigate("/history"); }} />
         ))}
       </div>
     </div>
