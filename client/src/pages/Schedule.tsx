@@ -312,7 +312,7 @@ export default function SchedulePage() {
       )}
 
       {/* Lista de jornadas — 1 columna en móvil, 2 en desktop */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
         {jornadas.map(({ num, matches: jMatches }) => {
           const isOpen = expanded.has(num);
           const pending = jMatches.filter((m) => m.status === "upcoming").length;
