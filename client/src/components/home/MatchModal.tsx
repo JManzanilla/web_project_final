@@ -199,8 +199,8 @@ export function MatchModal({
 
           {/* Ganador */}
           {status === "finished" && winner && (
-            <p className="text-center text-[13px] font-black text-white bg-brand-orange/15 border border-brand-orange/30 rounded-xl py-2.5 mb-5 tracking-wide">
-              🏆 <span className="text-brand-orange">{winner}</span>
+            <p className="text-center text-[13px] font-black bg-brand-orange/15 border border-brand-orange/30 rounded-xl py-2.5 mb-5 tracking-wide">
+              🏆 <span className="text-white">Ganador:</span> <span className="text-brand-orange">{winner}</span>
             </p>
           )}
 
