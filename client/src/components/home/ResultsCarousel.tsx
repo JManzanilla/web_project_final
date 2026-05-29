@@ -1,79 +1,36 @@
 import { useEffect, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
-import { CAROUSEL_SPEED } from "@/types/carousel.types";
+import { CAROUSEL_SPEED, apiMatchToCarouselMatch } from "@/types/carousel.types";
+import { MatchCard } from "./MatchCard";
 
 interface ResultMatch {
   id: string;
+  jornada: number;
   homeTeam: { name: string };
   awayTeam: { name: string };
   scoreHome: number | null;
   scoreAway: number | null;
   scheduledAt: string;
+  status: "upcoming" | "live" | "finished" | "suspended";
+  streamUrl: string | null;
   actaUrl: string | null;
-}
-
-function ResultSlide({ match, onClick }: { match: ResultMatch; onClick: () => void }) {
-  const scoreA = match.scoreHome ?? 0;
-  const scoreB = match.scoreAway ?? 0;
-  const winA   = scoreA > scoreB;
-
-  const date = new Date(match.scheduledAt).toLocaleDateString("es-MX", {
-    day: "numeric", month: "short",
-  });
-
-  return (
-    <div
-      onClick={onClick}
-      className="flex-shrink-0 min-w-[min(200px,calc(100vw-80px))] bg-white/6 border border-white/12 rounded-2xl px-4 py-3 select-none cursor-pointer hover:bg-white/10 hover:border-white/20 transition-all duration-200"
-    >
-      <div className="text-[9px] text-white/25 font-bold uppercase tracking-widest mb-2">{date}</div>
-
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
-          <div className="w-8 h-8 rounded-lg bg-white/8 border border-white/10 flex items-center justify-center text-[11px] font-black text-white/50 flex-shrink-0">
-            {match.homeTeam.name.charAt(0)}
-          </div>
-          <span className={`text-[10px] font-bold truncate w-full text-center ${winA ? "text-white" : "text-white/35"}`}>
-            {match.homeTeam.name}
-          </span>
-        </div>
-
-        <div className="flex flex-col items-center flex-shrink-0 px-1">
-          <div className="flex items-center gap-1.5">
-            <span className={`text-xl font-black tabular-nums ${winA ? "text-brand-orange" : "text-white/25"}`}>{scoreA}</span>
-            <span className="text-white/15 text-sm">-</span>
-            <span className={`text-xl font-black tabular-nums ${!winA ? "text-brand-orange" : "text-white/25"}`}>{scoreB}</span>
-          </div>
-          <span className="text-[8px] text-white/20 uppercase tracking-widest">Final</span>
-        </div>
-
-        <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
-          <div className="w-8 h-8 rounded-lg bg-white/8 border border-white/10 flex items-center justify-center text-[11px] font-black text-white/50 flex-shrink-0">
-            {match.awayTeam.name.charAt(0)}
-          </div>
-          <span className={`text-[10px] font-bold truncate w-full text-center ${!winA ? "text-white" : "text-white/35"}`}>
-            {match.awayTeam.name}
-          </span>
-        </div>
-      </div>
-    </div>
-  );
 }
 
 export function ResultsCarousel({ matches }: { matches: ResultMatch[] }) {
   const [, navigate] = useLocation();
-  const trackRef  = useRef<HTMLDivElement>(null);
-  const xRef      = useRef(0);
-  const lastRef   = useRef<number | null>(null);
-  const pausedRef = useRef(false);
-  const rafRef    = useRef<number>(0);
+  const trackRef     = useRef<HTMLDivElement>(null);
+  const xRef         = useRef(0);
+  const lastRef      = useRef<number | null>(null);
+  const pausedRef    = useRef(false);
+  const rafRef       = useRef<number>(0);
 
-  const pointerDownRef  = useRef(false);
-  const dragLastXRef    = useRef(0);
-  const dragMovedRef    = useRef(false);
-  const dragStartXRef   = useRef(0);
+  const pointerDownRef = useRef(false);
+  const dragLastXRef   = useRef(0);
+  const dragMovedRef   = useRef(false);
+  const dragStartXRef  = useRef(0);
 
-  const display = [...matches, ...matches, ...matches, ...matches];
+  const carouselMatches = matches.map(apiMatchToCarouselMatch);
+  const display = [...carouselMatches, ...carouselMatches, ...carouselMatches, ...carouselMatches];
 
   useEffect(() => {
     if (matches.length === 0) return;
@@ -82,12 +39,12 @@ export function ResultsCarousel({ matches }: { matches: ResultMatch[] }) {
       if (track && !pausedRef.current) {
         if (!lastRef.current) lastRef.current = ts;
         const dt = ts - lastRef.current;
-        xRef.current -= CAROUSEL_SPEED * dt;
+        xRef.current += CAROUSEL_SPEED * dt; // rightward (opposite to top carousel)
         const cardW = track.firstElementChild
-          ? (track.firstElementChild as HTMLElement).offsetWidth + 12
-          : 232;
+          ? (track.firstElementChild as HTMLElement).offsetWidth + 16
+          : 268;
         const setWidth = cardW * matches.length;
-        if (Math.abs(xRef.current) >= setWidth) xRef.current += setWidth;
+        if (xRef.current >= 0) xRef.current -= setWidth;
         track.style.transform = `translateX(${xRef.current}px)`;
       }
       lastRef.current = pausedRef.current ? null : ts;
@@ -96,6 +53,11 @@ export function ResultsCarousel({ matches }: { matches: ResultMatch[] }) {
     rafRef.current = requestAnimationFrame(step);
     return () => cancelAnimationFrame(rafRef.current);
   }, [matches.length]);
+
+  const onHoverChange = useCallback((val: boolean) => {
+    pausedRef.current = val;
+    lastRef.current = null;
+  }, []);
 
   const onPointerDown = useCallback((clientX: number) => {
     pointerDownRef.current = true;
@@ -113,8 +75,8 @@ export function ResultsCarousel({ matches }: { matches: ResultMatch[] }) {
     const dx = clientX - dragLastXRef.current;
     xRef.current += dx;
     const cardW = track.firstElementChild
-      ? (track.firstElementChild as HTMLElement).offsetWidth + 12
-      : 232;
+      ? (track.firstElementChild as HTMLElement).offsetWidth + 16
+      : 268;
     const setWidth = cardW * matches.length;
     while (xRef.current > 0) xRef.current -= setWidth;
     while (xRef.current <= -setWidth) xRef.current += setWidth;
@@ -132,9 +94,9 @@ export function ResultsCarousel({ matches }: { matches: ResultMatch[] }) {
 
   return (
     <div
-      className="overflow-hidden w-full py-2 select-none touch-pan-y"
-      onMouseEnter={() => { pausedRef.current = true; lastRef.current = null; }}
-      onMouseLeave={() => { pausedRef.current = false; lastRef.current = null; onPointerUp(); }}
+      className="overflow-hidden w-full py-3.5 select-none touch-pan-y"
+      onMouseEnter={() => onHoverChange(true)}
+      onMouseLeave={() => { onHoverChange(false); onPointerUp(); }}
       onMouseDown={(e) => onPointerDown(e.clientX)}
       onMouseMove={(e) => onPointerMove(e.clientX)}
       onMouseUp={onPointerUp}
@@ -143,10 +105,16 @@ export function ResultsCarousel({ matches }: { matches: ResultMatch[] }) {
       onTouchEnd={onPointerUp}
       onTouchCancel={onPointerUp}
     >
-      <div ref={trackRef} className="flex gap-3 w-max">
+      <div ref={trackRef} className="flex gap-4 w-max">
         {display.map((match, idx) => (
-          <ResultSlide key={`${match.id}-${idx}`} match={match}
-            onClick={() => { if (!dragMovedRef.current) navigate("/history"); }} />
+          <MatchCard
+            key={`${match.id}-${idx}`}
+            match={match}
+            status="finished"
+            selected={false}
+            onHoverChange={onHoverChange}
+            onClick={() => { if (!dragMovedRef.current) navigate("/history"); }}
+          />
         ))}
       </div>
     </div>
