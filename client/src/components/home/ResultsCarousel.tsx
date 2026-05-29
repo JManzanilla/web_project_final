@@ -1,7 +1,7 @@
-import { useEffect, useRef, useCallback } from "react";
-import { useLocation } from "wouter";
-import { CAROUSEL_SPEED, apiMatchToCarouselMatch } from "@/types/carousel.types";
+import { useEffect, useRef, useCallback, useState } from "react";
+import { CAROUSEL_SPEED, apiMatchToCarouselMatch, Match } from "@/types/carousel.types";
 import { MatchCard } from "./MatchCard";
+import { MatchModal } from "./MatchModal";
 
 interface ResultMatch {
   id: string;
@@ -17,7 +17,8 @@ interface ResultMatch {
 }
 
 export function ResultsCarousel({ matches }: { matches: ResultMatch[] }) {
-  const [, navigate] = useLocation();
+  const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
+  const modalOpenRef = useRef(false);
   const trackRef     = useRef<HTMLDivElement>(null);
   const xRef         = useRef(0);
   const lastRef      = useRef<number | null>(null);
@@ -55,7 +56,13 @@ export function ResultsCarousel({ matches }: { matches: ResultMatch[] }) {
   }, [matches.length]);
 
   const onHoverChange = useCallback((val: boolean) => {
-    pausedRef.current = val;
+    pausedRef.current = val || modalOpenRef.current;
+    lastRef.current = null;
+  }, []);
+
+  const handleClose = useCallback(() => {
+    setSelectedMatch(null);
+    modalOpenRef.current = false;
     lastRef.current = null;
   }, []);
 
@@ -93,30 +100,42 @@ export function ResultsCarousel({ matches }: { matches: ResultMatch[] }) {
   if (matches.length === 0) return null;
 
   return (
-    <div
-      className="overflow-hidden w-full py-3.5 select-none touch-pan-y"
-      onMouseEnter={() => onHoverChange(true)}
-      onMouseLeave={() => { onHoverChange(false); onPointerUp(); }}
-      onMouseDown={(e) => onPointerDown(e.clientX)}
-      onMouseMove={(e) => onPointerMove(e.clientX)}
-      onMouseUp={onPointerUp}
-      onTouchStart={(e) => onPointerDown(e.touches[0].clientX)}
-      onTouchMove={(e) => onPointerMove(e.touches[0].clientX)}
-      onTouchEnd={onPointerUp}
-      onTouchCancel={onPointerUp}
-    >
-      <div ref={trackRef} className="flex gap-4 w-max">
-        {display.map((match, idx) => (
-          <MatchCard
-            key={`${match.id}-${idx}`}
-            match={match}
-            status="finished"
-            selected={false}
-            onHoverChange={onHoverChange}
-            onClick={() => { if (!dragMovedRef.current) navigate("/history"); }}
-          />
-        ))}
+    <>
+      <div
+        className="overflow-hidden w-full py-3.5 select-none touch-pan-y"
+        onMouseEnter={() => onHoverChange(true)}
+        onMouseLeave={() => { onHoverChange(false); onPointerUp(); }}
+        onMouseDown={(e) => onPointerDown(e.clientX)}
+        onMouseMove={(e) => onPointerMove(e.clientX)}
+        onMouseUp={onPointerUp}
+        onTouchStart={(e) => onPointerDown(e.touches[0].clientX)}
+        onTouchMove={(e) => onPointerMove(e.touches[0].clientX)}
+        onTouchEnd={onPointerUp}
+        onTouchCancel={onPointerUp}
+      >
+        <div ref={trackRef} className="flex gap-4 w-max">
+          {display.map((match, idx) => (
+            <MatchCard
+              key={`${match.id}-${idx}`}
+              match={match}
+              status="finished"
+              selected={false}
+              onHoverChange={onHoverChange}
+              onClick={() => {
+                if (!dragMovedRef.current) {
+                  setSelectedMatch(match);
+                  modalOpenRef.current = true;
+                  lastRef.current = null;
+                }
+              }}
+            />
+          ))}
+        </div>
       </div>
-    </div>
+
+      {selectedMatch && (
+        <MatchModal match={selectedMatch} status="finished" onClose={handleClose} />
+      )}
+    </>
   );
 }
