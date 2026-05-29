@@ -61,9 +61,9 @@ export function PlayerStatsModal({
             <Input
               type="number"
               min={0}
-              max={5}
+              max={6}
               value={tempStats.flt}
-              onChange={(e) => setTempStats({ ...tempStats, flt: Number(e.target.value) })}
+              onChange={(e) => setTempStats({ ...tempStats, flt: Math.min(6, Math.max(0, Number(e.target.value))) })}
               className="glass-input h-14 text-center text-2xl font-display font-black"
             />
           </div>
