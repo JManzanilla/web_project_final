@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { Match, MatchStatus, getWinner } from "@/types/carousel.types";
 import { TeamLogo } from "./TeamLogo";
-import { X, FileText, History } from "lucide-react";
+import { X, FileText, History, Trophy } from "lucide-react";
 
 // ---------------------------------------------------------------------------
 // Genera la URL de embed según la plataforma
@@ -231,14 +231,22 @@ export function MatchModal({
             </div>
           )}
 
-          {/* Botón secundario: ir al historial (solo en partidos finalizados) */}
+          {/* Botones secundarios: historial y clasificación (solo en partidos finalizados) */}
           {status === "finished" && (
-            <button
-              onClick={() => { onClose(); navigate("/history"); }}
-              className="w-full mt-3 h-[44px] rounded-full font-semibold text-[13px] text-white/40 flex items-center justify-center gap-2 transition-all duration-200 hover:text-white/70 hover:bg-white/5 border border-transparent hover:border-white/10"
-            >
-              <History className="w-4 h-4" /> Ver historial completo
-            </button>
+            <div className="flex gap-2 mt-3">
+              <button
+                onClick={() => { onClose(); navigate("/history"); }}
+                className="flex-1 h-[44px] rounded-full font-semibold text-[13px] text-white/40 flex items-center justify-center gap-2 transition-all duration-200 border border-transparent hover:text-brand-orange/80 hover:border-brand-orange/50 active:text-brand-orange active:border-brand-orange"
+              >
+                <History className="w-4 h-4" /> Historial
+              </button>
+              <button
+                onClick={() => { onClose(); navigate("/standings"); }}
+                className="flex-1 h-[44px] rounded-full font-semibold text-[13px] text-white/40 flex items-center justify-center gap-2 transition-all duration-200 border border-transparent hover:text-brand-orange/80 hover:border-brand-orange/50 active:text-brand-orange active:border-brand-orange"
+              >
+                <Trophy className="w-4 h-4" /> Clasificación
+              </button>
+            </div>
           )}
         </div>
       </div>
