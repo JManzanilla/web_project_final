@@ -320,22 +320,22 @@ export default function SchedulePage() {
           return (
             <div key={num} className="glass-panel overflow-hidden">
               <button onClick={() => toggleExpand(num)}
-                className="w-full flex items-center justify-between px-5 py-4 hover:bg-white/3 transition-colors">
-                <div className="flex items-center gap-3">
-                  <span className="font-display font-black text-brand-orange text-lg whitespace-nowrap">Jornada {num}</span>
+                className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-white/3 transition-colors">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="font-display font-black text-brand-orange text-base whitespace-nowrap">Jornada {num}</span>
                   {pending > 0 && (
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/20 whitespace-nowrap">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/20 whitespace-nowrap flex-shrink-0">
                       {pending} pendiente{pending !== 1 ? "s" : ""}
                     </span>
                   )}
                   {hasSuspended && (
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/20 whitespace-nowrap">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/20 whitespace-nowrap flex-shrink-0">
                       suspendido
                     </span>
                   )}
                 </div>
-                <div className="flex items-center gap-2 text-white/30">
-                  <span className="text-[11px]">
+                <div className="flex items-center gap-2 text-white/30 flex-shrink-0 ml-2">
+                  <span className="text-[11px] whitespace-nowrap">
                     {new Date(jMatches[0].scheduledAt).toLocaleDateString("es-MX", { day: "numeric", month: "short" })}
                   </span>
                   {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
