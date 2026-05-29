@@ -24,6 +24,7 @@ interface ApiMatch {
   scheduledAt: string;
   homeTeam: { id: string; name: string };
   awayTeam: { id: string; name: string };
+  officials?: { ref1: string | null; ref2: string | null; scorer: string | null } | null;
 }
 
 function toPlayer(p: ApiPlayer): Player {
@@ -72,6 +73,15 @@ export default function MatchPage() {
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   const [statsMap, setStatsMap]             = useState<Record<string, PlayerStats>>({});
   const [tempStats, setTempStats]           = useState<PlayerStats>({ pts: 0, ast: 0, flt: 0 });
+
+  // Pre-cargar árbitros asignados desde el Rol de Árbitros (solo una vez)
+  useEffect(() => {
+    if (!match?.officials) return;
+    const { ref1, ref2, scorer } = match.officials;
+    if (ref1 || ref2 || scorer) {
+      setRefs({ ref1: ref1 ?? "", ref2: ref2 ?? "", scorer: scorer ?? "" });
+    }
+  }, [match]);
 
   // Inicializar lista de jugadores cuando llegan de la API (solo una vez)
   useEffect(() => {
