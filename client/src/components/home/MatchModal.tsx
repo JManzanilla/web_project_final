@@ -221,7 +221,7 @@ export function MatchModal({
               href={match.actaUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full h-[52px] rounded-full font-semibold text-[15px] text-white flex items-center justify-center gap-2 transition-all duration-200 hover:opacity-[0.88] active:scale-[0.97] bg-white/10 border border-white/20 hover:bg-white/15"
+              className="w-full h-[52px] rounded-full font-semibold text-[15px] text-white/40 flex items-center justify-center gap-2 transition-all duration-200 border border-transparent hover:text-brand-orange/80 hover:border-brand-orange/50 active:text-brand-orange active:border-brand-orange"
             >
               <FileText className="w-4 h-4" /> Ver acta del partido
             </a>
