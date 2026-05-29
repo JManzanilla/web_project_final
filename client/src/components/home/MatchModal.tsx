@@ -1,7 +1,8 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { Match, MatchStatus, getWinner } from "@/types/carousel.types";
 import { TeamLogo } from "./TeamLogo";
-import { X, FileText } from "lucide-react";
+import { X, FileText, History } from "lucide-react";
 
 // ---------------------------------------------------------------------------
 // Genera la URL de embed según la plataforma
@@ -110,6 +111,7 @@ export function MatchModal({
   onClose: () => void;
 }) {
   const [showStream, setShowStream] = useState(false);
+  const [, navigate] = useLocation();
   const winner = getWinner(match);
 
   const hasStream = !!match.streamUrl;
@@ -227,6 +229,16 @@ export function MatchModal({
             <div className="w-full h-[52px] rounded-full bg-white/4 border border-white/8 flex items-center justify-center text-[13px] text-white/20">
               Acta no disponible
             </div>
+          )}
+
+          {/* Botón secundario: ir al historial (solo en partidos finalizados) */}
+          {status === "finished" && (
+            <button
+              onClick={() => { onClose(); navigate("/history"); }}
+              className="w-full mt-3 h-[44px] rounded-full font-semibold text-[13px] text-white/40 flex items-center justify-center gap-2 transition-all duration-200 hover:text-white/70 hover:bg-white/5 border border-transparent hover:border-white/10"
+            >
+              <History className="w-4 h-4" /> Ver historial completo
+            </button>
           )}
         </div>
       </div>
