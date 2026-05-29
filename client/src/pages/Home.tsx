@@ -70,7 +70,7 @@ function StreamSection({
     <div className="mt-8">
       {/* Título de sección */}
       <div className="flex items-end gap-4 mb-4">
-        <h2 className="text-3xl md:text-4xl font-extrabold tracking-tighter uppercase font-display leading-none flex items-baseline gap-x-2.5">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tighter uppercase font-display leading-none flex flex-wrap items-baseline gap-x-2.5">
           <span className="text-white">Transmisión</span>
           {isLive
             ? <span className="text-brand-orange text-shadow-orange">En vivo</span>
