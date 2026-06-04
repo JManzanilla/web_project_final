@@ -20,15 +20,20 @@ interface ApiPlayer {
   id: string; name: string; lastName: string; number: string;
 }
 interface ApiMatch {
-  id: string; jornada: number; status: string; actaUrl: string | null;
+  id: string; jornada: number; phase: string; status: string; actaUrl: string | null;
   scheduledAt: string;
   homeTeam: { id: string; name: string };
   awayTeam: { id: string; name: string };
   officials?: { ref1: string | null; ref2: string | null; scorer: string | null } | null;
 }
 
-function toPlayer(p: ApiPlayer): Player {
-  return { id: p.id, name: p.name, lastName: p.lastName, number: p.number, eligible: true, attended: false };
+interface EligibilityRow {
+  id: string; eligible: boolean;
+}
+
+function toPlayer(p: ApiPlayer, eligibilityMap: Record<string, boolean> = {}): Player {
+  return { id: p.id, name: p.name, lastName: p.lastName, number: p.number,
+    eligible: eligibilityMap[p.id] ?? true, attended: false };
 }
 
 // ---------------------------------------------------------------------------
@@ -62,6 +67,14 @@ export default function MatchPage() {
     queryFn:  () => apiGet<{ rosterLockJornada: number }>("/api/config"),
   });
 
+  const isPlayoff = match?.phase !== undefined && match.phase !== "regular";
+
+  const { data: eligibilityData = [] } = useQuery<EligibilityRow[]>({
+    queryKey: ["/api/players/eligibility"],
+    queryFn:  () => apiGet<EligibilityRow[]>("/api/players/eligibility"),
+    enabled:  isPlayoff,
+  });
+
   // ── Estado local ─────────────────────────────────────────────────────────
   const [step, setStep]                     = useState<Step>(0);
   const [refs, setRefs]                     = useState({ ref1: "", ref2: "", scorer: "" });
@@ -86,11 +99,14 @@ export default function MatchPage() {
   // Inicializar lista de jugadores cuando llegan de la API (solo una vez)
   useEffect(() => {
     if (!playersReady && homeApiPlayers.length > 0 && awayApiPlayers.length > 0) {
-      setHomePlayers(homeApiPlayers.map(toPlayer));
-      setAwayPlayers(awayApiPlayers.map(toPlayer));
+      const eligMap = eligibilityData.reduce<Record<string, boolean>>(
+        (acc, e) => ({ ...acc, [e.id]: e.eligible }), {}
+      );
+      setHomePlayers(homeApiPlayers.map((p) => toPlayer(p, eligMap)));
+      setAwayPlayers(awayApiPlayers.map((p) => toPlayer(p, eligMap)));
       setPlayersReady(true);
     }
-  }, [homeApiPlayers, awayApiPlayers]);
+  }, [homeApiPlayers, awayApiPlayers, eligibilityData]);
 
   // ── Mutations ─────────────────────────────────────────────────────────────
   const officialsMutation = useMutation({
@@ -167,6 +183,13 @@ export default function MatchPage() {
     );
   }
 
+  const phaseLabel: Record<string, string> = {
+    sf1: "Semifinal 1", sf2: "Semifinal 2", final: "Gran Final",
+  };
+  const matchLabel = isPlayoff
+    ? (phaseLabel[match.phase] ?? "Playoffs")
+    : `Jornada ${match.jornada}`;
+
   if (match.status === "finished") {
     return (
       <div className="container max-w-4xl mx-auto px-4 py-16 flex flex-col items-center gap-6 text-center">
@@ -176,7 +199,7 @@ export default function MatchPage() {
         <div>
           <p className="text-white font-bold text-lg mb-1">Partido finalizado</p>
           <p className="text-white/35 text-sm">
-            {match.homeTeam.name} vs {match.awayTeam.name} — Jornada {match.jornada}
+            {match.homeTeam.name} vs {match.awayTeam.name} — {matchLabel}
           </p>
         </div>
         <button
@@ -194,14 +217,25 @@ export default function MatchPage() {
   const hasScore     = score.home !== "" && score.away !== "";
   const rosterLocked = match.jornada > (config?.rosterLockJornada ?? 4);
 
+  const phaseLabel: Record<string, string> = {
+    sf1: "Semifinal 1", sf2: "Semifinal 2", final: "Gran Final",
+  };
+  const matchLabel = isPlayoff
+    ? (phaseLabel[match.phase] ?? "Playoffs")
+    : `Jornada ${match.jornada}`;
+
   return (
     <div className="container max-w-4xl mx-auto px-4 py-8">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <SectionTitle whiteText="Mesa" orangeText="Técnica" className="mb-0" />
-        <div className="glass-panel px-5 py-2.5 rounded-full! flex items-center gap-2.5">
-          <span className="text-white/50 uppercase font-semibold text-xs tracking-wider">Jornada</span>
-          <span className="text-xl font-bold font-display text-white">{match.jornada}</span>
+        <div className={`px-5 py-2.5 rounded-full flex items-center gap-2.5 ${isPlayoff ? "bg-brand-orange/15 border border-brand-orange/30" : "glass-panel"}`}>
+          <span className={`uppercase font-semibold text-xs tracking-wider ${isPlayoff ? "text-brand-orange/70" : "text-white/50"}`}>
+            {isPlayoff ? "Fase" : "Jornada"}
+          </span>
+          <span className={`text-base font-black font-display ${isPlayoff ? "text-brand-orange" : "text-white"}`}>
+            {matchLabel}
+          </span>
         </div>
       </div>
 
@@ -219,8 +253,10 @@ export default function MatchPage() {
           refs={refs}
           setRefs={setRefs}
           jornada={match.jornada}
+          phase={match.phase ?? "regular"}
           scheduledAt={match.scheduledAt}
           onNext={() => officialsMutation.mutate()}
+          onSkip={() => setStep(1)}
           loading={officialsMutation.isPending}
         />
       )}

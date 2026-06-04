@@ -132,6 +132,7 @@ export const officials = pgTable("officials", {
   photoUrl:  text("photo_url"),
   roles:     jsonb("roles").$type<OfficialRoles>().notNull().default({ mainRef: false, assistRef: false, scorer: false }),
   active:    boolean("active").notNull().default(true),
+  teamId:    uuid("team_id").references(() => teams.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
