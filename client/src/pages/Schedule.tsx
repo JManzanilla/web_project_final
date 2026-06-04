@@ -23,6 +23,7 @@ type MatchStatus = "upcoming" | "live" | "finished" | "suspended";
 interface ScheduleMatch {
   id: string;
   jornada: number;
+  phase: string;
   scheduledAt: string;
   status: MatchStatus;
   scoreHome: number | null;
@@ -30,6 +31,12 @@ interface ScheduleMatch {
   homeTeam: { id: string; name: string; logoUrl: string | null };
   awayTeam: { id: string; name: string; logoUrl: string | null };
 }
+
+const PHASE_LABEL: Record<string, string> = {
+  sf1:   "Semifinal 1",
+  sf2:   "Semifinal 2",
+  final: "Gran Final",
+};
 
 function TeamLogo({ logoUrl, name }: { logoUrl: string | null; name: string }) {
   if (logoUrl) {
@@ -177,10 +184,10 @@ export default function SchedulePage() {
     queryFn:  () => apiGet<ScheduleMatch[]>("/api/matches"),
   });
 
-  // Separar pendientes (jornada=0) del resto
+  // Separar pendientes (jornada=0), regulares y playoffs
   const pendingMatches = matches.filter((m) => m.jornada === 0);
   const jornadaMap = matches
-    .filter((m) => m.jornada !== 0)
+    .filter((m) => m.jornada !== 0 && m.phase === "regular")
     .reduce<Record<number, ScheduleMatch[]>>((acc, m) => {
       (acc[m.jornada] ??= []).push(m);
       return acc;
@@ -189,8 +196,20 @@ export default function SchedulePage() {
     .map(([num, ms]) => ({ num: Number(num), matches: ms }))
     .sort((a, b) => a.num - b.num);
 
-  const [expanded, setExpanded] = useState<Set<number>>(new Set());
-  const toggleExpand = (n: number) =>
+  // Agrupar playoffs por fase en orden lógico
+  const playoffPhaseOrder = ["sf1", "sf2", "final"];
+  const playoffMap = matches
+    .filter((m) => m.phase !== "regular" && m.jornada !== 0)
+    .reduce<Record<string, ScheduleMatch[]>>((acc, m) => {
+      (acc[m.phase] ??= []).push(m);
+      return acc;
+    }, {});
+  const playoffs = playoffPhaseOrder
+    .filter((phase) => playoffMap[phase]?.length > 0)
+    .map((phase) => ({ phase, matches: playoffMap[phase] }));
+
+  const [expanded, setExpanded] = useState<Set<number | string>>(new Set());
+  const toggleExpand = (n: number | string) =>
     setExpanded((prev) => { const s = new Set(prev); s.has(n) ? s.delete(n) : s.add(n); return s; });
 
   // ── Modal editar partido ──────────────────────────────────────────────────
@@ -354,6 +373,53 @@ export default function SchedulePage() {
           );
         })}
       </div>
+
+      {/* Playoffs — Semifinales y Final */}
+      {playoffs.length > 0 && (
+        <div className="mt-6">
+          <p className="text-xs text-brand-orange/60 font-bold uppercase tracking-widest mb-3">
+            🏆 Eliminatorias
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
+            {playoffs.map(({ phase, matches: pMatches }) => {
+              const key = `playoff-${phase}`;
+              const isOpen = expanded.has(phase);
+              const pending = pMatches.filter((m) => m.status === "upcoming").length;
+              const label = PHASE_LABEL[phase] ?? phase;
+              return (
+                <div key={key} className="glass-panel overflow-hidden border-brand-orange/20">
+                  <button onClick={() => toggleExpand(phase)}
+                    className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-white/3 transition-colors">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="font-display font-black text-brand-orange text-base whitespace-nowrap">{label}</span>
+                      {pending > 0 && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/20 whitespace-nowrap flex-shrink-0">
+                          {pending} pendiente{pending !== 1 ? "s" : ""}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 text-white/30 flex-shrink-0 ml-2">
+                      <span className="text-[11px] whitespace-nowrap">
+                        {new Date(pMatches[0].scheduledAt).toLocaleDateString("es-MX", { day: "numeric", month: "short" })}
+                      </span>
+                      {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    </div>
+                  </button>
+                  {isOpen && (
+                    <div className="border-t border-brand-orange/10 divide-y divide-white/5">
+                      {pMatches.map((m) => (
+                        <MatchRow key={m.id} m={m} onEdit={openEdit}
+                          onToggleSuspend={(id, status) => suspendMutation.mutate({ id, status })}
+                          isPending={suspendMutation.isPending} isAdmin={user?.role === "admin"} />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* ── Modal: reprogramar partido ── */}
       <Dialog open={!!editing} onOpenChange={(open) => { if (!open) setEditing(null); }}>
