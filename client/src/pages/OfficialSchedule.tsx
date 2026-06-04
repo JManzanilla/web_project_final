@@ -341,12 +341,21 @@ function OfficialRow({ official: o, onEdit, onDelete }: { official: Official; on
 }
 
 // ── Página principal ─────────────────────────────────────────────────────────
+// Clave de selección: "j:N" = jornada regular N, "ph:sf1" = fase playoff
+type SelectKey = string | null;
+const PHASE_LABELS: Record<string, string> = { sf1: "Semifinal 1", sf2: "Semifinal 2", final: "Gran Final" };
+const PHASE_ORDER = ["sf1", "sf2", "final"];
+
 export default function OfficialSchedulePage() {
   const qc = useQueryClient();
-  const [jornada,     setJornada]     = useState<number | null>(null);
-  const [assignments, setAssignments] = useState<Record<string, Assignment>>({});
-  const [waText,      setWaText]      = useState("");
-  const [copied,      setCopied]      = useState(false);
+  const [selKey,       setSelKey]      = useState<SelectKey>(null);
+  const [assignments,  setAssignments] = useState<Record<string, Assignment>>({});
+  const [waText,       setWaText]      = useState("");
+  const [copied,       setCopied]      = useState(false);
+
+  const isPlayoffSel  = selKey?.startsWith("ph:") ?? false;
+  const jornadaNum    = selKey?.startsWith("j:")  ? parseInt(selKey.slice(2)) : null;
+  const phaseVal      = selKey?.startsWith("ph:") ? selKey.slice(3) : null;
 
   // ── Estado gestión de árbitros ───────────────────────────────────────────
   const [showOfficials, setShowOfficials] = useState(false);
@@ -403,26 +412,44 @@ export default function OfficialSchedulePage() {
     queryFn:  () => apiGet<MatchItem[]>("/api/matches"),
   });
 
-  const jornadas = useMemo(() => {
-    const nums = [...new Set(allMatches.map((m) => m.jornada))].sort((a, b) => a - b);
-    return nums;
+  const { regularJornadas, playoffPhases } = useMemo(() => {
+    const regSet   = new Set<number>();
+    const phSet    = new Set<string>();
+    allMatches.forEach((m) => {
+      if (m.phase === "regular") regSet.add(m.jornada);
+      else phSet.add(m.phase);
+    });
+    return {
+      regularJornadas: [...regSet].sort((a, b) => a - b),
+      playoffPhases:   PHASE_ORDER.filter((p) => phSet.has(p)),
+    };
   }, [allMatches]);
 
-  // Auto-seleccionar la próxima jornada activa
+  // Auto-seleccionar la próxima jornada/fase activa
   useEffect(() => {
-    if (jornada !== null || jornadas.length === 0) return;
-    const next = allMatches
+    if (selKey !== null || (regularJornadas.length === 0 && playoffPhases.length === 0)) return;
+    const next = [...allMatches]
       .filter((m) => m.status === "upcoming" || m.status === "live")
-      .map((m) => m.jornada)
-      .sort((a, b) => a - b)[0];
-    setJornada(next ?? jornadas[0]);
-  }, [jornadas]);
+      .sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime())[0];
+    if (next) {
+      setSelKey(next.phase === "regular" ? `j:${next.jornada}` : `ph:${next.phase}`);
+    } else if (regularJornadas.length > 0) {
+      setSelKey(`j:${regularJornadas[0]}`);
+    } else if (playoffPhases.length > 0) {
+      setSelKey(`ph:${playoffPhases[0]}`);
+    }
+  }, [regularJornadas, playoffPhases]);
 
-  // Partidos de la jornada seleccionada
+  // URL de query según selección
+  const matchQueryUrl = selKey === null ? ""
+    : isPlayoffSel ? `/api/matches?phase=${phaseVal}`
+    : `/api/matches?jornada=${jornadaNum}&phase=regular`;
+
+  // Partidos de la selección activa
   const { data: matches = [], isLoading: loadingMatches } = useQuery<MatchItem[]>({
-    queryKey: ["/api/matches", jornada],
-    queryFn:  () => apiGet<MatchItem[]>(`/api/matches?jornada=${jornada}`),
-    enabled:  jornada !== null,
+    queryKey: ["/api/matches", selKey],
+    queryFn:  () => apiGet<MatchItem[]>(matchQueryUrl),
+    enabled:  selKey !== null,
   });
 
   // Todos los árbitros activos
@@ -432,11 +459,11 @@ export default function OfficialSchedulePage() {
   });
   const activeOfficials = officials.filter((o) => o.active);
 
-  // Slots de disponibilidad para esta jornada (todos los árbitros)
+  // Slots de disponibilidad (solo para jornadas regulares)
   const { data: slots = [], isLoading: loadingSlots } = useQuery<Slot[]>({
-    queryKey: ["/api/officials/availability", jornada],
-    queryFn:  () => apiGet<Slot[]>(`/api/officials/availability?jornada=${jornada}`),
-    enabled:  jornada !== null,
+    queryKey: ["/api/officials/availability", jornadaNum],
+    queryFn:  () => apiGet<Slot[]>(`/api/officials/availability?jornada=${jornadaNum}`),
+    enabled:  jornadaNum !== null,
   });
 
   // Inicializar asignaciones cuando cambian los partidos
@@ -463,14 +490,14 @@ export default function OfficialSchedulePage() {
   const addSlotMutation = useMutation({
     mutationFn: ({ officialId, data }: { officialId: string; data: { jornada: number; dayOfWeek: number; startTime: string; endTime: string } }) =>
       apiPost<Slot>(`/api/officials/${officialId}/availability`, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["/api/officials/availability", jornada] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["/api/officials/availability", jornadaNum] }),
     onError:   (e) => sileo.error({ title: "Error al agregar", description: (e as Error).message }),
   });
 
   const deleteSlotMutation = useMutation({
     mutationFn: ({ officialId, slotId }: { officialId: string; slotId: string }) =>
       apiDelete(`/api/officials/${officialId}/availability/${slotId}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["/api/officials/availability", jornada] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["/api/officials/availability", jornadaNum] }),
     onError:   (e) => sileo.error({ title: "Error al eliminar", description: (e as Error).message }),
   });
 
@@ -484,12 +511,15 @@ export default function OfficialSchedulePage() {
         }
         return apiPut(`/api/matches/${m.id}/officials`, { ref1: a.ref1 || null, ref2: a.ref2 || null, scorer: a.scorer || null, extRef1: null, extRef2: null, extScorer: null });
       })),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["/api/matches", jornada] }); sileo.success({ title: "Rol guardado correctamente" }); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["/api/matches", selKey] }); sileo.success({ title: "Rol guardado correctamente" }); },
     onError:   (e) => sileo.error({ title: "Error al guardar", description: (e as Error).message }),
   });
 
-  // ── Candidatos disponibles por match (filtrado por hora) ─────────────────
+  // ── Candidatos disponibles por match ─────────────────────────────────────
+  // Playoffs: todos los árbitros activos (no hay slots por jornada)
+  // Regular: filtrado por disponibilidad horaria
   function candidatesFor(match: MatchItem): Official[] {
+    if (match.phase !== "regular") return activeOfficials;
     const d    = new Date(match.scheduledAt);
     const day  = d.getDay();
     const time = fmtTime(match.scheduledAt);
@@ -501,20 +531,26 @@ export default function OfficialSchedulePage() {
 
   // ── Generar WhatsApp ─────────────────────────────────────────────────────
   const generateWA = () => {
-    if (!jornada || matches.length === 0) return;
+    if (selKey === null || matches.length === 0) return;
 
     const byDay: Record<string, MatchItem[]> = {};
     matches.forEach((m) => { (byDay[fmtDateFull(m.scheduledAt)] ??= []).push(m); });
 
-    let text = `🏀 *ROL DE ÁRBITROS — JORNADA ${jornada}*\n\n`;
+    const title = isPlayoffSel
+      ? (PHASE_LABELS[phaseVal ?? ""] ?? "Playoffs")
+      : `JORNADA ${jornadaNum}`;
+    let text = `🏀 *ROL DE ÁRBITROS — ${title}*\n\n`;
     Object.entries(byDay).forEach(([day, ms]) => {
       text += `📅 *${day}*\n`;
       ms.forEach((m) => {
-        const a = assignments[m.id] ?? { ref1: "", ref2: "", scorer: "" };
+        const a = assignments[m.id] ?? { ref1: "", ref2: "", scorer: "", extRef1: "", extRef2: "", extScorer: "", isExternal: false };
+        const r1 = a.isExternal ? (a.extRef1 || "Por definir") : (a.ref1 || "Por definir");
+        const r2 = a.isExternal ? (a.extRef2 || "Por definir") : (a.ref2 || "Por definir");
+        const sc = a.isExternal ? (a.extScorer || "Por definir") : (a.scorer || "Por definir");
         text += `\n⏰ *${fmtTime(m.scheduledAt)}* — ${m.homeTeam.name} vs ${m.awayTeam.name}\n`;
-        text += `🟠 Principal: ${a.ref1 || "Por definir"}\n`;
-        text += `🔵 Auxiliar:  ${a.ref2 || "Por definir"}\n`;
-        text += `📋 Anotador:  ${a.scorer || "Por definir"}\n`;
+        text += `🟠 Principal: ${r1}\n`;
+        text += `🔵 Auxiliar:  ${r2}\n`;
+        text += `📋 Anotador:  ${sc}\n`;
       });
       text += "\n";
     });
@@ -531,7 +567,7 @@ export default function OfficialSchedulePage() {
 
   const openWhatsApp = () => window.open(`https://wa.me/?text=${encodeURIComponent(waText)}`, "_blank");
 
-  if (jornadas.length === 0 && !loadingMatches) {
+  if (regularJornadas.length === 0 && playoffPhases.length === 0 && !loadingMatches) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
         <p className="text-white/30">No hay partidos en el sistema aún.</p>
@@ -585,32 +621,54 @@ export default function OfficialSchedulePage() {
         )}
       </div>
 
-      {/* Selector de jornada */}
-      <div className="glass-panel rounded-2xl px-4 py-3 mb-6 flex items-center gap-4">
-        <span className="text-xs font-bold uppercase tracking-widest text-white/40 flex-shrink-0">Jornada</span>
-        <div className="flex gap-2 flex-wrap">
-          {jornadas.map((j) => (
-            <button key={j} onClick={() => { setJornada(j); setWaText(""); setAssignments({}); }}
-              className={`px-4 py-1.5 rounded-full text-sm font-bold border transition-all ${
-                jornada === j
-                  ? "bg-brand-orange border-brand-orange text-white glow-orange"
-                  : "bg-white/5 border-white/10 text-white/50 hover:border-white/30 hover:text-white"
-              }`}>
-              {j}
-            </button>
-          ))}
-        </div>
+      {/* Selector de jornada / fase */}
+      <div className="glass-panel rounded-2xl px-4 py-3 mb-6 space-y-2">
+        {regularJornadas.length > 0 && (
+          <div className="flex items-center gap-4 flex-wrap">
+            <span className="text-xs font-bold uppercase tracking-widest text-white/40 flex-shrink-0">Jornada</span>
+            <div className="flex gap-2 flex-wrap">
+              {regularJornadas.map((j) => (
+                <button key={`j:${j}`} onClick={() => { setSelKey(`j:${j}`); setWaText(""); setAssignments({}); }}
+                  className={`px-4 py-1.5 rounded-full text-sm font-bold border transition-all ${
+                    selKey === `j:${j}`
+                      ? "bg-brand-orange border-brand-orange text-white glow-orange"
+                      : "bg-white/5 border-white/10 text-white/50 hover:border-white/30 hover:text-white"
+                  }`}>
+                  {j}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        {playoffPhases.length > 0 && (
+          <div className="flex items-center gap-4 flex-wrap">
+            <span className="text-xs font-bold uppercase tracking-widest text-brand-orange/60 flex-shrink-0">Playoffs</span>
+            <div className="flex gap-2 flex-wrap">
+              {playoffPhases.map((ph) => (
+                <button key={`ph:${ph}`} onClick={() => { setSelKey(`ph:${ph}`); setWaText(""); setAssignments({}); }}
+                  className={`px-4 py-1.5 rounded-full text-sm font-bold border transition-all ${
+                    selKey === `ph:${ph}`
+                      ? "bg-brand-orange border-brand-orange text-white glow-orange"
+                      : "bg-brand-orange/10 border-brand-orange/25 text-brand-orange/60 hover:border-brand-orange/50 hover:text-brand-orange"
+                  }`}>
+                  {PHASE_LABELS[ph] ?? ph}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
-      {jornada !== null && (
+      {selKey !== null && (
         <>
           {/* ── Grid 2 columnas: Disponibilidad | Partidos ────────────────── */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 items-start">
 
-            {/* Columna izquierda: Disponibilidad */}
+            {/* Columna izquierda: Disponibilidad (solo para jornadas regulares) */}
+            {!isPlayoffSel ? (
             <div className="glass-panel rounded-2xl overflow-hidden lg:sticky lg:top-4">
               <div className="px-4 py-3 border-b border-white/8 flex items-center justify-between">
-                <p className="font-bold text-white text-sm">Disponibilidad — Jornada {jornada}</p>
+                <p className="font-bold text-white text-sm">Disponibilidad — Jornada {jornadaNum}</p>
                 <p className="text-[11px] text-white/30">Toca cada árbitro para editar</p>
               </div>
               {loadingSlots ? (
@@ -624,21 +682,27 @@ export default function OfficialSchedulePage() {
                       key={o.id}
                       official={o}
                       slots={slots}
-                      jornada={jornada}
-                      onAdd={(data) => addSlotMutation.mutate({ officialId: o.id, data: { jornada, ...data } })}
+                      jornada={jornadaNum!}
+                      onAdd={(data) => addSlotMutation.mutate({ officialId: o.id, data: { jornada: jornadaNum!, ...data } })}
                       onDelete={(slotId) => deleteSlotMutation.mutate({ officialId: o.id, slotId })}
                     />
                   ))}
                 </div>
               )}
             </div>
+            ) : (
+            <div className="glass-panel rounded-2xl p-5">
+              <p className="font-bold text-white text-sm mb-1">{PHASE_LABELS[phaseVal ?? ""] ?? "Playoffs"}</p>
+              <p className="text-[11px] text-white/30">En playoffs todos los árbitros activos están disponibles.<br/>Usa el toggle Locales/Externos en cada partido.</p>
+            </div>
+            )}
 
             {/* Columna derecha: Partidos + Guardar */}
             {loadingMatches ? (
               <div className="text-center text-white/30 py-8">Cargando partidos...</div>
             ) : matches.length === 0 ? (
               <div className="glass-panel rounded-2xl p-8 text-center">
-                <p className="text-white/30">No hay partidos en la Jornada {jornada}</p>
+                <p className="text-white/30">No hay partidos{isPlayoffSel ? ` para ${PHASE_LABELS[phaseVal ?? ""] ?? phaseVal}` : ` en la Jornada ${jornadaNum}`}</p>
               </div>
             ) : (
               <div className="space-y-4">
