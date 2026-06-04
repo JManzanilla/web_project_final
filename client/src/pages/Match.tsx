@@ -217,13 +217,6 @@ export default function MatchPage() {
   const hasScore     = score.home !== "" && score.away !== "";
   const rosterLocked = match.jornada > (config?.rosterLockJornada ?? 4);
 
-  const phaseLabel: Record<string, string> = {
-    sf1: "Semifinal 1", sf2: "Semifinal 2", final: "Gran Final",
-  };
-  const matchLabel = isPlayoff
-    ? (phaseLabel[match.phase] ?? "Playoffs")
-    : `Jornada ${match.jornada}`;
-
   return (
     <div className="container max-w-4xl mx-auto px-4 py-8">
       {/* Header */}
