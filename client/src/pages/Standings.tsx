@@ -54,13 +54,11 @@ function BracketCard({ label, subtitle, series, highlight }: {
         : "border-white/12"
     }`}>
       {/* Header */}
-      <div className={`px-4 py-2.5 border-b flex items-center justify-between gap-2 ${highlight ? "border-brand-orange/20 bg-brand-orange/8" : "border-white/8"}`}>
-        <div className="flex items-center gap-2 min-w-0">
-          <span className={`text-[11px] font-black uppercase tracking-widest whitespace-nowrap ${highlight ? "text-brand-orange" : "text-white/50"}`}>{label}</span>
-          {subtitle && <span className="text-[10px] text-white/25 hidden sm:inline">{subtitle}</span>}
-        </div>
+      <div className={`px-4 py-2.5 border-b flex flex-col items-center gap-1 ${highlight ? "border-brand-orange/20 bg-brand-orange/8" : "border-white/8"}`}>
+        <span className={`text-[11px] font-black uppercase tracking-widest whitespace-nowrap ${highlight ? "text-brand-orange" : "text-white/50"}`}>{label}</span>
+        {subtitle && <span className="text-[10px] text-white/25">{subtitle}</span>}
         {winner && (
-          <span className="text-[10px] font-bold text-green-400 bg-green-500/10 border border-green-500/20 px-2 py-0.5 rounded-full whitespace-nowrap">
+          <span className="text-[10px] font-bold text-green-400 bg-green-500/10 border border-green-500/20 px-2 py-0.5 rounded-full whitespace-nowrap mt-0.5">
             🏆 {winner.name}
           </span>
         )}
