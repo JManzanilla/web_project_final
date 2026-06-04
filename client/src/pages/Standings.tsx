@@ -38,66 +38,125 @@ interface PlayoffData {
   final: PlayoffSeries | null;
 }
 
-// ── Componente de una serie (SF1, SF2 o Final) ────────────────────────────────
-function SeriesCard({ label, series, highlight }: { label: string; series: PlayoffSeries | null; highlight?: boolean }) {
-  const isDone = !!series?.winnerId;
+// ── Tarjeta de serie para el bracket ─────────────────────────────────────────
+function BracketCard({ label, subtitle, series, highlight }: {
+  label: string; subtitle?: string;
+  series: PlayoffSeries | null; highlight?: boolean;
+}) {
   const winner = series?.winnerId
     ? (series.winnerId === series.team1.id ? series.team1 : series.team2)
     : null;
 
   return (
-    <div className={`glass-panel rounded-2xl overflow-hidden ${highlight ? "border-brand-orange/30 bg-brand-orange/5" : ""}`}>
-      <div className="px-4 py-2.5 border-b border-white/8 flex items-center gap-2">
-        <Trophy className={`w-3.5 h-3.5 flex-shrink-0 ${highlight ? "text-brand-orange" : "text-white/30"}`} />
-        <span className="text-[11px] font-bold uppercase tracking-widest text-white/50">{label}</span>
-        {isDone && winner && (
-          <span className="ml-auto text-[10px] font-bold text-green-400 bg-green-500/10 border border-green-500/20 px-2 py-0.5 rounded-full">
-            {winner.name} campeón
+    <div className={`glass-panel rounded-2xl overflow-hidden w-full ${
+      highlight
+        ? "border-brand-orange/40 shadow-[0_0_30px_rgba(255,69,0,0.18)]"
+        : "border-white/12"
+    }`}>
+      {/* Header */}
+      <div className={`px-4 py-2.5 border-b flex items-center justify-between gap-2 ${highlight ? "border-brand-orange/20 bg-brand-orange/8" : "border-white/8"}`}>
+        <div className="flex items-center gap-2 min-w-0">
+          <span className={`text-[11px] font-black uppercase tracking-widest whitespace-nowrap ${highlight ? "text-brand-orange" : "text-white/50"}`}>{label}</span>
+          {subtitle && <span className="text-[10px] text-white/25 hidden sm:inline">{subtitle}</span>}
+        </div>
+        {winner && (
+          <span className="text-[10px] font-bold text-green-400 bg-green-500/10 border border-green-500/20 px-2 py-0.5 rounded-full whitespace-nowrap">
+            🏆 {winner.name}
           </span>
         )}
       </div>
 
       {series ? (
         <div className="p-4">
-          {/* Equipos y marcador serie */}
-          <div className="flex items-center justify-between gap-3 mb-3">
-            <div className={`flex-1 text-center ${series.winnerId === series.team1.id ? "text-white" : "text-white/60"}`}>
-              <p className="font-bold text-sm truncate">{series.team1.name}</p>
+          {/* Equipos + marcador de serie */}
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <div className={`flex-1 text-center transition-opacity ${series.winnerId && series.winnerId !== series.team1.id ? "opacity-35" : ""}`}>
+              <p className="font-black text-sm text-white truncate">{series.team1.name}</p>
             </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <span className={`text-2xl font-black font-display ${series.winnerId === series.team1.id ? "text-brand-orange" : "text-white/70"}`}>
-                {series.wins[0]}
-              </span>
-              <span className="text-white/20 text-sm">-</span>
-              <span className={`text-2xl font-black font-display ${series.winnerId === series.team2.id ? "text-brand-orange" : "text-white/70"}`}>
-                {series.wins[1]}
-              </span>
+            <div className="flex flex-col items-center flex-shrink-0">
+              <div className="flex items-center gap-2">
+                <span className={`text-2xl font-black font-display ${series.wins[0] > series.wins[1] ? "text-brand-orange" : "text-white/40"}`}>{series.wins[0]}</span>
+                <span className="text-white/20 text-sm">-</span>
+                <span className={`text-2xl font-black font-display ${series.wins[1] > series.wins[0] ? "text-brand-orange" : "text-white/40"}`}>{series.wins[1]}</span>
+              </div>
+              {series.seriesLength === 3 && (
+                <span className="text-[9px] text-white/20 mt-0.5">mejor de 3</span>
+              )}
             </div>
-            <div className={`flex-1 text-center ${series.winnerId === series.team2.id ? "text-white" : "text-white/60"}`}>
-              <p className="font-bold text-sm truncate">{series.team2.name}</p>
+            <div className={`flex-1 text-center transition-opacity ${series.winnerId && series.winnerId !== series.team2.id ? "opacity-35" : ""}`}>
+              <p className="font-black text-sm text-white truncate">{series.team2.name}</p>
             </div>
           </div>
 
-          {/* Juegos individuales */}
-          {series.games.map((g, i) => (
-            <div key={g.id} className="flex items-center justify-between text-xs py-1 border-t border-white/5">
-              <span className="text-white/30">Juego {g.seriesGame ?? i + 1}</span>
-              {g.status === "finished" && g.scoreHome !== null && g.scoreAway !== null ? (
-                <span className="font-bold text-white/70">{g.scoreHome} – {g.scoreAway}</span>
-              ) : (
-                <span className="text-white/20">{g.status === "upcoming" ? "Próximo" : g.status === "live" ? "🔴 En vivo" : "—"}</span>
-              )}
+          {/* Juegos */}
+          {series.games.length > 0 && (
+            <div className="border-t border-white/5 pt-2 space-y-1">
+              {series.games.map((g, i) => (
+                <div key={g.id} className="flex items-center justify-between text-[11px]">
+                  <span className="text-white/25">Juego {g.seriesGame ?? i + 1}</span>
+                  {g.status === "finished" && g.scoreHome !== null ? (
+                    <span className="font-bold text-white/60">{g.scoreHome} – {g.scoreAway}</span>
+                  ) : g.status === "live" ? (
+                    <span className="text-brand-orange font-bold animate-pulse">🔴 En vivo</span>
+                  ) : (
+                    <span className="text-white/20">Próximo</span>
+                  )}
+                </div>
+              ))}
             </div>
-          ))}
-
-          {series.seriesLength === 3 && !isDone && (
-            <p className="text-[10px] text-white/25 text-center mt-2">Mejor de 3 — gana quien llegue a 2</p>
           )}
         </div>
       ) : (
-        <div className="p-4 text-center text-white/25 text-sm py-6">Por definirse</div>
+        <div className="p-6 text-center">
+          <p className="text-white/20 text-sm">Por definirse</p>
+          <p className="text-white/12 text-[10px] mt-1">Pendiente resultado de semis</p>
+        </div>
       )}
     </div>
+  );
+}
+
+// ── Bracket tipo fixture ──────────────────────────────────────────────────────
+function PlayoffBracket({ playoffs }: { playoffs: PlayoffData }) {
+  return (
+    <>
+      {/* Desktop: SF1 — Trofeo+Final — SF2 */}
+      <div className="hidden md:flex items-center gap-2">
+        <div className="flex-1">
+          <BracketCard label="Semifinal 1" subtitle="1° vs 4°" series={playoffs.sf1} />
+        </div>
+
+        {/* Conector izquierdo */}
+        <div className="w-10 flex-shrink-0 h-0.5 bg-gradient-to-r from-white/10 to-brand-orange/40" />
+
+        {/* Centro: trofeo + final */}
+        <div className="flex flex-col items-center gap-4 w-56 flex-shrink-0">
+          <Trophy className="w-14 h-14 text-brand-orange drop-shadow-[0_0_24px_rgba(255,69,0,0.7)]" />
+          <BracketCard label="Gran Final" series={playoffs.final} highlight />
+        </div>
+
+        {/* Conector derecho */}
+        <div className="w-10 flex-shrink-0 h-0.5 bg-gradient-to-l from-white/10 to-brand-orange/40" />
+
+        <div className="flex-1">
+          <BracketCard label="Semifinal 2" subtitle="2° vs 3°" series={playoffs.sf2} />
+        </div>
+      </div>
+
+      {/* Mobile: semis arriba, trofeo + final abajo */}
+      <div className="md:hidden space-y-4">
+        <div className="grid grid-cols-2 gap-3">
+          <BracketCard label="Semifinal 1" subtitle="1° vs 4°" series={playoffs.sf1} />
+          <BracketCard label="Semifinal 2" subtitle="2° vs 3°" series={playoffs.sf2} />
+        </div>
+        <div className="flex items-center gap-2 px-4">
+          <div className="flex-1 h-0.5 bg-gradient-to-r from-transparent to-brand-orange/40" />
+          <Trophy className="w-8 h-8 text-brand-orange drop-shadow-[0_0_16px_rgba(255,69,0,0.6)] flex-shrink-0" />
+          <div className="flex-1 h-0.5 bg-gradient-to-l from-transparent to-brand-orange/40" />
+        </div>
+        <BracketCard label="Gran Final" series={playoffs.final} highlight />
+      </div>
+    </>
   );
 }
 
@@ -137,45 +196,31 @@ export default function StandingsPage() {
         </div>
       )}
 
-      {/* ── Bracket de playoffs (cuando todos los partidos regulares terminaron) ── */}
-      {allRegularDone && (
+      {/* ── Bracket de playoffs ── */}
+      {allRegularDone && playoffs && (
         <div className="mb-10">
-          <div className="flex items-center gap-2 mb-4">
+          <div className="flex items-center gap-2 mb-5">
             <Swords className="w-4 h-4 text-brand-orange" />
             <span className="text-[11px] font-bold uppercase tracking-widest text-brand-orange">Fase Eliminatoria</span>
           </div>
-
-          <div className="grid md:grid-cols-3 gap-4">
-            <div className="order-1 md:order-1">
-              <SeriesCard label="Semifinal 1 · 1° vs 4°" series={playoffs?.sf1 ?? null} />
-            </div>
-            <div className="order-3 md:order-2">
-              <SeriesCard label="Final" series={playoffs?.final ?? null} highlight />
-            </div>
-            <div className="order-2 md:order-3">
-              <SeriesCard label="Semifinal 2 · 2° vs 3°" series={playoffs?.sf2 ?? null} />
-            </div>
-          </div>
-
+          <PlayoffBracket playoffs={playoffs} />
           {!playoffsActive && (
-            <p className="text-[11px] text-white/30 text-center mt-3">
+            <p className="text-[11px] text-white/30 text-center mt-4">
               Fase regular terminada · El administrador generará los partidos de playoffs próximamente
             </p>
           )}
         </div>
       )}
 
-      {/* ── Tabla de posiciones (se oculta cuando los playoffs terminan con campeón) ── */}
-      {!champion && (
+      {/* ── Tabla de posiciones — solo durante fase regular ── */}
+      {!allRegularDone && !champion && (
         <>
-          {!allRegularDone && (
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-3 h-3 rounded-full bg-brand-orange shadow-[0_0_10px_rgba(255,69,0,0.8)] flex-shrink-0" />
-              <span className="text-white/70 text-xs font-semibold uppercase tracking-wider">
-                Zona de Semifinales — los primeros {Math.min(4, standings.length)} clasifican
-              </span>
-            </div>
-          )}
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-3 h-3 rounded-full bg-brand-orange shadow-[0_0_10px_rgba(255,69,0,0.8)] flex-shrink-0" />
+            <span className="text-white/70 text-xs font-semibold uppercase tracking-wider">
+              Zona de Semifinales — los primeros {Math.min(4, standings.length)} clasifican
+            </span>
+          </div>
 
           <div className="glass-panel overflow-hidden mb-10">
             {isLoading ? (
@@ -275,6 +320,7 @@ export default function StandingsPage() {
           </div>
         </>
       )}
+
 
       {/* ── Canasteo individual ── */}
       <SectionTitle whiteText="Canasteo" orangeText="Individual" />
