@@ -68,32 +68,32 @@ function BracketCard({ label, subtitle, series, highlight }: {
         <div className="p-4">
           {/* Equipos + marcador de serie */}
           <div className="flex items-center justify-between gap-2 mb-3">
-            <div className={`flex-1 text-center transition-opacity ${series.winnerId && series.winnerId !== series.team1.id ? "opacity-35" : ""}`}>
-              <p className="font-black text-sm text-white truncate">{series.team1.name}</p>
+            <div className={`flex-1 text-center transition-opacity ${series.winnerId && series.winnerId !== series.team1.id ? "opacity-30" : ""}`}>
+              <p className="font-black text-base text-white truncate">{series.team1.name}</p>
             </div>
             <div className="flex flex-col items-center flex-shrink-0">
               <div className="flex items-center gap-2">
-                <span className={`text-2xl font-black font-display ${series.wins[0] > series.wins[1] ? "text-brand-orange" : "text-white/40"}`}>{series.wins[0]}</span>
-                <span className="text-white/20 text-sm">-</span>
-                <span className={`text-2xl font-black font-display ${series.wins[1] > series.wins[0] ? "text-brand-orange" : "text-white/40"}`}>{series.wins[1]}</span>
+                <span className={`text-3xl font-black font-display ${series.wins[0] > series.wins[1] ? "text-brand-orange" : "text-white/60"}`}>{series.wins[0]}</span>
+                <span className="text-white/25 text-base">-</span>
+                <span className={`text-3xl font-black font-display ${series.wins[1] > series.wins[0] ? "text-brand-orange" : "text-white/60"}`}>{series.wins[1]}</span>
               </div>
               {series.seriesLength === 3 && (
-                <span className="text-[9px] text-white/20 mt-0.5">mejor de 3</span>
+                <span className="text-[9px] text-white/25 mt-0.5">mejor de 3</span>
               )}
             </div>
-            <div className={`flex-1 text-center transition-opacity ${series.winnerId && series.winnerId !== series.team2.id ? "opacity-35" : ""}`}>
-              <p className="font-black text-sm text-white truncate">{series.team2.name}</p>
+            <div className={`flex-1 text-center transition-opacity ${series.winnerId && series.winnerId !== series.team2.id ? "opacity-30" : ""}`}>
+              <p className="font-black text-base text-white truncate">{series.team2.name}</p>
             </div>
           </div>
 
           {/* Juegos */}
           {series.games.length > 0 && (
-            <div className="border-t border-white/5 pt-2 space-y-1">
+            <div className="border-t border-white/8 pt-2 space-y-1">
               {series.games.map((g, i) => (
-                <div key={g.id} className="flex items-center justify-between text-[11px]">
-                  <span className="text-white/25">Juego {g.seriesGame ?? i + 1}</span>
+                <div key={g.id} className="flex items-center justify-between text-[12px]">
+                  <span className="text-white/35 font-semibold">Juego {g.seriesGame ?? i + 1}</span>
                   {g.status === "finished" && g.scoreHome !== null ? (
-                    <span className="font-bold text-white/60">{g.scoreHome} – {g.scoreAway}</span>
+                    <span className="font-bold text-white/80">{g.scoreHome} – {g.scoreAway}</span>
                   ) : g.status === "live" ? (
                     <span className="text-brand-orange font-bold animate-pulse">🔴 En vivo</span>
                   ) : (
