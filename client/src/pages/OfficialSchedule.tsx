@@ -708,7 +708,7 @@ export default function OfficialSchedulePage() {
               <div className="space-y-4">
                 <div className="glass-panel rounded-2xl overflow-hidden">
                   <div className="px-4 py-3 border-b border-white/8">
-                    <p className="font-bold text-white text-sm">Partidos — Jornada {jornada}</p>
+                    <p className="font-bold text-white text-sm">Partidos — {isPlayoffSel ? (PHASE_LABELS[phaseVal ?? ""] ?? "Playoffs") : `Jornada ${jornadaNum}`}</p>
                   </div>
                   <div className="divide-y divide-white/5">
                     {matches.map((m) => {
