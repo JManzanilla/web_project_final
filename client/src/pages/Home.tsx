@@ -2,18 +2,22 @@ import React, { useState } from "react";
 import { Link } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { SectionTitle } from "@/components/ui/SectionTitle";
-import { ChevronRight, FileText, LogIn, ExternalLink, Radio, Check } from "lucide-react";
+import { ChevronRight, FileText, LogIn, ExternalLink, Radio, Check, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { InfiniteCarousel } from "@/components/home/InfiniteCarousel";
 import { ResultsCarousel } from "@/components/home/ResultsCarousel";
+import { MatchModal } from "@/components/home/MatchModal";
 import { useAuth } from "@/context/AuthContext";
 import { apiGet, apiPut } from "@/lib/apiClient";
 import { sileo } from "sileo";
+import { apiMatchToCarouselMatch, matchGroupLabel } from "@/types/carousel.types";
+import type { MatchStatus } from "@/types/carousel.types";
 
 interface ApiMatch {
   id: string;
   jornada: number;
+  phase: string;
   homeTeam: { id: string; name: string };
   awayTeam: { id: string; name: string };
   scoreHome: number | null;
@@ -23,6 +27,112 @@ interface ApiMatch {
   streamUrl: string | null;
   actaUrl:   string | null;
   stats: { playerId: string; pts: number; player: { name: string; lastName: string } }[];
+}
+
+// ── Tarjeta de partido de playoff ──────────────────────────────────────────
+function PlayoffMatchCard({ match, onClick }: { match: ApiMatch; onClick: () => void }) {
+  const isFinished = match.status === "finished";
+  const isLive     = match.status === "live";
+  const label      = matchGroupLabel(match.jornada, match.phase);
+
+  const fmtDate = new Date(match.scheduledAt).toLocaleDateString("es-MX", {
+    weekday: "short", day: "numeric", month: "short",
+  });
+  const fmtTime = new Date(match.scheduledAt).toLocaleTimeString("es-MX", {
+    hour: "2-digit", minute: "2-digit",
+  });
+
+  const winnerHome = isFinished && (match.scoreHome ?? 0) > (match.scoreAway ?? 0);
+  const winnerAway = isFinished && (match.scoreAway ?? 0) > (match.scoreHome ?? 0);
+
+  return (
+    <div
+      onClick={onClick}
+      className={`glass-panel p-4 rounded-2xl cursor-pointer transition-all duration-200 hover:bg-white/8 hover:border-brand-orange/30 active:scale-[0.98] ${
+        isLive ? "border border-brand-orange/40 shadow-[0_0_20px_rgba(251,146,60,0.1)]" : "border border-white/8"
+      }`}
+    >
+      {/* Fase + estado */}
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-[10px] font-black uppercase tracking-widest text-brand-orange/70">
+          {label}
+        </span>
+        {isLive ? (
+          <span className="flex items-center gap-1 text-[9px] font-bold text-brand-orange bg-brand-orange/10 border border-brand-orange/25 px-2 py-0.5 rounded-full">
+            <span className="w-1.5 h-1.5 rounded-full bg-brand-orange animate-pulse" /> EN VIVO
+          </span>
+        ) : isFinished ? (
+          <span className="text-[9px] font-bold text-white/30 uppercase tracking-widest">Finalizado</span>
+        ) : (
+          <span className="text-[9px] font-bold text-white/30 uppercase tracking-widest">{fmtDate} · {fmtTime}</span>
+        )}
+      </div>
+
+      {/* Equipos + marcador */}
+      <div className="flex items-center gap-2">
+        <div className="flex-1 min-w-0">
+          <p className={`font-black text-sm truncate ${winnerHome ? "text-white" : isFinished ? "text-white/35" : "text-white"}`}>
+            {match.homeTeam.name}
+          </p>
+        </div>
+        {(isFinished || isLive) ? (
+          <div className="flex items-center gap-1.5 flex-shrink-0 px-1">
+            <span className={`text-2xl font-black tabular-nums ${winnerHome ? "text-brand-orange" : "text-white/40"}`}>
+              {match.scoreHome ?? 0}
+            </span>
+            <span className="text-white/20 text-sm font-bold">-</span>
+            <span className={`text-2xl font-black tabular-nums ${winnerAway ? "text-brand-orange" : "text-white/40"}`}>
+              {match.scoreAway ?? 0}
+            </span>
+          </div>
+        ) : (
+          <span className="text-white/20 text-xs font-bold flex-shrink-0 px-2">vs</span>
+        )}
+        <div className="flex-1 min-w-0 text-right">
+          <p className={`font-black text-sm truncate ${winnerAway ? "text-white" : isFinished ? "text-white/35" : "text-white"}`}>
+            {match.awayTeam.name}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Sección de playoffs ────────────────────────────────────────────────────
+const PHASE_ORDER = ["sf1", "sf2", "final"];
+
+function PlayoffsSection({ matches }: { matches: ApiMatch[] }) {
+  const [selectedMatch, setSelectedMatch] = useState<ApiMatch | null>(null);
+
+  const playoffMatches = matches
+    .filter((m) => m.phase !== "regular")
+    .sort((a, b) => PHASE_ORDER.indexOf(a.phase) - PHASE_ORDER.indexOf(b.phase));
+
+  if (playoffMatches.length === 0) return null;
+
+  return (
+    <div className="mt-6">
+      <div className="flex items-center gap-3 mb-3">
+        <Trophy className="w-3.5 h-3.5 text-brand-orange/70 flex-shrink-0" />
+        <p className="text-xs text-brand-orange/60 uppercase tracking-widest font-bold">Playoffs</p>
+        <div className="h-px flex-1 bg-gradient-to-r from-brand-orange/20 to-transparent" />
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {playoffMatches.map((m) => (
+          <PlayoffMatchCard key={m.id} match={m} onClick={() => setSelectedMatch(m)} />
+        ))}
+      </div>
+
+      {selectedMatch && (
+        <MatchModal
+          match={apiMatchToCarouselMatch(selectedMatch)}
+          status={selectedMatch.status as MatchStatus}
+          onClose={() => setSelectedMatch(null)}
+        />
+      )}
+    </div>
+  );
 }
 
 // Genera URL de embed para el player en Home
@@ -413,21 +523,20 @@ export default function HomePage() {
     queryFn: () => apiGet<ApiMatch[]>("/api/matches"),
   });
 
-  // Jornada activa = la de menor número con partidos upcoming/live
+  // Jornada activa = solo regulares (playoffs se muestran aparte)
   const activeJornada = (() => {
-    const active = allMatches
-      .filter((m) => m.status === "live" || m.status === "upcoming")
-      .map((m) => m.jornada);
+    const regular = allMatches.filter((m) => m.phase === "regular");
+    const active  = regular.filter((m) => m.status === "live" || m.status === "upcoming").map((m) => m.jornada);
     if (active.length > 0) return Math.min(...active);
-    const nums = allMatches.map((m) => m.jornada);
+    const nums = regular.map((m) => m.jornada);
     return nums.length > 0 ? Math.max(...nums) : null;
   })();
 
   const liveMatch = allMatches.find((m) => m.status === "live") ?? null;
 
-  // Próximo partido de la jornada activa
+  // Próximo partido (regular o playoff)
   const nextMatch = allMatches
-    .filter((m) => m.jornada === activeJornada && m.status === "upcoming")
+    .filter((m) => m.status === "upcoming")
     .sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime())[0] ?? null;
 
   const canManage = user?.role === "admin" || !!user?.permissions?.stream?.edit;
@@ -455,8 +564,11 @@ export default function HomePage() {
         )}
       </div>
 
-      {/* Carrusel de partidos */}
+      {/* Carrusel de partidos regulares */}
       <InfiniteCarousel />
+
+      {/* Sección de playoffs — aparece cuando hay partidos de playoffs */}
+      <PlayoffsSection matches={allMatches} />
 
       {/* Sección de transmisión — siempre visible */}
       <StreamSection

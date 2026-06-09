@@ -26,28 +26,26 @@ interface ApiMatch {
 
 type ActiveGroup = { jornada: number; phase: string };
 
-/** Grupo activo = partido EN VIVO > próximo upcoming > último registrado */
+/** Grupo activo = solo jornadas regulares (playoffs se muestran aparte en Home) */
 function getActiveGroup(all: ApiMatch[]): ActiveGroup | null {
-  if (all.length === 0) return null;
+  const regular = all.filter((m) => m.phase === "regular");
+  if (regular.length === 0) return null;
 
-  const live = all.find((m) => m.status === "live");
-  if (live) return { jornada: live.jornada, phase: live.phase };
+  const live = regular.find((m) => m.status === "live");
+  if (live) return { jornada: live.jornada, phase: "regular" };
 
   const now = Date.now();
-  const upcoming = all
+  const upcoming = regular
     .filter((m) => m.status === "upcoming" && m.scheduledAt)
     .sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime());
 
   const next = upcoming.find((m) => new Date(m.scheduledAt).getTime() >= now);
-  if (next) return { jornada: next.jornada, phase: next.phase };
+  if (next) return { jornada: next.jornada, phase: "regular" };
 
-  if (upcoming.length > 0) {
-    const last = upcoming[upcoming.length - 1];
-    return { jornada: last.jornada, phase: last.phase };
-  }
+  if (upcoming.length > 0) return { jornada: upcoming[upcoming.length - 1].jornada, phase: "regular" };
 
-  const fallback = [...all].sort((a, b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime())[0];
-  return fallback ? { jornada: fallback.jornada, phase: fallback.phase } : null;
+  const fallback = [...regular].sort((a, b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime())[0];
+  return fallback ? { jornada: fallback.jornada, phase: "regular" } : null;
 }
 
 export const InfiniteCarousel: React.FC = () => {
