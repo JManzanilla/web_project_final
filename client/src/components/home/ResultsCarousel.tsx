@@ -6,6 +6,7 @@ import { MatchModal } from "./MatchModal";
 interface ResultMatch {
   id: string;
   jornada: number;
+  phase?: string;
   homeTeam: { name: string };
   awayTeam: { name: string };
   scoreHome: number | null;

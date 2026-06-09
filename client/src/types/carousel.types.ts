@@ -3,6 +3,7 @@ export type MatchStatus = "live" | "finished" | "upcoming";
 export interface Match {
   id: string;
   jornada: number;
+  phase: string;
   teamA: string;
   teamB: string;
   dayLabel: string; // e.g. "Lun 13 Abr"
@@ -12,6 +13,14 @@ export interface Match {
   status: MatchStatus;
   streamUrl: string | null;
   actaUrl:   string | null;
+}
+
+export const PHASE_LABELS: Record<string, string> = {
+  sf1: "Semifinal 1", sf2: "Semifinal 2", final: "Gran Final",
+};
+
+export function matchGroupLabel(jornada: number, phase: string): string {
+  return phase === "regular" ? `Jornada ${jornada}` : (PHASE_LABELS[phase] ?? "Playoffs");
 }
 
 export const TEAM_CONFIG: Record<string, { emoji: string; bg: string }> = {
@@ -38,6 +47,7 @@ export function getWinner(match: Match): string | null {
 export function apiMatchToCarouselMatch(m: {
   id: string;
   jornada: number;
+  phase?: string;
   homeTeam: { name: string };
   awayTeam: { name: string };
   scoreHome: number | null;
@@ -58,6 +68,7 @@ export function apiMatchToCarouselMatch(m: {
   return {
     id: m.id,
     jornada: m.jornada,
+    phase: m.phase ?? "regular",
     teamA: m.homeTeam.name,
     teamB: m.awayTeam.name,
     dayLabel,

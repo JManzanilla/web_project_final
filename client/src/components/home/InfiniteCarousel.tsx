@@ -4,6 +4,7 @@ import {
   Match, MatchStatus,
   CAROUSEL_SPEED,
   apiMatchToCarouselMatch,
+  matchGroupLabel,
 } from "@/types/carousel.types";
 import { MatchCard } from "./MatchCard";
 import { MatchModal } from "./MatchModal";
@@ -12,6 +13,7 @@ import { apiGet } from "@/lib/apiClient";
 interface ApiMatch {
   id: string;
   jornada: number;
+  phase: string;
   homeTeam: { id: string; name: string };
   awayTeam: { id: string; name: string };
   scoreHome: number | null;
@@ -22,30 +24,30 @@ interface ApiMatch {
   actaUrl: string | null;
 }
 
-/** Jornada activa = la que tiene un partido EN VIVO; si no, la más próxima en fecha;
- *  si no hay upcoming, la última jornada jugada */
-function getActiveJornada(all: ApiMatch[]): number | null {
+type ActiveGroup = { jornada: number; phase: string };
+
+/** Grupo activo = partido EN VIVO > próximo upcoming > último registrado */
+function getActiveGroup(all: ApiMatch[]): ActiveGroup | null {
   if (all.length === 0) return null;
 
-  // 1. Si hay partido en vivo, esa jornada primero
   const live = all.find((m) => m.status === "live");
-  if (live) return live.jornada;
+  if (live) return { jornada: live.jornada, phase: live.phase };
 
   const now = Date.now();
-
-  // 2. Upcoming más cercano en fecha (scheduledAt >= ahora)
   const upcoming = all
     .filter((m) => m.status === "upcoming" && m.scheduledAt)
     .sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime());
 
   const next = upcoming.find((m) => new Date(m.scheduledAt).getTime() >= now);
-  if (next) return next.jornada;
+  if (next) return { jornada: next.jornada, phase: next.phase };
 
-  // 3. Si todos los upcoming ya pasaron (sin marcar finished), el más reciente
-  if (upcoming.length > 0) return upcoming[upcoming.length - 1].jornada;
+  if (upcoming.length > 0) {
+    const last = upcoming[upcoming.length - 1];
+    return { jornada: last.jornada, phase: last.phase };
+  }
 
-  // 4. Fallback: última jornada registrada
-  return Math.max(...all.map((m) => m.jornada));
+  const fallback = [...all].sort((a, b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime())[0];
+  return fallback ? { jornada: fallback.jornada, phase: fallback.phase } : null;
 }
 
 export const InfiniteCarousel: React.FC = () => {
@@ -54,10 +56,10 @@ export const InfiniteCarousel: React.FC = () => {
     queryFn: () => apiGet<ApiMatch[]>("/api/matches"),
   });
 
-  // Filtrar solo la jornada activa (sin suspendidos)
-  const activeJornada = getActiveJornada(apiMatches);
+  // Filtrar solo el grupo activo (jornada + fase, sin suspendidos)
+  const activeGroup = getActiveGroup(apiMatches);
   const weekMatches = apiMatches.filter(
-    (m) => m.jornada === activeJornada && m.status !== "suspended",
+    (m) => m.jornada === activeGroup?.jornada && m.phase === activeGroup?.phase && m.status !== "suspended",
   );
 
   const matches: Match[] = weekMatches.map(apiMatchToCarouselMatch);
@@ -169,7 +171,7 @@ export const InfiniteCarousel: React.FC = () => {
     <>
       <div className="mb-1 flex items-center gap-3">
         <p className="text-xs text-brand-orange/60 uppercase tracking-widest font-bold">
-          Jornada {activeJornada}
+          {activeGroup ? matchGroupLabel(activeGroup.jornada, activeGroup.phase) : ""}
         </p>
         {apiMatches.some((m) => m.status === "live") && (
           <span className="flex items-center gap-1 text-[10px] font-bold text-brand-orange bg-brand-orange/10 border border-brand-orange/25 px-2 py-0.5 rounded-full">
