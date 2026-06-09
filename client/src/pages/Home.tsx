@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { InfiniteCarousel } from "@/components/home/InfiniteCarousel";
 import { ResultsCarousel } from "@/components/home/ResultsCarousel";
 import { MatchModal } from "@/components/home/MatchModal";
+import { MatchCard } from "@/components/home/MatchCard";
 import { useAuth } from "@/context/AuthContext";
 import { apiGet, apiPut } from "@/lib/apiClient";
 import { sileo } from "sileo";
@@ -29,75 +30,6 @@ interface ApiMatch {
   stats: { playerId: string; pts: number; player: { name: string; lastName: string } }[];
 }
 
-// ── Tarjeta de partido de playoff ──────────────────────────────────────────
-function PlayoffMatchCard({ match, onClick }: { match: ApiMatch; onClick: () => void }) {
-  const isFinished = match.status === "finished";
-  const isLive     = match.status === "live";
-  const label      = matchGroupLabel(match.jornada, match.phase);
-
-  const fmtDate = new Date(match.scheduledAt).toLocaleDateString("es-MX", {
-    weekday: "short", day: "numeric", month: "short",
-  });
-  const fmtTime = new Date(match.scheduledAt).toLocaleTimeString("es-MX", {
-    hour: "2-digit", minute: "2-digit",
-  });
-
-  const winnerHome = isFinished && (match.scoreHome ?? 0) > (match.scoreAway ?? 0);
-  const winnerAway = isFinished && (match.scoreAway ?? 0) > (match.scoreHome ?? 0);
-
-  return (
-    <div
-      onClick={onClick}
-      className={`glass-panel p-4 rounded-2xl cursor-pointer transition-all duration-200 hover:bg-white/8 hover:border-brand-orange/30 active:scale-[0.98] ${
-        isLive ? "border border-brand-orange/40 shadow-[0_0_20px_rgba(251,146,60,0.1)]" : "border border-white/8"
-      }`}
-    >
-      {/* Fase + estado */}
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-[10px] font-black uppercase tracking-widest text-brand-orange/70">
-          {label}
-        </span>
-        {isLive ? (
-          <span className="flex items-center gap-1 text-[9px] font-bold text-brand-orange bg-brand-orange/10 border border-brand-orange/25 px-2 py-0.5 rounded-full">
-            <span className="w-1.5 h-1.5 rounded-full bg-brand-orange animate-pulse" /> EN VIVO
-          </span>
-        ) : isFinished ? (
-          <span className="text-[9px] font-bold text-white/30 uppercase tracking-widest">Finalizado</span>
-        ) : (
-          <span className="text-[9px] font-bold text-white/30 uppercase tracking-widest">{fmtDate} · {fmtTime}</span>
-        )}
-      </div>
-
-      {/* Equipos + marcador */}
-      <div className="flex items-center gap-2">
-        <div className="flex-1 min-w-0">
-          <p className={`font-black text-sm truncate ${winnerHome ? "text-white" : isFinished ? "text-white/35" : "text-white"}`}>
-            {match.homeTeam.name}
-          </p>
-        </div>
-        {(isFinished || isLive) ? (
-          <div className="flex items-center gap-1.5 flex-shrink-0 px-1">
-            <span className={`text-2xl font-black tabular-nums ${winnerHome ? "text-brand-orange" : "text-white/40"}`}>
-              {match.scoreHome ?? 0}
-            </span>
-            <span className="text-white/20 text-sm font-bold">-</span>
-            <span className={`text-2xl font-black tabular-nums ${winnerAway ? "text-brand-orange" : "text-white/40"}`}>
-              {match.scoreAway ?? 0}
-            </span>
-          </div>
-        ) : (
-          <span className="text-white/20 text-xs font-bold flex-shrink-0 px-2">vs</span>
-        )}
-        <div className="flex-1 min-w-0 text-right">
-          <p className={`font-black text-sm truncate ${winnerAway ? "text-white" : isFinished ? "text-white/35" : "text-white"}`}>
-            {match.awayTeam.name}
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ── Sección de playoffs ────────────────────────────────────────────────────
 const PHASE_ORDER = ["sf1", "sf2", "final"];
 
@@ -110,17 +42,38 @@ function PlayoffsSection({ matches }: { matches: ApiMatch[] }) {
 
   if (playoffMatches.length === 0) return null;
 
+  // Convertir a formato carousel con el nombre de fase como dayLabel
+  const carouselMatches = playoffMatches.map((m) => ({
+    ...apiMatchToCarouselMatch(m),
+    dayLabel: matchGroupLabel(m.jornada, m.phase),
+  }));
+
   return (
-    <div className="mt-6">
-      <div className="flex items-center gap-3 mb-3">
-        <Trophy className="w-3.5 h-3.5 text-brand-orange/70 flex-shrink-0" />
-        <p className="text-xs text-brand-orange/60 uppercase tracking-widest font-bold">Playoffs</p>
-        <div className="h-px flex-1 bg-gradient-to-r from-brand-orange/20 to-transparent" />
+    <div className="mt-2">
+      {/* Header centrado con líneas a ambos lados */}
+      <div className="flex items-center gap-4 mb-4">
+        <div className="h-px flex-1 bg-gradient-to-r from-transparent to-brand-orange/35" />
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <Trophy className="w-4 h-4 text-brand-orange" />
+          <p className="text-sm font-black uppercase tracking-widest text-brand-orange">Playoffs</p>
+        </div>
+        <div className="h-px flex-1 bg-gradient-to-l from-transparent to-brand-orange/35" />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {playoffMatches.map((m) => (
-          <PlayoffMatchCard key={m.id} match={m} onClick={() => setSelectedMatch(m)} />
+      {/* Cards centradas, mismo diseño que el carrusel */}
+      <div className="flex justify-center gap-4 flex-wrap py-3.5">
+        {carouselMatches.map((match) => (
+          <MatchCard
+            key={match.id}
+            match={match}
+            status={match.status}
+            selected={selectedMatch?.id === match.id}
+            onHoverChange={() => {}}
+            onClick={() => {
+              const src = playoffMatches.find((m) => m.id === match.id)!;
+              setSelectedMatch(src);
+            }}
+          />
         ))}
       </div>
 
@@ -541,10 +494,15 @@ export default function HomePage() {
 
   const canManage = user?.role === "admin" || !!user?.permissions?.stream?.edit;
 
-  // Partidos de la jornada anterior (solo finalizados)
+  // Hay playoffs activos (upcoming o live) → ocultar carrusel regular
+  const hasActivePlayoffs = allMatches.some(
+    (m) => m.phase !== "regular" && (m.status === "upcoming" || m.status === "live"),
+  );
+
+  // Partidos de la jornada anterior (solo finalizados, solo regulares)
   const prevJornada = activeJornada !== null ? activeJornada - 1 : null;
   const prevResults = prevJornada !== null
-    ? allMatches.filter((m) => m.jornada === prevJornada && m.status === "finished")
+    ? allMatches.filter((m) => m.phase === "regular" && m.jornada === prevJornada && m.status === "finished")
     : [];
 
   return (
@@ -564,10 +522,10 @@ export default function HomePage() {
         )}
       </div>
 
-      {/* Carrusel de partidos regulares */}
-      <InfiniteCarousel />
+      {/* Carrusel regular — oculto cuando hay playoffs activos */}
+      {!hasActivePlayoffs && <InfiniteCarousel />}
 
-      {/* Sección de playoffs — aparece cuando hay partidos de playoffs */}
+      {/* Sección de playoffs */}
       <PlayoffsSection matches={allMatches} />
 
       {/* Sección de transmisión — siempre visible */}
