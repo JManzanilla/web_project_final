@@ -12,6 +12,7 @@ import {
   Settings2, Calendar, Clock, Check, AlertTriangle,
   Shuffle, ChevronDown, ChevronUp, Plus, Minus, Pencil, Lock,
   Trash2, TriangleAlert, UserPlus, ShieldCheck, Trophy, Users,
+  Copy, MessageCircle,
 } from "lucide-react";
 import { apiGet, apiPut, apiPost, apiDelete } from "@/lib/apiClient";
 import { sileo } from "sileo";
@@ -75,9 +76,9 @@ export default function ConfigPage() {
   const hasExistingCalendar = upcomingMatches.length > 0;
 
   // Detectar si todos los partidos regulares están finalizados (para mostrar playoffs)
-  const { data: allRegularMatches = [] } = useQuery<{ id: string; status: string }[]>({
+  const { data: allRegularMatches = [] } = useQuery<{ id: string; status: string; jornada: number }[]>({
     queryKey: ["/api/matches", { phase: "regular" }],
-    queryFn:  () => apiGet<{ id: string; status: string }[]>("/api/matches?phase=regular"),
+    queryFn:  () => apiGet<{ id: string; status: string; jornada: number }[]>("/api/matches?phase=regular"),
   });
   const { data: playoffStatus } = useQuery<{ status: string }>({
     queryKey: ["/api/playoffs"],
@@ -92,6 +93,7 @@ export default function ConfigPage() {
   });
   const allRegularDone = allRegularMatches.length > 0 && allRegularMatches.every(m => m.status === "finished");
   const playoffsGenerated = playoffStatus?.status === "playoffs_in_progress";
+  const tournamentLocked = playoffsGenerated || allRegularMatches.some(m => m.jornada === 2 && m.status === "finished");
 
   // ── Estado ─────────────────────────────────────────────────────────────────
   const [totalTeams,      setTotalTeams]      = useState(8);
@@ -758,8 +760,22 @@ export default function ConfigPage() {
             })}
           </div>
 
-          {/* Bloqueo: ya existe calendario */}
-          {hasExistingCalendar && (
+          {/* Bloqueo fuerte: torneo en curso o playoffs */}
+          {tournamentLocked && (
+            <div className="rounded-xl border border-red-500/25 bg-red-500/8 p-3 mb-3">
+              <p className="text-red-400/80 text-[11px] flex items-start gap-2">
+                <Lock className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                <span>
+                  {playoffsGenerated
+                    ? "Los playoffs están en curso. El calendario regular no puede modificarse."
+                    : "El torneo ya está en la jornada 2. No se puede regenerar el calendario."}
+                </span>
+              </p>
+            </div>
+          )}
+
+          {/* Bloqueo suave: existe calendario pero aún se puede reemplazar */}
+          {hasExistingCalendar && !tournamentLocked && (
             <div className="rounded-xl border border-amber-500/25 bg-amber-500/8 p-3 mb-3">
               <p className="text-amber-400/80 text-[11px] flex items-start gap-2">
                 <Lock className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
@@ -771,22 +787,24 @@ export default function ConfigPage() {
             </div>
           )}
 
-          {/* Opción reemplazar */}
-          <button onClick={() => setReplaceExisting(!replaceExisting)}
-            className={`flex items-center gap-2.5 w-full p-3 rounded-xl border transition-all mb-3 ${
-              replaceExisting
-                ? "bg-red-500/10 border-red-500/30 text-red-400"
-                : "bg-white/4 border-white/8 text-white/65 hover:border-white/20"
-            }`}>
-            <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 ${
-              replaceExisting ? "bg-red-500 border-red-500" : "border-white/20"
-            }`}>
-              {replaceExisting && <Check className="w-2.5 h-2.5 text-white" />}
-            </div>
-            <span className="text-[11px] font-semibold text-left">
-              Reemplazar partidos pendientes existentes
-            </span>
-          </button>
+          {/* Opción reemplazar — solo visible si no está bloqueado */}
+          {!tournamentLocked && (
+            <button onClick={() => setReplaceExisting(!replaceExisting)}
+              className={`flex items-center gap-2.5 w-full p-3 rounded-xl border transition-all mb-3 ${
+                replaceExisting
+                  ? "bg-red-500/10 border-red-500/30 text-red-400"
+                  : "bg-white/4 border-white/8 text-white/65 hover:border-white/20"
+              }`}>
+              <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 ${
+                replaceExisting ? "bg-red-500 border-red-500" : "border-white/20"
+              }`}>
+                {replaceExisting && <Check className="w-2.5 h-2.5 text-white" />}
+              </div>
+              <span className="text-[11px] font-semibold text-left">
+                Reemplazar partidos pendientes existentes
+              </span>
+            </button>
+          )}
 
           {/* Aviso si faltan equipos */}
           {teams.length < totalTeams && (
@@ -799,9 +817,9 @@ export default function ConfigPage() {
           {/* Botón generar */}
           <Button
             onClick={handleGenerate}
-            disabled={generateMutation.isPending || (hasExistingCalendar && !replaceExisting)}
+            disabled={generateMutation.isPending || tournamentLocked || (hasExistingCalendar && !replaceExisting)}
             className="w-full rounded-full h-13 text-base font-bold bg-brand-orange hover:bg-brand-orange/85 text-white glow-orange disabled:opacity-40 disabled:cursor-not-allowed">
-            {hasExistingCalendar && !replaceExisting
+            {tournamentLocked || (hasExistingCalendar && !replaceExisting)
               ? <><Lock className="w-4 h-4 mr-2" />Calendario bloqueado</>
               : generateMutation.isPending
                 ? <><Shuffle className="w-4 h-4 mr-2 animate-spin" />Generando...</>
@@ -1112,7 +1130,7 @@ export default function ConfigPage() {
 
             {showEligibility && (
               <div className="mt-4">
-                {/* Criterios actuales como chips separados */}
+                {/* Criterios actuales como chips */}
                 <div className="flex flex-wrap items-center gap-2 mb-4">
                   <span className="text-[11px] text-white/60 font-semibold">Criterios:</span>
                   <span className="text-[11px] font-bold px-3 py-1 rounded-full bg-brand-orange/15 border border-brand-orange/30 text-brand-orange">
@@ -1125,27 +1143,62 @@ export default function ConfigPage() {
                     {fetchingEligibility ? "Actualizando..." : "↻ Actualizar"}
                   </button>
                 </div>
-                <div className="flex items-center gap-4 mb-3 text-[11px] font-semibold">
-                  <span className="flex items-center gap-1.5 text-green-400">
+
+                {/* Conteos + botones de exportar */}
+                <div className="flex flex-wrap items-center gap-3 mb-4">
+                  <span className="flex items-center gap-1.5 text-[11px] font-semibold text-green-400">
                     <span className="w-2 h-2 rounded-full bg-green-400 inline-block" />
                     {eligibility.filter(r => r.eligible).length} elegibles
                   </span>
-                  <span className="flex items-center gap-1.5 text-red-400">
+                  <span className="flex items-center gap-1.5 text-[11px] font-semibold text-red-400">
                     <span className="w-2 h-2 rounded-full bg-red-400 inline-block" />
                     {eligibility.filter(r => !r.eligible).length} no cumplen
                   </span>
+
+                  {eligibility.filter(r => !r.eligible).length > 0 && (
+                    <div className="ml-auto flex gap-2">
+                      <button
+                        onClick={() => {
+                          const ineligible = eligibility.filter(r => !r.eligible);
+                          const text = `⚠️ Jugadores NO elegibles para Playoffs\nCriterio: ${minAttendancePct}% asistencia + ≥${playoffMinJornadas} partido${playoffMinJornadas !== 1 ? "s" : ""}\n\n`
+                            + ineligible.map((r, i) => `${i + 1}. #${r.number} ${r.lastName} ${r.name} (${r.teamName}) — ${r.attendedJornadas}/${r.totalJornadas} partidos (${r.pct}%)`).join("\n")
+                            + `\n\nTotal: ${ineligible.length} jugador${ineligible.length !== 1 ? "es" : ""}`;
+                          navigator.clipboard.writeText(text);
+                          sileo.success({ title: "Lista copiada", description: "Pegala donde necesites" });
+                        }}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/6 border border-white/15 text-white/60 hover:text-white hover:bg-white/10 text-[11px] font-bold transition-all"
+                      >
+                        <Copy className="w-3 h-3" />
+                        Copiar lista
+                      </button>
+                      <button
+                        onClick={() => {
+                          const ineligible = eligibility.filter(r => !r.eligible);
+                          const text = `⚠️ Jugadores NO elegibles para Playoffs\nCriterio: ${minAttendancePct}% asistencia + ≥${playoffMinJornadas} partido${playoffMinJornadas !== 1 ? "s" : ""}\n\n`
+                            + ineligible.map((r, i) => `${i + 1}. #${r.number} ${r.lastName} ${r.name} (${r.teamName}) — ${r.attendedJornadas}/${r.totalJornadas} partidos (${r.pct}%)`).join("\n")
+                            + `\n\nTotal: ${ineligible.length} jugador${ineligible.length !== 1 ? "es" : ""}`;
+                          window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+                        }}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-green-500/10 border border-green-500/25 text-green-400 hover:bg-green-500/20 text-[11px] font-bold transition-all"
+                      >
+                        <MessageCircle className="w-3 h-3" />
+                        WhatsApp
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {eligibility.length === 0 ? (
                   <p className="text-white/50 text-center py-8 text-sm">No hay datos de asistencia aún</p>
+                ) : eligibility.filter(r => !r.eligible).length === 0 ? (
+                  <div className="flex items-center gap-2 justify-center py-6 text-green-400">
+                    <Check className="w-4 h-4" />
+                    <span className="text-sm font-semibold">Todos los jugadores cumplen los requisitos</span>
+                  </div>
                 ) : (
-                  <div className="space-y-2">
-                    {eligibility.map((row) => (
-                      <div key={row.id} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 border ${
-                        row.eligible
-                          ? "bg-green-500/8 border-green-500/20"
-                          : "bg-white/4 border-white/8"
-                      }`}>
+                  <div className={`grid grid-cols-1 gap-2 ${eligibility.filter(r => !r.eligible).length > 6 ? "sm:grid-cols-2 lg:grid-cols-3" : "sm:grid-cols-2"}`}>
+                    {eligibility.filter(r => !r.eligible).map((row) => (
+                      <div key={row.id} className="flex items-center gap-3 rounded-xl px-3 py-2.5 border bg-red-500/5 border-red-500/20">
                         {/* Número */}
                         <span className="text-[11px] font-black text-brand-orange w-6 text-center flex-shrink-0">
                           #{row.number}
@@ -1153,7 +1206,7 @@ export default function ConfigPage() {
 
                         {/* Nombre + equipo */}
                         <div className="flex-1 min-w-0">
-                          <p className={`text-sm font-bold truncate ${row.eligible ? "text-white" : "text-white/70"}`}>
+                          <p className="text-sm font-bold truncate text-white/80">
                             {row.lastName} {row.name}
                           </p>
                           <p className="text-[10px] text-white/50 truncate">{row.teamName}</p>
@@ -1163,31 +1216,21 @@ export default function ConfigPage() {
                         <div className="w-24 flex-shrink-0 hidden sm:block">
                           <div className="flex justify-between text-[10px] mb-0.5">
                             <span className="text-white/60">{row.attendedJornadas} de {row.totalJornadas} partidos</span>
-                            <span className={`font-bold ${row.pct >= minAttendancePct ? "text-green-400" : "text-red-400"}`}>{row.pct}%</span>
+                            <span className="font-bold text-red-400">{row.pct}%</span>
                           </div>
                           <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
-                            <div
-                              className={`h-full rounded-full transition-all ${row.pct >= minAttendancePct ? "bg-green-400" : "bg-red-400/70"}`}
-                              style={{ width: `${row.pct}%` }}
-                            />
+                            <div className="h-full rounded-full bg-red-400/70 transition-all" style={{ width: `${row.pct}%` }} />
                           </div>
                         </div>
 
                         {/* % en mobile */}
-                        <span className={`text-sm font-bold sm:hidden flex-shrink-0 ${row.pct >= minAttendancePct ? "text-green-400" : "text-red-400"}`}>
+                        <span className="text-sm font-bold sm:hidden flex-shrink-0 text-red-400">
                           {row.pct}%
                         </span>
 
-                        {/* Badge */}
-                        {row.eligible ? (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-500/20 border border-green-500/30 text-green-400 flex-shrink-0">
-                            ✓
-                          </span>
-                        ) : (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500/15 border border-red-500/25 text-red-400 flex-shrink-0">
-                            ✗
-                          </span>
-                        )}
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500/15 border border-red-500/25 text-red-400 flex-shrink-0">
+                          ✗
+                        </span>
                       </div>
                     ))}
                   </div>
