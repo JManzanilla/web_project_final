@@ -307,6 +307,13 @@ export default function HistoryPage() {
     queryFn: () => apiGet<ApiMatch[]>("/api/matches?status=finished"),
   });
 
+  const { data: pendingMatches = [] } = useQuery<{ id: string }[]>({
+    queryKey: ["/api/matches", { status: "pending" }],
+    queryFn: () => apiGet<{ id: string }[]>("/api/matches?status=pending"),
+  });
+
+  const tournamentActive = pendingMatches.length > 0;
+
   const jornadas: JornadaGroup[] = React.useMemo(() => {
     const map = new Map<number, ApiMatch[]>();
     for (const m of matches) {
@@ -315,8 +322,8 @@ export default function HistoryPage() {
     }
     return Array.from(map.entries())
       .sort(([a], [b]) => b - a)
-      .map(([numero, ms], idx) => ({ numero, matches: ms, reciente: idx === 0 }));
-  }, [matches]);
+      .map(([numero, ms], idx) => ({ numero, matches: ms, reciente: tournamentActive && idx === 0 }));
+  }, [matches, tournamentActive]);
 
   return (
     <div className="container max-w-5xl mx-auto px-4 py-8">
