@@ -268,7 +268,7 @@ function JornadaBlock({ jornada, isOpen, onToggle }: {
         className="w-full flex items-center justify-between px-5 py-4 hover:bg-white/3 transition-colors"
       >
         <div className="flex items-center gap-3">
-          <span className="font-display font-black text-brand-orange text-lg">
+          <span className="font-display font-black text-brand-orange text-lg whitespace-nowrap">
             Jornada {jornada.numero}
           </span>
           {jornada.reciente && (

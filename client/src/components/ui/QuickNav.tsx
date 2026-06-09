@@ -15,13 +15,13 @@ export function QuickNav({ items }: { items: QuickNavItem[] }) {
         const active = location === href;
         return (
           <Link key={href} href={href}
-            className={`flex items-center gap-2 px-4 h-9 rounded-full text-sm font-bold border transition-all flex-shrink-0 ${
+            className={`flex items-center gap-0 sm:gap-2 px-2.5 sm:px-4 h-9 rounded-full text-sm font-bold border transition-all flex-shrink-0 ${
               active
                 ? "bg-brand-orange border-brand-orange text-white glow-orange pointer-events-none"
                 : "glass-panel border-white/15 text-white/60 hover:text-white hover:border-white/30"
             }`}>
             <Icon size={15} />
-            {label}
+            <span className="hidden sm:inline">{label}</span>
           </Link>
         );
       })}

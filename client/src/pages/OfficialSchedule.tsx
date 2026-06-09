@@ -584,8 +584,9 @@ export default function OfficialSchedulePage() {
         <div className="flex items-center justify-between gap-4">
           <SectionTitle whiteText="Rol de" orangeText="Árbitros" className="mb-1" />
           <Button onClick={openCreate}
-            className="flex-shrink-0 rounded-full bg-brand-orange hover:bg-brand-orange/85 text-white font-bold px-4 h-10 glow-orange text-sm mr-2">
-            <UserPlus className="w-4 h-4 mr-1.5" /> Nuevo árbitro
+            className="flex-shrink-0 rounded-full bg-brand-orange hover:bg-brand-orange/85 text-white font-bold glow-orange h-10 px-3 sm:px-4 text-sm mr-2">
+            <UserPlus className="w-4 h-4 sm:mr-1.5" />
+            <span className="hidden sm:inline">Nuevo árbitro</span>
           </Button>
         </div>
         <p className="text-white/30 text-sm">Captura disponibilidad, asigna y envía el rol al grupo</p>
