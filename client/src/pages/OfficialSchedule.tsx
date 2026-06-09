@@ -442,8 +442,9 @@ export default function OfficialSchedulePage() {
 
   // URL de query según selección
   const matchQueryUrl = selKey === null ? ""
-    : isPlayoffSel ? `/api/matches?phase=${phaseVal}`
-    : `/api/matches?jornada=${jornadaNum}&phase=regular`;
+    : isPlayoffSel && phaseVal ? `/api/matches?phase=${phaseVal}`
+    : !isPlayoffSel && jornadaNum ? `/api/matches?jornada=${jornadaNum}&phase=regular`
+    : "";
 
   // Partidos de la selección activa
   const { data: matches = [], isLoading: loadingMatches } = useQuery<MatchItem[]>({
