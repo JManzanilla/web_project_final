@@ -515,8 +515,26 @@ export default function HomePage() {
     (m) => m.phase !== "regular" && (m.status === "upcoming" || m.status === "live"),
   );
 
-  // Partidos de la jornada anterior (solo finalizados, solo regulares)
-  const prevJornada = activeJornada !== null ? activeJornada - 1 : null;
+  // Última jornada regular con resultados para el carrusel de abajo
+  const prevJornada = (() => {
+    const regular = allMatches.filter((m) => m.phase === "regular");
+    if (regular.length === 0) return null;
+    // Si ya hay playoffs, el torneo regular terminó — mostrar la jornada más alta con partidos finalizados
+    const playoffsExist = allMatches.some((m) => m.phase !== "regular");
+    if (playoffsExist) {
+      const finished = regular.filter((m) => m.status === "finished");
+      return finished.length > 0 ? Math.max(...finished.map((m) => m.jornada)) : null;
+    }
+    // Sin playoffs: última jornada completamente terminada (todos finished, sin contar suspended)
+    const byJornada = regular.filter((m) => m.status !== "suspended").reduce<Record<number, typeof regular>>((acc, m) => {
+      (acc[m.jornada] ??= []).push(m);
+      return acc;
+    }, {});
+    const completed = Object.entries(byJornada)
+      .filter(([, ms]) => ms.length > 0 && ms.every((m) => m.status === "finished"))
+      .map(([j]) => Number(j));
+    return completed.length > 0 ? Math.max(...completed) : null;
+  })();
   const prevResults = prevJornada !== null
     ? allMatches.filter((m) => m.phase === "regular" && m.jornada === prevJornada && m.status === "finished")
     : [];
