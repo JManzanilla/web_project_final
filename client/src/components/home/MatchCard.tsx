@@ -8,12 +8,14 @@ export function MatchCard({
   onHoverChange,
   onClick,
   selected,
+  featured = false,
 }: {
   match: Match;
   status: MatchStatus;
   onHoverChange: (val: boolean) => void;
   onClick: () => void;
   selected: boolean;
+  featured?: boolean;
 }) {
   const dayLabel = match.dayLabel;
   const isClickable = true;
@@ -36,7 +38,10 @@ export function MatchCard({
       onMouseLeave={() => onHoverChange(false)}
       onClick={handleClick}
       className={[
-        "min-w-[min(252px,calc(100vw-68px))] rounded-[20px] p-[18px] flex-shrink-0 select-none transition-all duration-200",
+        featured
+          ? "min-w-[min(310px,calc(100vw-68px))]"
+          : "min-w-[min(252px,calc(100vw-68px))]",
+        "rounded-[20px] p-[18px] flex-shrink-0 select-none transition-all duration-200",
         selected
           ? status === "live"
             ? "bg-brand-orange/36 border-2 border-brand-orange cursor-pointer scale-[1.03] shadow-[0_0_30px_rgba(255,69,0,0.35)] ring-1 ring-brand-orange/40"
@@ -46,8 +51,12 @@ export function MatchCard({
           : status === "live"
             ? "bg-brand-orange/12 border border-brand-orange/70 cursor-pointer hover:scale-[1.02] hover:border-brand-orange"
             : status === "finished"
-              ? "bg-white/10 border border-white/25 cursor-pointer hover:scale-[1.02] hover:bg-white/12 hover:border-white/35"
-              : "bg-white/8 border border-white/20 cursor-pointer hover:scale-[1.02] hover:bg-white/10",
+              ? featured
+                ? "bg-brand-orange/8 border border-brand-orange/40 cursor-pointer hover:scale-[1.02] hover:bg-brand-orange/12 shadow-[0_0_24px_rgba(255,69,0,0.12)]"
+                : "bg-white/10 border border-white/25 cursor-pointer hover:scale-[1.02] hover:bg-white/12 hover:border-white/35"
+              : featured
+                ? "bg-brand-orange/8 border border-brand-orange/40 cursor-pointer hover:scale-[1.02] shadow-[0_0_24px_rgba(255,69,0,0.12)]"
+                : "bg-white/8 border border-white/20 cursor-pointer hover:scale-[1.02] hover:bg-white/10",
       ].join(" ")}
     >
       {/* Badge */}

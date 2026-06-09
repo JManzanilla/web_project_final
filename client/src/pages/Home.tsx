@@ -42,11 +42,13 @@ function PlayoffsSection({ matches }: { matches: ApiMatch[] }) {
 
   if (playoffMatches.length === 0) return null;
 
-  // Convertir a formato carousel con el nombre de fase como dayLabel
-  const carouselMatches = playoffMatches.map((m) => ({
+  const semis = playoffMatches.filter((m) => m.phase !== "final");
+  const final = playoffMatches.filter((m) => m.phase === "final");
+
+  const toCard = (m: ApiMatch) => ({
     ...apiMatchToCarouselMatch(m),
     dayLabel: matchGroupLabel(m.jornada, m.phase),
-  }));
+  });
 
   return (
     <div className="mt-2">
@@ -60,22 +62,36 @@ function PlayoffsSection({ matches }: { matches: ApiMatch[] }) {
         <div className="h-px flex-1 bg-gradient-to-l from-transparent to-brand-orange/35" />
       </div>
 
-      {/* Cards centradas, mismo diseño que el carrusel */}
-      <div className="flex justify-center gap-4 flex-wrap py-3.5">
-        {carouselMatches.map((match) => (
-          <MatchCard
-            key={match.id}
-            match={match}
-            status={match.status}
-            selected={selectedMatch?.id === match.id}
-            onHoverChange={() => {}}
-            onClick={() => {
-              const src = playoffMatches.find((m) => m.id === match.id)!;
-              setSelectedMatch(src);
-            }}
-          />
-        ))}
-      </div>
+      {/* Semifinales */}
+      {semis.length > 0 && (
+        <div className="flex justify-center gap-4 flex-wrap py-2">
+          {semis.map((m) => (
+            <MatchCard key={m.id} match={toCard(m)} status={m.status as MatchStatus}
+              selected={selectedMatch?.id === m.id} onHoverChange={() => {}}
+              onClick={() => setSelectedMatch(m)} />
+          ))}
+        </div>
+      )}
+
+      {/* Gran Final — fila propia, card más grande */}
+      {final.length > 0 && (
+        <>
+          {semis.length > 0 && (
+            <div className="flex items-center gap-4 my-3">
+              <div className="h-px flex-1 bg-white/6" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-brand-orange/50 flex-shrink-0">Gran Final</span>
+              <div className="h-px flex-1 bg-white/6" />
+            </div>
+          )}
+          <div className="flex justify-center py-2">
+            {final.map((m) => (
+              <MatchCard key={m.id} match={toCard(m)} status={m.status as MatchStatus}
+                selected={selectedMatch?.id === m.id} onHoverChange={() => {}}
+                onClick={() => setSelectedMatch(m)} featured />
+            ))}
+          </div>
+        </>
+      )}
 
       {selectedMatch && (
         <MatchModal
