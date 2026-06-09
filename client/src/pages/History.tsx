@@ -307,12 +307,12 @@ export default function HistoryPage() {
     queryFn: () => apiGet<ApiMatch[]>("/api/matches?status=finished"),
   });
 
-  const { data: pendingMatches = [] } = useQuery<{ id: string }[]>({
-    queryKey: ["/api/matches", { status: "pending" }],
-    queryFn: () => apiGet<{ id: string }[]>("/api/matches?status=pending"),
+  const { data: upcomingRegular = [] } = useQuery<{ id: string }[]>({
+    queryKey: ["/api/matches", { status: "upcoming", phase: "regular" }],
+    queryFn: () => apiGet<{ id: string }[]>("/api/matches?status=upcoming&phase=regular"),
   });
 
-  const tournamentActive = pendingMatches.length > 0;
+  const tournamentActive = upcomingRegular.length > 0;
 
   const jornadas: JornadaGroup[] = React.useMemo(() => {
     const map = new Map<number, ApiMatch[]>();
