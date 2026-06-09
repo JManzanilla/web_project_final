@@ -376,10 +376,12 @@ export default function SchedulePage() {
 
       {/* Playoffs — Semifinales y Final */}
       {playoffs.length > 0 && (
-        <div className="mt-6">
-          <p className="text-xs text-brand-orange/60 font-bold uppercase tracking-widest mb-3">
-            🏆 Eliminatorias
-          </p>
+        <div className="mt-3">
+          <div className="flex items-center gap-4 my-5">
+            <div className="flex-1 h-px bg-gradient-to-l from-brand-orange/30 to-transparent" />
+            <span className="text-xs font-black text-brand-orange/70 uppercase tracking-widest">🏆 Playoffs</span>
+            <div className="flex-1 h-px bg-gradient-to-r from-brand-orange/30 to-transparent" />
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
             {playoffs.map(({ phase, matches: pMatches }) => {
               const key = `playoff-${phase}`;

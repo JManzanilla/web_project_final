@@ -15,6 +15,7 @@ type MatchStatus = "upcoming" | "live" | "finished" | "suspended";
 interface MatchItem {
   id: string;
   jornada: number;
+  phase: string;
   scheduledAt: string;
   status: MatchStatus;
   scoreHome: number | null;
@@ -39,6 +40,13 @@ function formatTime(iso: string) {
     hour: "2-digit", minute: "2-digit", hour12: true,
   });
 }
+
+const PHASE_LABELS: Record<string, string> = {
+  sf1: "Semifinal 1",
+  sf2: "Semifinal 2",
+  final: "Gran Final",
+};
+const PHASE_ORDER = ["sf1", "sf2", "final"];
 
 const STATUS_CONFIG: Record<MatchStatus, { label: string; color: string }> = {
   upcoming:  { label: "Pendiente",  color: "bg-white/6 border-white/10 text-white/40" },
@@ -119,7 +127,17 @@ function MatchCard({ match }: { match: MatchItem }) {
 // ---------------------------------------------------------------------------
 // Grupo de jornada colapsable
 // ---------------------------------------------------------------------------
-function JornadaGroup({ jornada, matches }: { jornada: number; matches: MatchItem[] }) {
+function JornadaGroup({
+  jornada,
+  matches,
+  label,
+  isPlayoff = false,
+}: {
+  jornada: number;
+  matches: MatchItem[];
+  label?: string;
+  isPlayoff?: boolean;
+}) {
   const hasLive     = matches.some((m) => m.status === "live");
   const allFinished = matches.every((m) => m.status === "finished");
   const pending     = matches.filter((m) => m.status === "upcoming").length;
@@ -130,12 +148,12 @@ function JornadaGroup({ jornada, matches }: { jornada: number; matches: MatchIte
   );
 
   return (
-    <div className="glass-panel overflow-hidden">
+    <div className={`glass-panel overflow-hidden ${isPlayoff ? "border border-brand-orange/20" : ""}`}>
       <button onClick={() => setOpen(!open)}
         className="w-full flex items-center justify-between px-5 py-4 hover:bg-white/3 transition-colors">
         <div className="flex items-center gap-3">
           <span className={`font-display font-black text-lg ${hasLive ? "text-brand-orange" : allFinished ? "text-white/40" : "text-brand-orange"}`}>
-            Jornada {jornada}
+            {label ?? `Jornada ${jornada}`}
           </span>
           {hasLive && (
             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-brand-orange/15 border border-brand-orange/30 text-brand-orange">
@@ -177,12 +195,21 @@ export default function MatchesPage() {
     queryFn:  () => apiGet<MatchItem[]>("/api/matches"),
   });
 
-  const byJornada = matches.reduce<Record<number, MatchItem[]>>((acc, m) => {
+  const regularMatches  = matches.filter((m) => m.phase === "regular");
+  const playoffMatches  = matches.filter((m) => m.phase !== "regular");
+
+  const byJornada = regularMatches.reduce<Record<number, MatchItem[]>>((acc, m) => {
     (acc[m.jornada] ??= []).push(m);
     return acc;
   }, {});
 
   const sortedJornadas = Object.keys(byJornada).map(Number).sort((a, b) => a - b);
+
+  const playoffByPhase: Record<string, MatchItem[]> = {};
+  playoffMatches.forEach((m) => { (playoffByPhase[m.phase] ??= []).push(m); });
+  const activePlayoffPhases = PHASE_ORDER.filter((ph) => playoffByPhase[ph]?.length > 0);
+
+  const isEmpty = sortedJornadas.length === 0 && activePlayoffPhases.length === 0;
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl">
@@ -204,21 +231,47 @@ export default function MatchesPage() {
 
       {isLoading ? (
         <div className="text-center text-white/30 py-12">Cargando partidos…</div>
-      ) : sortedJornadas.length === 0 ? (
+      ) : isEmpty ? (
         <div className="text-center text-white/30 py-12">No hay partidos registrados.</div>
       ) : (
-        <div className="flex flex-col md:flex-row gap-3 items-start">
-          <div className="flex-1 flex flex-col gap-3">
-            {sortedJornadas.filter((_, i) => i % 2 === 0).map((j) => (
-              <JornadaGroup key={j} jornada={j} matches={byJornada[j]} />
-            ))}
-          </div>
-          <div className="flex-1 flex flex-col gap-3">
-            {sortedJornadas.filter((_, i) => i % 2 !== 0).map((j) => (
-              <JornadaGroup key={j} jornada={j} matches={byJornada[j]} />
-            ))}
-          </div>
-        </div>
+        <>
+          {sortedJornadas.length > 0 && (
+            <div className="flex flex-col md:flex-row gap-3 items-start">
+              <div className="flex-1 flex flex-col gap-3">
+                {sortedJornadas.filter((_, i) => i % 2 === 0).map((j) => (
+                  <JornadaGroup key={j} jornada={j} matches={byJornada[j]} />
+                ))}
+              </div>
+              <div className="flex-1 flex flex-col gap-3">
+                {sortedJornadas.filter((_, i) => i % 2 !== 0).map((j) => (
+                  <JornadaGroup key={j} jornada={j} matches={byJornada[j]} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activePlayoffPhases.length > 0 && (
+            <>
+              <div className="flex items-center gap-4 my-5">
+                <div className="flex-1 h-px bg-gradient-to-l from-brand-orange/30 to-transparent" />
+                <span className="text-xs font-black text-brand-orange/70 uppercase tracking-widest">🏆 Playoffs</span>
+                <div className="flex-1 h-px bg-gradient-to-r from-brand-orange/30 to-transparent" />
+              </div>
+              <div className="flex flex-col md:flex-row gap-3 items-start">
+                <div className="flex-1 flex flex-col gap-3">
+                  {activePlayoffPhases.filter((_, i) => i % 2 === 0).map((ph) => (
+                    <JornadaGroup key={ph} jornada={1} matches={playoffByPhase[ph]} label={PHASE_LABELS[ph] ?? ph} isPlayoff />
+                  ))}
+                </div>
+                <div className="flex-1 flex flex-col gap-3">
+                  {activePlayoffPhases.filter((_, i) => i % 2 !== 0).map((ph) => (
+                    <JornadaGroup key={ph} jornada={1} matches={playoffByPhase[ph]} label={PHASE_LABELS[ph] ?? ph} isPlayoff />
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+        </>
       )}
     </div>
   );

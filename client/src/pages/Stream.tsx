@@ -18,12 +18,20 @@ import { useAuth } from "@/context/AuthContext";
 interface MatchStream {
   id: string;
   jornada: number;
+  phase: string;
   homeTeam: { name: string; logoUrl: string | null };
   awayTeam: { name: string; logoUrl: string | null };
   scheduledAt: string;
   status: "upcoming" | "live" | "finished" | "suspended";
   streamUrl: string | null;
 }
+
+const PHASE_LABELS: Record<string, string> = {
+  sf1: "Semifinal 1",
+  sf2: "Semifinal 2",
+  final: "Gran Final",
+};
+const PHASE_ORDER = ["sf1", "sf2", "final"];
 
 // ---------------------------------------------------------------------------
 // Detecta plataforma desde una URL
@@ -218,7 +226,7 @@ function MatchStreamCard({
 // Acordeón de una jornada
 // ---------------------------------------------------------------------------
 function JornadaAccordion({
-  jornada, matches, isOpen, isActive, onToggle, onSave, onStatusChange,
+  jornada, matches, isOpen, isActive, onToggle, onSave, onStatusChange, label, isPlayoff = false,
 }: {
   jornada: number;
   matches: MatchStream[];
@@ -227,17 +235,19 @@ function JornadaAccordion({
   onToggle: () => void;
   onSave: (id: string, url: string | null) => void;
   onStatusChange: (id: string, status: "live" | "upcoming") => void;
+  label?: string;
+  isPlayoff?: boolean;
 }) {
   const withLink = matches.filter((m) => m.streamUrl).length;
   const hasLive  = matches.some((m) => m.status === "live");
 
   return (
-    <div className="glass-panel overflow-hidden">
+    <div className={`glass-panel overflow-hidden ${isPlayoff ? "border border-brand-orange/20" : ""}`}>
       <button onClick={onToggle}
         className="w-full flex items-center justify-between px-5 py-4 hover:bg-white/3 transition-colors">
         <div className="flex items-center gap-3">
           <span className="font-display font-black text-lg text-brand-orange">
-            Jornada {jornada}
+            {label ?? `Jornada ${jornada}`}
           </span>
           {isActive && (
             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-brand-orange/15 border border-brand-orange/30 text-brand-orange">
@@ -277,9 +287,9 @@ function JornadaAccordion({
 export default function StreamPage() {
   const qc = useQueryClient();
   const { user } = useAuth();
-  const [expanded, setExpanded] = useState<Set<number>>(new Set());
-  const toggleExpand = (n: number) =>
-    setExpanded((prev) => { const s = new Set(prev); s.has(n) ? s.delete(n) : s.add(n); return s; });
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const toggleExpand = (key: string) =>
+    setExpanded((prev) => { const s = new Set(prev); s.has(key) ? s.delete(key) : s.add(key); return s; });
 
   const { data: matches = [], isLoading } = useQuery<MatchStream[]>({
     queryKey: ["/api/matches"],
@@ -306,9 +316,12 @@ export default function StreamPage() {
     onError: (e) => sileo.error({ title: "Error", description: (e as Error).message }),
   });
 
-  // Agrupar por jornada, ordenar por jornada asc
+  const notSuspendedOrFinished = (m: MatchStream) =>
+    m.status !== "suspended" && m.status !== "finished";
+
+  // Agrupar partidos regulares por jornada
   const byJornada = matches
-    .filter((m) => m.status !== "suspended" && m.status !== "finished")
+    .filter((m) => m.phase === "regular" && notSuspendedOrFinished(m))
     .reduce<Record<number, MatchStream[]>>((acc, m) => {
       (acc[m.jornada] ??= []).push(m);
       return acc;
@@ -322,6 +335,13 @@ export default function StreamPage() {
   const activeJornada = sortedJornadas.find((j) =>
     byJornada[j].some((m) => m.status === "live" || m.status === "upcoming"),
   ) ?? sortedJornadas[sortedJornadas.length - 1];
+
+  // Agrupar partidos de playoffs por fase
+  const playoffByPhase: Record<string, MatchStream[]> = {};
+  matches
+    .filter((m) => m.phase !== "regular" && notSuspendedOrFinished(m))
+    .forEach((m) => { (playoffByPhase[m.phase] ??= []).push(m); });
+  const activePlayoffPhases = PHASE_ORDER.filter((ph) => playoffByPhase[ph]?.length > 0);
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl">
@@ -351,45 +371,97 @@ export default function StreamPage() {
 
       {isLoading ? (
         <div className="text-center text-white/30 py-12">Cargando partidos...</div>
-      ) : sortedJornadas.length === 0 ? (
+      ) : sortedJornadas.length === 0 && activePlayoffPhases.length === 0 ? (
         <div className="text-center text-white/30 py-12">No hay partidos registrados.</div>
       ) : (
         <>
-          {/* Mobile: columna única en orden */}
-          <div className="flex flex-col gap-3 md:hidden">
-            {sortedJornadas.map((jornada) => (
-              <JornadaAccordion
-                key={jornada}
-                jornada={jornada}
-                matches={byJornada[jornada]}
-                isOpen={expanded.has(jornada)}
-                isActive={jornada === activeJornada}
-                onToggle={() => toggleExpand(jornada)}
-                onSave={(id, url) => streamMutation.mutate({ id, streamUrl: url })}
-                onStatusChange={(id, status) => statusMutation.mutate({ id, status })}
-              />
-            ))}
-          </div>
-
-          {/* Desktop: dos columnas alternas */}
-          <div className="hidden md:flex gap-3 items-start">
-            {[sortedJornadas.filter((_, i) => i % 2 === 0), sortedJornadas.filter((_, i) => i % 2 !== 0)].map((col, ci) => (
-              <div key={ci} className="flex-1 flex flex-col gap-3">
-                {col.map((jornada) => (
+          {sortedJornadas.length > 0 && (
+            <>
+              {/* Mobile: columna única en orden */}
+              <div className="flex flex-col gap-3 md:hidden">
+                {sortedJornadas.map((jornada) => (
                   <JornadaAccordion
                     key={jornada}
                     jornada={jornada}
                     matches={byJornada[jornada]}
-                    isOpen={expanded.has(jornada)}
+                    isOpen={expanded.has(String(jornada))}
                     isActive={jornada === activeJornada}
-                    onToggle={() => toggleExpand(jornada)}
+                    onToggle={() => toggleExpand(String(jornada))}
                     onSave={(id, url) => streamMutation.mutate({ id, streamUrl: url })}
                     onStatusChange={(id, status) => statusMutation.mutate({ id, status })}
                   />
                 ))}
               </div>
-            ))}
-          </div>
+
+              {/* Desktop: dos columnas alternas */}
+              <div className="hidden md:flex gap-3 items-start">
+                {[sortedJornadas.filter((_, i) => i % 2 === 0), sortedJornadas.filter((_, i) => i % 2 !== 0)].map((col, ci) => (
+                  <div key={ci} className="flex-1 flex flex-col gap-3">
+                    {col.map((jornada) => (
+                      <JornadaAccordion
+                        key={jornada}
+                        jornada={jornada}
+                        matches={byJornada[jornada]}
+                        isOpen={expanded.has(String(jornada))}
+                        isActive={jornada === activeJornada}
+                        onToggle={() => toggleExpand(String(jornada))}
+                        onSave={(id, url) => streamMutation.mutate({ id, streamUrl: url })}
+                        onStatusChange={(id, status) => statusMutation.mutate({ id, status })}
+                      />
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {activePlayoffPhases.length > 0 && (
+            <>
+              <div className="flex items-center gap-4 my-5">
+                <div className="flex-1 h-px bg-gradient-to-l from-brand-orange/30 to-transparent" />
+                <span className="text-xs font-black text-brand-orange/70 uppercase tracking-widest">🏆 Playoffs</span>
+                <div className="flex-1 h-px bg-gradient-to-r from-brand-orange/30 to-transparent" />
+              </div>
+              {/* Mobile */}
+              <div className="flex flex-col gap-3 md:hidden">
+                {activePlayoffPhases.map((ph) => (
+                  <JornadaAccordion
+                    key={ph}
+                    jornada={1}
+                    matches={playoffByPhase[ph]}
+                    isOpen={expanded.has(ph)}
+                    isActive={false}
+                    onToggle={() => toggleExpand(ph)}
+                    onSave={(id, url) => streamMutation.mutate({ id, streamUrl: url })}
+                    onStatusChange={(id, status) => statusMutation.mutate({ id, status })}
+                    label={PHASE_LABELS[ph] ?? ph}
+                    isPlayoff
+                  />
+                ))}
+              </div>
+              {/* Desktop */}
+              <div className="hidden md:flex gap-3 items-start">
+                {[activePlayoffPhases.filter((_, i) => i % 2 === 0), activePlayoffPhases.filter((_, i) => i % 2 !== 0)].map((col, ci) => (
+                  <div key={ci} className="flex-1 flex flex-col gap-3">
+                    {col.map((ph) => (
+                      <JornadaAccordion
+                        key={ph}
+                        jornada={1}
+                        matches={playoffByPhase[ph]}
+                        isOpen={expanded.has(ph)}
+                        isActive={false}
+                        onToggle={() => toggleExpand(ph)}
+                        onSave={(id, url) => streamMutation.mutate({ id, streamUrl: url })}
+                        onStatusChange={(id, status) => statusMutation.mutate({ id, status })}
+                        label={PHASE_LABELS[ph] ?? ph}
+                        isPlayoff
+                      />
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </>
       )}
 
