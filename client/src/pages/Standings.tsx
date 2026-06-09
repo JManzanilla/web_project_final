@@ -65,24 +65,24 @@ function BracketCard({ label, subtitle, series, highlight }: {
       </div>
 
       {series ? (
-        <div className="p-4">
+        <div className="p-2.5 sm:p-4">
           {/* Equipos + marcador de serie */}
-          <div className="flex items-center justify-between gap-2 mb-3">
-            <div className={`flex-1 text-center transition-opacity ${series.winnerId && series.winnerId !== series.team1.id ? "opacity-30" : ""}`}>
-              <p className="font-black text-base text-white truncate">{series.team1.name}</p>
+          <div className="flex items-center justify-between gap-1 sm:gap-2 mb-3">
+            <div className={`flex-1 min-w-0 text-center transition-opacity ${series.winnerId && series.winnerId !== series.team1.id ? "opacity-30" : ""}`}>
+              <p className="font-black text-sm sm:text-base text-white truncate">{series.team1.name}</p>
             </div>
             <div className="flex flex-col items-center flex-shrink-0">
-              <div className="flex items-center gap-2">
-                <span className={`text-3xl font-black font-display ${series.wins[0] > series.wins[1] ? "text-brand-orange" : "text-white/60"}`}>{series.wins[0]}</span>
-                <span className="text-white/25 text-base">-</span>
-                <span className={`text-3xl font-black font-display ${series.wins[1] > series.wins[0] ? "text-brand-orange" : "text-white/60"}`}>{series.wins[1]}</span>
+              <div className="flex items-center gap-1 sm:gap-2">
+                <span className={`text-2xl sm:text-3xl font-black font-display ${series.wins[0] > series.wins[1] ? "text-brand-orange" : "text-white/60"}`}>{series.wins[0]}</span>
+                <span className="text-white/25 text-sm sm:text-base">-</span>
+                <span className={`text-2xl sm:text-3xl font-black font-display ${series.wins[1] > series.wins[0] ? "text-brand-orange" : "text-white/60"}`}>{series.wins[1]}</span>
               </div>
               {series.seriesLength === 3 && (
                 <span className="text-[9px] text-white/25 mt-0.5">mejor de 3</span>
               )}
             </div>
-            <div className={`flex-1 text-center transition-opacity ${series.winnerId && series.winnerId !== series.team2.id ? "opacity-30" : ""}`}>
-              <p className="font-black text-base text-white truncate">{series.team2.name}</p>
+            <div className={`flex-1 min-w-0 text-center transition-opacity ${series.winnerId && series.winnerId !== series.team2.id ? "opacity-30" : ""}`}>
+              <p className="font-black text-sm sm:text-base text-white truncate">{series.team2.name}</p>
             </div>
           </div>
 
