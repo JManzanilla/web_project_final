@@ -143,7 +143,7 @@ function PlayoffBracket({ playoffs }: { playoffs: PlayoffData }) {
 
       {/* Mobile: semis arriba, trofeo + final abajo */}
       <div className="md:hidden space-y-4">
-        <div className="grid grid-cols-2 gap-3">
+        <div className="flex flex-col gap-3">
           <BracketCard label="Semifinal 1" subtitle="1° vs 4°" series={playoffs.sf1} />
           <BracketCard label="Semifinal 2" subtitle="2° vs 3°" series={playoffs.sf2} />
         </div>
