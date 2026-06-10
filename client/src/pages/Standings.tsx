@@ -90,7 +90,7 @@ function BracketCard({ label, subtitle, series, highlight }: {
           {series.games.length > 0 && (
             <div className="border-t border-white/8 pt-2 space-y-1">
               {series.games.map((g, i) => (
-                <div key={g.id} className="flex items-center justify-between text-[12px]">
+                <div key={g.id} className="flex items-center justify-center gap-3 text-[12px]">
                   <span className="text-white/35 font-semibold">Juego {g.seriesGame ?? i + 1}</span>
                   {g.status === "finished" && g.scoreHome !== null ? (
                     <span className="font-bold text-white/80">{g.scoreHome} – {g.scoreAway}</span>
